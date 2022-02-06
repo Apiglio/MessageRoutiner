@@ -5544,10 +5544,11 @@ object Form_Routiner: TForm_Routiner
         Caption = '设置'
         object MenuItem_Setting_Lag: TMenuItem
           Caption = '异步器设置'
+          Enabled = False
           OnClick = MenuItem_Setting_LagClick
         end
         object MenuItem_RunPerformance: TMenuItem
-          Caption = '性能设置'
+          Caption = '全局设置'
           OnClick = MenuItem_RunPerformanceClick
         end
       end
@@ -5555,15 +5556,11 @@ object Form_Routiner: TForm_Routiner
         Caption = '关于'
         OnClick = MenuItem_Opt_AboutClick
       end
-      object MenuItem_Exit: TMenuItem
-        Caption = '退出'
-        OnClick = MenuItem_ExitClick
-      end
       object MenuItem_Opt_Div: TMenuItem
         Caption = '-'
       end
       object MenuItem_Opt_Adapter: TMenuItem
-        Caption = '消息调试窗口'
+        Caption = 'Hook Adapter'
         OnClick = MenuItem_Opt_AdapterClick
       end
     end

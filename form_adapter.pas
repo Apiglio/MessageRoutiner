@@ -1,4 +1,4 @@
-//{$define HookAdapter}//主单元也有一个需要同步修改
+{$define HookAdapter}//主单元也有一个需要同步修改
 
 unit form_adapter;
 
@@ -11,12 +11,16 @@ uses
   StdCtrls, ExtCtrls, Windows, Dos;
 
 const
-  MessageOffset  = 100;
+  MessageOffset = 100;
+  ShortcutCount = 31;
 
 type
 
   TRecTimeMode = (rtmWaittimer=0,rtmSleep=1);
   TRecSyntaxMode = (smRapid=0,smChar=1,smMono=2);
+  TShortcutMode = (scmDblCheck=0,scmDownUp=1,scmLoop=2,scmPoly=3);
+  //DblCheck 双击+命令+确认      DownUp 按下+命令+抬起
+  //Loop     GTA秘籍循环检测     Poly   多键按下
   TButtonState = record
     pressed:boolean;
     DownWhen:longint;
@@ -25,12 +29,9 @@ type
   { TAdapterForm }
 
   TAdapterForm = class(TForm)
-    Button_Clear: TButton;
-    Button_MemoRec: TToggleBox;
-    Memo_debug: TMemo;
-    Splitter1: TSplitter;
-    procedure Button_ClearClick(Sender: TObject);
-    procedure Button_MemoRecChange(Sender: TObject);
+    Image1: TImage;
+    Label_auther: TLabel;
+    Label_AD: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -40,7 +41,6 @@ type
 
   protected
     procedure WndProc(var TheMessage:TLMessage);override;
-    procedure HookProc(var TheMessage:TMessage);message WM_USER+MessageOffset;
   private
     FRecordMode:boolean;     //是否记录
     FSynchronicMode:boolean; //是否同步
@@ -59,10 +59,13 @@ type
 
       end;
       Shortcut:record
-        Exec_Command:string; //快捷键命令行临时储存字符串
+        Exec_Command:string;//快捷键命令行临时储存字符串
+        KeyDown:array[0..255]of boolean;//每个键按是否按下的状态
+        LastTime:array[0..255]of dword;//每一个按键上一次按下的时间
+        LastKey:byte;//上一次按下的键
+        ListenKey:boolean;//是否读取指令，Loop模式和Poly模式始终为true
       end;
     end;
-
   public
     Option:record
       Rec:record
@@ -70,26 +73,45 @@ type
         TimeMode:TRecTimeMode;
         SyntaxMode:TRecSyntaxMode;
       end;//录制器设置
-      Sync:record end;//同步器与异步器设置
-      Shortcut:record end;//键盘快捷键设置
-    end;//所有设置
-    property RecordMode:boolean read FRecordMode write FRecordMode default false;
-    property SynchronicMode:boolean read FSynchronicMode write FSynchronicMode default false;
-    property ShortcutMode:boolean read FShortcutMode write FShortcutMode default false;
+      Sync:record
+
+      end;//同步器与异步器设置
+      Shortcut:record
+        Mode:TShortcutMode;
+        StartKey,EndKey:byte; //双击按键与确认按键，scmDblCheck时有效
+        DoubleGap:word;       //双击最大毫秒限制，scmDblCheck时有效
+        DownUpKey:byte;       //按下抬起检测按键，scmDownUp时有效
+
+        ScriptFiles:array[0..ShortcutCount]of record
+          command:string;//存入的时候需要转为小写！！！
+          filename:string;
+        end;
+      end;//键盘快捷键设置
+    end;
+    property RecordMode:boolean read FRecordMode write FRecordMode;
+    property SynchronicMode:boolean read FSynchronicMode write FSynchronicMode;
+    property ShortcutMode:boolean read FShortcutMode write FShortcutMode;
+    property SetMouseOriMode:boolean read Status.Rec.SettingOri write Status.Rec.SettingOri;
+
+  public
+    procedure StartRecord;                  //录制器：开始录制
+    procedure EndRecord;                    //录制器：结束录制
 
   protected
-    procedure CommandInitialize;       //键盘快捷键：命令行重置
-    procedure CommandAppend(key:char); //键盘快捷键：命令行更新
-    procedure CommandExecute;          //键盘快捷键：命令行执行
+    procedure CommandInitialize;            //键盘快捷键：命令行重置
+    procedure CommandAppend(key:char);      //键盘快捷键：命令行更新
+    procedure CommandExecute;               //键盘快捷键：命令行执行
 
     procedure MessageBroadcast(TheMessage:TLMessage);//同步器、异步器、转发器：消息广播
 
-    procedure RecordAufScript(str:string);//录制器：添加代码
+    procedure RecordAufScript(str:string);  //录制器：添加代码
 
-    procedure SynchronicProc(Msg:TMessage);//同步器异步器过程
-    procedure RecordProc(Msg:TMessage);//录制器过程
-    procedure ShortcutProc(Msg:TMessage);//键盘快捷键过程
-    procedure DuplicateProc(Msg:TMessage);//转发器过程
+
+    procedure SynchronicProc(Msg:TMessage); //同步器异步器过程
+    procedure RecordProc(Msg:TMessage);     //录制器过程
+    procedure ShortcutProc(Msg:TMessage);   //键盘快捷键过程
+    procedure DuplicateProc(Msg:TMessage);  //转发器过程
+    procedure MouseOriSetting(Msg:TMessage);//鼠标原点设置过程
 
 
   end;
@@ -102,6 +124,15 @@ uses MessageRoutiner_Unit, Apiglio_Useful;
 
 {$R *.lfm}
 
+function StrToHex(inp:string):string;
+var i:integer;
+begin
+  result:='';
+  for i:=1 to length(inp) do
+    begin
+      result:=result+IntToHex(ord(inp[i]),2);
+    end;
+end;
 
 function KeyMsgToChar(km:longint):string;
 begin
@@ -170,10 +201,25 @@ begin
   end;
 end;
 
+function GetTimeNumber:longint;
+var h,m,s,ms:word;
+begin
+  gettime(h,m,s,ms);
+  result:=ms*10+s*1000+m*60000+h*3600000;
+end;
+
 procedure TAdapterForm.FormCreate(Sender: TObject);
 begin
   Self.FRecordMode:=true;
   GlobalExpressionList.TryAddExp('sel',narg('',IntToStr(Self.Handle),''));
+  Self.FRecordMode:=false;
+  Self.FSynchronicMode:=false;
+  Self.FShortcutMode:=true;
+  with Self.Option do
+    begin
+      Rec.SyntaxMode:=smRapid;
+      Rec.TimeMode:=rtmSleep;
+    end;
   {$ifdef HookAdapter}
   with Form_Routiner do
     begin
@@ -183,16 +229,28 @@ begin
       //MouseHook;//初始不开鼠标钩子
   end;
   {$endif}
+  Self.ShortcutMode:=true;
+  with Self.Option.Shortcut do
+    begin
+      //Mode:=scmDblCheck;
+      Mode:=scmDownUp;
+      StartKey:=32;
+      EndKey:=13;
+      DoubleGap:=300;
+      DownUpKey:=45;//Insert
+
+    end;
+
 end;
 
 procedure TAdapterForm.FormHide(Sender: TObject);
 begin
-  Self.Button_MemoRec.Checked:=false;
+
 end;
 
 procedure TAdapterForm.FormShow(Sender: TObject);
 begin
-  Self.Button_MemoRec.Checked:=true;
+
 end;
 
 procedure TAdapterForm.DebugLine(str:String);
@@ -200,22 +258,10 @@ begin
   RecordAufScript(str);
 end;
 
-procedure TAdapterForm.Button_ClearClick(Sender: TObject);
-begin
-  Self.Memo_debug.Clear;
-end;
-
-procedure TAdapterForm.Button_MemoRecChange(Sender: TObject);
-begin
-  if (Sender as TToggleBox).Checked then Self.FRecordMode:=true
-  else Self.FRecordMode:=false;
-end;
-
 procedure TAdapterForm.WndProc(var TheMessage:TLMessage);//快捷键激活；同步器、脚本群发；录制器发送。
 label inherit;
 var Translated_Msg:TLMessage;
 begin
-  //Self.DebugLine('Msg='+IntToStr(TheMessage.msg)+' w='+IntToStr(TheMessage.wParam)+' l='+IntToStr(TheMessage.lParam));
   if TheMessage.msg=WM_USER+MessageOffset then
     begin
       Translated_Msg.msg:=TheMessage.wParam;
@@ -226,12 +272,16 @@ begin
     DuplicateProc(TheMessage);//转发器
     goto inherit;
   end;
-  //Self.DebugLine('Msg='+IntToStr(Translated_Msg.msg)+' w='+IntToStr(Translated_Msg.wParam)+' l='+IntToStr(Translated_Msg.lParam));
-
 
   if Self.FSynchronicMode then SynchronicProc(Translated_Msg);//同步器
+
   if Self.FShortcutMode then ShortcutProc(Translated_Msg);//键盘快捷键
+
+  if (Self.Status.Rec.SettingOri)and(Translated_Msg.msg=WM_LButtonUp) then
+    Self.MouseOriSetting(Translated_Msg);//鼠标录制原点设置
+
   if Self.FRecordMode then RecordProc(Translated_Msg);//录制器
+
 
 inherit:
   case TheMessage.msg of
@@ -243,11 +293,6 @@ inherit:
   else
     inherited WndProc(TheMessage);
   end;
-end;
-
-procedure TAdapterForm.HookProc(var TheMessage:TMessage);
-begin
-  Self.DebugLine('Msg='+IntToStr(TheMessage.msg)+' w='+IntToStr(TheMessage.wParam)+' l='+IntToStr(TheMessage.lParam));
 end;
 
 procedure TAdapterForm.MessageBroadcast(TheMessage:TLMessage);
@@ -272,14 +317,59 @@ begin
   Self.Status.Shortcut.Exec_Command:=Self.Status.Shortcut.Exec_Command+key;
 end;
 procedure TAdapterForm.CommandExecute;
+var str:string;
+    num:word;
+    pi:integer;
 begin
-  //结构未实现
+  if Self.Status.Shortcut.Exec_Command='' then exit;
+  str:=lowercase(Self.Status.Shortcut.Exec_Command);
+  try
+    num:=StrToInt(str);
+    if num in [0..SynCount] then
+      begin
+        Form_Routiner.CheckBoxs[num].Checked:=not Form_Routiner.CheckBoxs[num].Checked;
+        exit;
+      end;
+    //异步器暂时停用，快捷键无效
+  except
+    //
+  end;
+  case str of
+    #$C0:Form_Routiner.Button_Wnd_SynthesisClick(Form_Routiner.Button_Wnd_Synthesis);
+    'about':RecordAufScript('about');
+    else
+      begin
+        RecordAufScript('|'+StrToHex(Self.Status.Shortcut.Exec_Command)+'|');
+        pi:=0;
+        for pi:=0 to ShortcutCount do
+          begin
+            if (str=Self.Option.Shortcut.ScriptFiles[pi].command)
+            and (Form_Routiner.SCAufs[pi].Script.PSW.haltoff) then
+              begin
+                Form_Routiner.SCAufs[pi].Script.command('load "'+Self.Option.Shortcut.ScriptFiles[pi].filename+'"');
+                //ShowMessage('load "'+Self.Option.Shortcut.ScriptFiles[pi].filename+'"')
+              end;
+          end;
+      end;
+  end;
+  //RecordAufScript(Self.Status.Shortcut.Exec_Command);
 end;
 
 procedure TAdapterForm.RecordAufScript(str:string);
 begin
   with Form_Routiner do
   AufScriptFrames[PageControl.ActivePageIndex].Frame.Memo_cmd.Lines.Append(str);
+end;
+procedure TAdapterForm.StartRecord;
+begin
+  Self.FRecordMode:=true;
+  Self.Status.Rec.LastRecTime:=GetTimeNumber;
+  Self.Status.Rec.FirstRecTime:=GetTimeNumber;
+  if Self.Option.Rec.TimeMode=rtmWaittimer then RecordAufScript('settimer');
+end;
+procedure TAdapterForm.EndRecord;
+begin
+  Self.FRecordMode:=false;
 end;
 
 procedure TAdapterForm.SynchronicProc(Msg:TMessage);//同步器过程（包括异步器）
@@ -296,12 +386,7 @@ begin
     else ;
   end;
 end;
-function GetTimeNumber:longint;
-var h,m,s,ms:word;
-begin
-  gettime(h,m,s,ms);
-  result:=ms*10+s*1000+m*60000+h*3600000;
-end;
+
 procedure TAdapterForm.RecordProc(Msg:TMessage);//录制器过程
 var NowTimeNumber,NowTmp:longint;
 begin
@@ -328,14 +413,6 @@ begin
     WM_RButtonDown,WM_RButtonUp,WM_RButtonDblClk,
     WM_MButtonDown,WM_MButtonUp,WM_MButtonDblClk:
       BEGIN
-        //录制模式下鼠标原点设置
-        if (Self.Status.Rec.SettingOri)and(Msg.msg=WM_LButtonUp) then begin
-          Self.Status.Rec.MouseOri.x:=Msg.wParam;
-          Self.Status.Rec.MouseOri.y:=Msg.lParam;
-          Self.Status.Rec.SettingOri:=false;
-          Form_Routiner.Button_MouseOri.Enabled:=true;
-          Form_Routiner.Button_MouseOri.Caption:='('+IntToStr(Msg.wParam)+','+IntToStr(Msg.lParam)+')';
-        end;
         //录制
         if not Self.Option.Rec.BMouse then exit;//没有选择鼠标消息录制则退出
         NowTimeNumber:=GetTimeNumber;
@@ -357,18 +434,86 @@ begin
               +dword(Msg.wParam-Self.Status.Rec.MouseOri.x)));
         END;
         Self.Status.Rec.LastRecTime:=NowTimeNumber;
-
       END;
     ELSE ;
   END;
 end;
 procedure TAdapterForm.ShortcutProc(Msg:TMessage);//快捷方式过程
+var key:byte;
+    time:longint;
 begin
+  key:=Msg.wParam mod 256;
+  time:=GetTimeNumber;
+
+  case Msg.msg of
+    WM_KEYDOWN,WM_SYSKEYDOWN:
+      begin
+        Self.Status.Shortcut.KeyDown[key]:=true;
+        case Self.Option.Shortcut.Mode of
+          scmDblCheck:
+            begin
+              if Self.Status.Shortcut.ListenKey and (Self.Option.Shortcut.EndKey=key) then
+                begin
+                  Self.Status.Shortcut.ListenKey:=false;
+                  Self.CommandExecute;
+                end;
+              if (key=Self.Status.Shortcut.LastKey) and (key=Self.Option.Shortcut.StartKey) and
+              (Self.Option.Shortcut.DoubleGap>dword(time-Self.Status.Shortcut.LastTime[key])) then
+                begin
+                  Self.CommandInitialize;
+                  Self.Status.Shortcut.ListenKey:=true;
+                end;
+            end;
+          scmDownUp:
+          begin
+            if key=Self.Option.Shortcut.DownUpKey then
+              begin
+                Self.CommandInitialize;
+                Self.Status.Shortcut.ListenKey:=true;
+              end;
+          end;
+          scmLoop:;
+          scmPoly:;
+        end;
+        Self.Status.Shortcut.LastKey:=key;
+      end;
+    WM_KEYUP,WM_SYSKEYUP:
+      begin
+        Self.Status.Shortcut.KeyDown[key]:=false;
+        case Self.Option.Shortcut.Mode of
+          scmDblCheck:
+            begin
+              if Self.Status.Shortcut.ListenKey then Self.CommandAppend(char(key));
+            end;
+          scmDownUp:
+            begin
+              if Self.Status.Shortcut.ListenKey and (Self.Option.Shortcut.DownUpKey=key) then
+                begin
+                  Self.Status.Shortcut.ListenKey:=false;
+                  Self.CommandExecute;
+                end;
+              if Self.Status.Shortcut.ListenKey then Self.CommandAppend(char(key));
+            end;
+          scmLoop:;
+          scmPoly:;
+        end;
+        Self.Status.Shortcut.LastTime[key]:=time;
+      end
+    else ;
+  end;
 
 end;
 procedure TAdapterForm.DuplicateProc(Msg:TMessage);//转发器过程
 begin
   Self.MessageBroadcast(Msg);
+end;
+procedure TAdapterForm.MouseOriSetting(Msg:TMessage);//鼠标原点设置过程
+begin
+  Self.Status.Rec.MouseOri.x:=Msg.wParam;
+  Self.Status.Rec.MouseOri.y:=Msg.lParam;
+  Self.Status.Rec.SettingOri:=false;
+  Form_Routiner.Button_MouseOri.Enabled:=true;
+  Form_Routiner.Button_MouseOri.Caption:='('+IntToStr(Msg.wParam)+','+IntToStr(Msg.lParam)+')';
 end;
 
 end.

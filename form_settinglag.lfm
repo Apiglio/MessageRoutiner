@@ -2,10 +2,10 @@ object SettingLagForm: TSettingLagForm
   Left = 446
   Height = 391
   Top = 363
-  Width = 675
+  Width = 584
   Caption = '异步器设置'
   ClientHeight = 391
-  ClientWidth = 675
+  ClientWidth = 584
   DesignTimePPI = 120
   OnCreate = FormCreate
   LCLVersion = '1.8.4.0'
@@ -28,5 +28,19 @@ object SettingLagForm: TSettingLagForm
     BorderSpacing.Right = 5
     BorderSpacing.Bottom = 5
     TabOrder = 0
+  end
+  object Label_Lag_tmp: TLabel
+    AnchorSideTop.Control = Owner
+    AnchorSideTop.Side = asrCenter
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    Left = 424
+    Height = 15
+    Top = 188
+    Width = 150
+    Anchors = [akTop, akRight]
+    BorderSpacing.Right = 10
+    Caption = '此版本异步器暂时停用'
+    ParentColor = False
   end
 end

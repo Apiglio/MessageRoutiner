@@ -1,6 +1,8 @@
 //{$define OldButtFiles}
 //0.1.6及以前版本的旧方法，只能接受相对根目录的脚本文件，伺机删除
 
+
+
 unit form_aufbutton;
 
 {$mode objfpc}{$H+}
@@ -139,12 +141,19 @@ begin
   //Self.Syn_Show.Lines.Add('load "scriptfile"');
   Self.ComboBox_Window.Items.Clear;
   for i:=0 to SynCount do Self.ComboBox_Window.Items.Add(Form_Routiner.Edits[i].Text);
+
+  Self.OpenDialog.Title:='选择脚本文件';
+  Self.OpenDialog.InitialDir:=ExtractFilePath(Application.ExeName);
+  Self.OpenDialog.Filter:='AufScript File(*.auf)|*.auf|TableCalc Script File(*.scpt)|*.scpt|布局脚本文件(*.auf.lay)|*.auf.lay|文本文档(*.txt)|*.txt|全部文件(*.*)|*.*';
+  Self.OpenDialog.DefaultExt:='*.auf';
+  Self.OpenDialog.Options:=[ofAllowMultiSelect,ofFileMustExist,ofEnableSizing,ofViewDetail];
+
   Self.FormResize(nil);
 end;
 
 procedure TAufButtonForm.FormHide(Sender: TObject);
 begin
-  ////////
+  Self.Button_ReEditClick(Self.Button_ReEdit);
 end;
 
 procedure TAufButtonForm.FormResize(Sender: TObject);
@@ -159,8 +168,10 @@ end;
 
 procedure TAufButtonForm.FormShow(Sender: TObject);
 begin
-  {
+
   Self.ReEdit;
+  Self.ReNewSyntax;
+  {
   Self.Syn_Show.Highlighter:=(Self.NowEditing as TAufButton).Auf.Script.SynAufSyn;
   Self.SynEdit_FileView.Highlighter:=(Self.NowEditing as TAufButton).Auf.Script.SynAufSyn;
   }
@@ -176,7 +187,7 @@ begin
       {$ifdef OldButtFiles}
       for i:=1 to Self.MultiFile.Count-1 do Self.MultiFile[i]:=ExtractFileName(Self.MultiFile[i]);
       {$else}
-      for i:=0 to Self.MultiFile.Count-1 do Self.MultiFile[i]:=Self.OpenDialog.InitialDir+Self.MultiFile[i];
+      for i:=0 to Self.MultiFile.Count-1 do Self.MultiFile[i]:={Self.OpenDialog.InitialDir+}Self.MultiFile[i];
       {$endif}
       //Self.Button_FileName.Caption:=Self.OpenDialog.FileName;
       Self.ReNewSyntax;
