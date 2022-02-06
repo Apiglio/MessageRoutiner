@@ -1,0 +1,22 @@
+object SettingLagForm: TSettingLagForm
+  Left = 1122
+  Height = 251
+  Top = 544
+  Width = 396
+  BorderStyle = bsSingle
+  Caption = '运动延迟选项'
+  ClientHeight = 251
+  ClientWidth = 396
+  DesignTimePPI = 120
+  OnCreate = FormCreate
+  LCLVersion = '1.8.4.0'
+  object ScrollBox: TScrollBox
+    Left = 0
+    Height = 336
+    Top = 0
+    Width = 424
+    HorzScrollBar.Page = 1
+    VertScrollBar.Page = 1
+    TabOrder = 0
+  end
+end
