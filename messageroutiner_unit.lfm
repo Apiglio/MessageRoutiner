@@ -43,7 +43,7 @@ object Form_Routiner: TForm_Routiner
     AnchorSideRight.Control = Splitter_MainV
     AnchorSideBottom.Control = Splitter_LeftH
     Left = 6
-    Height = 252
+    Height = 334
     Top = 0
     Width = 602
     Anchors = [akTop, akLeft, akRight, akBottom]
@@ -59,13 +59,13 @@ object Form_Routiner: TForm_Routiner
     AnchorSideRight.Control = Splitter_RightV
     AnchorSideBottom.Control = StatusBar
     Left = 614
-    Height = 473
-    Top = 214
+    Height = 369
+    Top = 318
     Width = 396
     HorzScrollBar.Page = 264
     VertScrollBar.Page = 349
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 469
+    ClientHeight = 365
     ClientWidth = 392
     TabOrder = 2
     OnResize = GroupBox_RecOptionResize
@@ -114,7 +114,7 @@ object Form_Routiner: TForm_Routiner
       AnchorSideBottom.Control = GroupBox_RecOption
       AnchorSideBottom.Side = asrBottom
       Left = 5
-      Height = 148
+      Height = 44
       Top = 316
       Width = 259
       Anchors = [akTop, akLeft, akRight, akBottom]
@@ -326,7 +326,7 @@ object Form_Routiner: TForm_Routiner
     Cursor = crVSplit
     Left = 6
     Height = 6
-    Top = 252
+    Top = 334
     Width = 602
     Align = alNone
     Anchors = [akLeft, akRight]
@@ -360,7 +360,7 @@ object Form_Routiner: TForm_Routiner
     Cursor = crVSplit
     Left = 614
     Height = 6
-    Top = 208
+    Top = 312
     Width = 396
     Align = alNone
     Anchors = [akLeft, akRight]
@@ -386,7 +386,7 @@ object Form_Routiner: TForm_Routiner
     AnchorSideRight.Control = Splitter_RightV
     AnchorSideBottom.Control = Splitter_RecH
     Left = 614
-    Height = 170
+    Height = 274
     Top = 38
     Width = 396
     HorzScrollBar.Page = 384
@@ -395,15 +395,21 @@ object Form_Routiner: TForm_Routiner
     VertScrollBar.Range = 252
     Anchors = [akTop, akLeft, akRight, akBottom]
     AutoScroll = False
-    ClientHeight = 166
+    ClientHeight = 270
     ClientWidth = 392
     TabOrder = 10
     OnResize = ScrollBox_WndListResize
     object TreeView_Wnd: TTreeView
       Left = 16
-      Height = 96
+      Height = 208
       Top = 8
       Width = 368
+      Font.CharSet = ANSI_CHARSET
+      Font.Height = -17
+      Font.Name = 'Consolas'
+      Font.Pitch = fpFixed
+      Font.Quality = fqDraft
+      ParentFont = False
       TabOrder = 0
       OnChange = TreeView_WndChange
       OnMouseEnter = TreeView_WndMouseEnter
@@ -412,7 +418,7 @@ object Form_Routiner: TForm_Routiner
     object Label_filter: TLabel
       Left = 16
       Height = 15
-      Top = 120
+      Top = 240
       Width = 45
       Caption = '查找：'
       ParentColor = False
@@ -420,7 +426,7 @@ object Form_Routiner: TForm_Routiner
     object Edit_TreeView: TEdit
       Left = 72
       Height = 28
-      Top = 112
+      Top = 232
       Width = 224
       OnChange = Edit_TreeViewChange
       TabOrder = 1
@@ -428,7 +434,7 @@ object Form_Routiner: TForm_Routiner
     object Button_TreeViewFresh: TButton
       Left = 312
       Height = 28
-      Top = 112
+      Top = 232
       Width = 72
       Caption = '刷新列表'
       OnClick = Button_TreeViewFreshClick
@@ -477,14 +483,14 @@ object Form_Routiner: TForm_Routiner
     AnchorSideRight.Control = Splitter_SyncV
     AnchorSideBottom.Control = StatusBar
     Left = 6
-    Height = 429
-    Top = 258
+    Height = 347
+    Top = 340
     Width = 234
     HorzScrollBar.Page = 1
     HorzScrollBar.Visible = False
     VertScrollBar.Page = 329
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 425
+    ClientHeight = 343
     ClientWidth = 230
     TabOrder = 13
     OnResize = ScrollBox_WndViewResize
@@ -575,8 +581,8 @@ object Form_Routiner: TForm_Routiner
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
     Left = 240
-    Height = 455
-    Top = 258
+    Height = 373
+    Top = 340
     Width = 6
     Align = alNone
     Anchors = [akTop, akLeft, akBottom]
@@ -590,8 +596,8 @@ object Form_Routiner: TForm_Routiner
     AnchorSideRight.Control = Splitter_MainV
     AnchorSideBottom.Control = StatusBar
     Left = 246
-    Height = 429
-    Top = 258
+    Height = 347
+    Top = 340
     Width = 362
     HorzScrollBar.Page = 1
     HorzScrollBar.Visible = False

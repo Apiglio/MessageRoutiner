@@ -103,16 +103,16 @@ procedure TFormRunPerformance.Button_OkayClick(Sender: TObject);
 begin
   with Self.Setting do
     begin
-      Form_Routiner.Setting.AufButtonAct1:=AufButtonAct1*[ssAlt,ssShift,ssCtrl];
-      Form_Routiner.Setting.AufButtonAct2:=AufButtonAct2;
-      Form_Routiner.Setting.AufButtonExtraAct1:=AufButtonExtraAct1*[ssAlt,ssShift,ssCtrl];
-      Form_Routiner.Setting.AufButtonExtraAct2:=AufButtonExtraAct2;
-      Form_Routiner.Setting.AufButtonSetting1:=AufButtonSetting1*[ssAlt,ssShift,ssCtrl];
-      Form_Routiner.Setting.AufButtonSetting2:=AufButtonSetting2;
-      Form_Routiner.Setting.AufButtonHalt1:=AufButtonHalt1*[ssAlt,ssShift,ssCtrl];
-      Form_Routiner.Setting.AufButtonHalt2:=AufButtonHalt2;
-      Form_Routiner.Setting.HoldButtonSetting1:=HoldButtonSetting1*[ssAlt,ssShift,ssCtrl];
-      Form_Routiner.Setting.HoldButtonSetting2:=HoldButtonSetting2;
+      Form_Routiner.Setting.AufButton.Act1:=AufButtonAct1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.AufButton.Act2:=AufButtonAct2;
+      Form_Routiner.Setting.AufButton.ExtraAct1:=AufButtonExtraAct1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.AufButton.ExtraAct2:=AufButtonExtraAct2;
+      Form_Routiner.Setting.AufButton.Setting1:=AufButtonSetting1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.AufButton.Setting2:=AufButtonSetting2;
+      Form_Routiner.Setting.AufButton.Halt1:=AufButtonHalt1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.AufButton.Halt2:=AufButtonHalt2;
+      Form_Routiner.Setting.HoldButton.Setting1:=HoldButtonSetting1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.HoldButton.Setting2:=HoldButtonSetting2;
     end;
 
     if Self.CheckGroup_HookEnabled.Checked[0] then begin
@@ -133,16 +133,16 @@ procedure TFormRunPerformance.Button_ResetClick(Sender: TObject);
 begin
   with Self.Setting do
     begin
-      Form_Routiner.Setting.AufButtonAct1:=[];
-      Form_Routiner.Setting.AufButtonAct2:=mbLeft;
-      Form_Routiner.Setting.AufButtonExtraAct1:=[ssCtrl];
-      Form_Routiner.Setting.AufButtonExtraAct2:=mbLeft;
-      Form_Routiner.Setting.AufButtonSetting1:=[];
-      Form_Routiner.Setting.AufButtonSetting2:=mbRight;
-      Form_Routiner.Setting.AufButtonHalt1:=[];
-      Form_Routiner.Setting.AufButtonHalt2:=mbMiddle;
-      Form_Routiner.Setting.HoldButtonSetting1:=[];
-      Form_Routiner.Setting.HoldButtonSetting2:=mbRight;
+      Form_Routiner.Setting.AufButton.Act1:=[];
+      Form_Routiner.Setting.AufButton.Act2:=mbLeft;
+      Form_Routiner.Setting.AufButton.ExtraAct1:=[ssCtrl];
+      Form_Routiner.Setting.AufButton.ExtraAct2:=mbLeft;
+      Form_Routiner.Setting.AufButton.Setting1:=[];
+      Form_Routiner.Setting.AufButton.Setting2:=mbRight;
+      Form_Routiner.Setting.AufButton.Halt1:=[];
+      Form_Routiner.Setting.AufButton.Halt2:=mbMiddle;
+      Form_Routiner.Setting.HoldButton.Setting1:=[];
+      Form_Routiner.Setting.HoldButton.Setting2:=mbRight;
     end;
   Self.CheckGroup_HookEnabled.Checked[0]:=true;
   Self.CheckGroup_HookEnabled.Checked[1]:=false;
@@ -206,20 +206,20 @@ procedure TFormRunPerformance.FormActivate(Sender: TObject);
 begin
   with Self.Setting do
     begin
-      AufButtonAct1:=Form_Routiner.Setting.AufButtonAct1;
-      AufButtonAct2:=Form_Routiner.Setting.AufButtonAct2;
+      AufButtonAct1:=Form_Routiner.Setting.AufButton.Act1;
+      AufButtonAct2:=Form_Routiner.Setting.AufButton.Act2;
       Self.Button_AufButtonAct.Caption:=MouseActToStr(AufButtonAct1,AufButtonAct2);
-      AufButtonExtraAct1:=Form_Routiner.Setting.AufButtonExtraAct1;
-      AufButtonExtraAct2:=Form_Routiner.Setting.AufButtonExtraAct2;
+      AufButtonExtraAct1:=Form_Routiner.Setting.AufButton.ExtraAct1;
+      AufButtonExtraAct2:=Form_Routiner.Setting.AufButton.ExtraAct2;
       Self.Button_AufButtonExtraAct.Caption:=MouseActToStr(AufButtonExtraAct1,AufButtonExtraAct2);
-      AufButtonSetting1:=Form_Routiner.Setting.AufButtonSetting1;
-      AufButtonSetting2:=Form_Routiner.Setting.AufButtonSetting2;
+      AufButtonSetting1:=Form_Routiner.Setting.AufButton.Setting1;
+      AufButtonSetting2:=Form_Routiner.Setting.AufButton.Setting2;
       Self.Button_AufButtonSetting.Caption:=MouseActToStr(AufButtonSetting1,AufButtonSetting2);
-      AufButtonHalt1:=Form_Routiner.Setting.AufButtonHalt1;
-      AufButtonHalt2:=Form_Routiner.Setting.AufButtonHalt2;
+      AufButtonHalt1:=Form_Routiner.Setting.AufButton.Halt1;
+      AufButtonHalt2:=Form_Routiner.Setting.AufButton.Halt2;
       Self.Button_AufButtonHalt.Caption:=MouseActToStr(AufButtonHalt1,AufButtonHalt2);
-      HoldButtonSetting1:=Form_Routiner.Setting.HoldButtonSetting1;
-      HoldButtonSetting2:=Form_Routiner.Setting.HoldButtonSetting2;
+      HoldButtonSetting1:=Form_Routiner.Setting.HoldButton.Setting1;
+      HoldButtonSetting2:=Form_Routiner.Setting.HoldButton.Setting2;
       Self.Button_HoldButtonSetting.Caption:=MouseActToStr(HoldButtonSetting1,HoldButtonSetting2);
     end;
 end;
