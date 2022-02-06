@@ -10,7 +10,7 @@ uses
   Forms, aufscript_frame,
   { you can add units after this }
   MessageRoutiner_Unit, form_settinglag, form_aufbutton, form_manual,
-  form_runperformance, unit_holdbuttonsetting, form_adapter;
+  form_runperformance, unit_holdbuttonsetting, form_adapter, unit_bitmapdata;
 
 {$R *.res}
 

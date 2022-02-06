@@ -1,3 +1,6 @@
+//{$define OldButtFiles}
+//0.1.6及以前版本的旧方法，只能接受相对根目录的脚本文件，伺机删除
+
 unit form_aufbutton;
 
 {$mode objfpc}{$H+}
@@ -99,7 +102,8 @@ begin
     end;
   if button.WindowChangeable then Self.ComboBox_Window.ItemIndex:=button.WindowIndex
   else Self.ComboBox_Window.ItemIndex:=button.WindowIndex;
-  //上面这里定义上没有很好的区分固有行号和实际窗体行号，所以以上表述不适用于WindowChangeable=true的状况
+  //上面这里定义上没有很好地区分固有行号和实际窗体行号
+  //所以以上表述不适用于WindowChangeable=true的状况
   Self.Button_FileName.Caption:=button.ScriptFile.CommaText;
   Self.MultiFile:=button.ScriptFile;
   Self.Syn_Show.Text:=button.cmd.Text;
@@ -109,7 +113,7 @@ end;
 
 procedure TAufButtonForm.FormCreate(Sender: TObject);
 var i:integer;
-    str:string;
+    str,path,tmppath:string;
 begin
   //Self.SynAufSyn:=TSynAufSyn.Create(Self);
   //Self.SynEdit_FileView.Highlighter:=Self.;
@@ -119,7 +123,17 @@ begin
   Self.Syn_Show.Lines.Clear;
   Self.Syn_Show.Lines.Add('define win, @win_name');
   Self.Syn_Show.Lines.Add('jmp +1');
-  for str in Self.MultiFile do Self.Syn_Show.Lines.Add('load "'+str+'"');
+  path:='';
+  for str in Self.MultiFile do
+    begin
+      tmppath:=ExtractFilePath(str);
+      if tmppath<>'' then path:=tmppath;
+      if pos(':',str)>0 then
+        Self.Syn_Show.Lines.Add('load "'+str+'"')
+      else
+        Self.Syn_Show.Lines.Add('load "'+path+ExtractFileName(str)+'"');
+    end;
+
   Self.Syn_Show.Lines.Add('end');
   Self.Syn_Show.Lines.Add('');
   //Self.Syn_Show.Lines.Add('load "scriptfile"');
@@ -159,7 +173,11 @@ begin
     begin
       Self.Button_FileName.Caption:=Self.OpenDialog.Files.CommaText;
       Self.MultiFile.CommaText:=Self.OpenDialog.Files.CommaText;
+      {$ifdef OldButtFiles}
       for i:=1 to Self.MultiFile.Count-1 do Self.MultiFile[i]:=ExtractFileName(Self.MultiFile[i]);
+      {$else}
+      for i:=0 to Self.MultiFile.Count-1 do Self.MultiFile[i]:=Self.OpenDialog.InitialDir+Self.MultiFile[i];
+      {$endif}
       //Self.Button_FileName.Caption:=Self.OpenDialog.FileName;
       Self.ReNewSyntax;
     end;
@@ -197,16 +215,23 @@ begin
   Self.Syn_Show.Lines.Add('define win, @'+Form_Routiner.Buttons[Self.ComboBox_Window.ItemIndex].expression);
   Self.Syn_Show.Lines.Add('jmp +'+IntToStr((Self.NowEditing as TAufButton).SkipLine));
   //Self.Syn_Show.Lines.Add('load "'+Self.Button_FileName.Caption+'"');
+  path:='';
   for str in Self.MultiFile do
     begin
       tmppath:=ExtractFilePath(str);
       if tmppath<>'' then path:=tmppath;
-      Self.Syn_Show.Lines.Add('load "'+path+ExtractFileName(str)+'"');
+      if pos(':',str)>0 then
+        Self.Syn_Show.Lines.Add('load "'+str+'"')
+      else
+        Self.Syn_Show.Lines.Add('load "'+path+ExtractFileName(str)+'"');
       try
         tmpStr.add('');
         tmpStr.add('//文件 "'+ExtractFileName(str)+'":');
         Application.ProcessMessages;
-        Self.SynEdit_FileView.Lines.LoadFromFile(path+ExtractFileName(str));
+        if pos(':',str)>0 then
+          Self.SynEdit_FileView.Lines.LoadFromFile(str)
+        else
+          Self.SynEdit_FileView.Lines.LoadFromFile(path+ExtractFileName(str));
         for stmp in Self.SynEdit_FileView.Lines do tmpStr.Add(stmp);
       except
         tmpStr.Add('//文件未正确打开');

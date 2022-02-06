@@ -1,5 +1,7 @@
 //{$define insert}
 
+//{$define HookAdapter}//form_adapter单元也有一个需要同步修改
+
 unit MessageRoutiner_Unit;
 
 {$mode objfpc}{$H+}
@@ -9,18 +11,18 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
   Windows, StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, Dos, LazUTF8
-  {$ifndef insert}, Apiglio_Useful, aufscript_frame, auf_ram_var{$endif};
+  {$ifndef insert},
+  Apiglio_Useful, aufscript_frame, auf_ram_var, form_adapter, unit_bitmapdata
+  {$endif};
 
 const
 
-  version_number='0.1.7';
+  version_number='0.1.8';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
   ButtonColumn   = 9;{不能大于31，否则设置保存会出问题}
   AufPopupCount  = 5;{不能大于254，也不推荐大于5}
-
-  MessageOffset  = 100;
 
   gap=5;
   sp_thick=6;
@@ -37,21 +39,20 @@ const
 type
 
   TLayoutSet = (Lay_Command=0,Lay_Advanced=1,Lay_Synchronic=2,Lay_Buttons=3,Lay_Recorder=4,Lay_Customer=5);
-  TRecTimeMode = (rtmWaittimer=0,rtmSleep=1);
-  TRecSyntaxMode = (smRapid=0,smChar=1,smMono=2);
+
 
   { TWindow }
   TWindow = class(TObject)
   public
     info:record
       hd:HWND;
-      name:utf8string;
+      name,classname:string;
       Left,Top,Height,Width:word;
     end;
     child:TList;
     parent:TWindow;
     node:TObject;
-    constructor Create(_hd:HWND;_name:utf8string;_Left,_Top,_Width,_Height:word);
+    constructor Create(_hd:HWND;_name,_classname:string;_Left,_Top,_Width,_Height:word);
   end;
 
 
@@ -171,11 +172,14 @@ type
     Button_Wnd_Record: TButton;
     Button_advanced: TButton;
     Button_Wnd_Synthesis: TButton;
+    CheckBox_ViewEnabled: TCheckBox;
     CheckGroup_KeyMouse: TCheckGroup;
     Edit_TimerOffset: TEdit;
     Edit_TreeView: TEdit;
+    ScrollBox_ImageView: TScrollBox;
     GroupBox_OffsetSetting: TGroupBox;
-    GroupBox_RecOption: TScrollBox;
+    ScrollBox_RecOption: TScrollBox;
+    Image_Ram: TImage;
     Label_MouseOri: TLabel;
     Label_filter: TLabel;
     Label_TimerOffset: TLabel;
@@ -247,6 +251,7 @@ type
     procedure Button_Wnd_RecordMouseLeave(Sender: TObject);
     procedure Button_Wnd_SynthesisMouseEnter(Sender: TObject);
     procedure Button_Wnd_SynthesisMouseLeave(Sender: TObject);
+    procedure CheckBox_ViewEnabledChange(Sender: TObject);
     procedure CheckGroup_KeyMouseItemClick(Sender: TObject; Index: integer);
     procedure CheckGroup_KeyMouseMouseEnter(Sender: TObject);
     procedure CheckGroup_KeyMouseMouseLeave(Sender: TObject);
@@ -270,7 +275,7 @@ type
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure GroupBox_RecOptionResize(Sender: TObject);
+    procedure ScrollBox_RecOptionResize(Sender: TObject);
     procedure Memo_TmpKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure Memo_TmpRecKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -296,7 +301,6 @@ type
     procedure MenuItem_Setting_LagClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
     procedure PageControlResize(Sender: TObject);
-    procedure RadioGroup_RecHookModeSelectionChanged(Sender: TObject);
     procedure RadioGroup_RecSyntaxModeSelectionChanged(Sender: TObject);
     procedure ScrollBox_AufButtonResize(Sender: TObject);
     procedure ScrollBox_HoldButtonResize(Sender: TObject);
@@ -399,7 +403,7 @@ var
 
 implementation
 uses form_settinglag, form_aufbutton, form_manual, form_runperformance,
-     unit_holdbuttonsetting, form_adapter;
+     unit_holdbuttonsetting;
 
 {$R *.lfm}
 
@@ -571,7 +575,7 @@ begin
       GetWindowInfo(hd,info);
       w:=info.rcWindow.Right-info.rcWindow.Left;
       h:=info.rcWindow.Bottom-info.rcWindow.Top;
-      new_wnd:=TWindow.Create(hd,wincptoutf8(title),info.rcWindow.Left,info.rcWindow.Top,w,h);
+      new_wnd:=TWindow.Create(hd,wincptoutf8(title),wincptoutf8(classname),info.rcWindow.Left,info.rcWindow.Top,w,h);
       new_wnd.parent:=Wnd;
       wnd.child.add(new_wnd);
       if title='' then title:=' ';
@@ -611,7 +615,7 @@ var hd:HWND;
 begin
   ClearWindows(WndRoot);
   hd:=GetDesktopWindow;//得到桌面窗口
-  WndRoot:=TWindow.Create(hd,'WndRoot',0,0,0,0);
+  WndRoot:=TWindow.Create(hd,'WndRoot','',0,0,0,0);
   WndRoot.parent:=nil;
   WndRoot.node:=nil;
 
@@ -634,7 +638,7 @@ begin
   AufScpt.writeln('- by Apiglio -');
 end;
 
-procedure getwind_str(Sender:TObject);
+procedure getwind_name(Sender:TObject);
 var AAuf:TAuf;
     AufScpt:TAufScript;
     wind_name:string;
@@ -649,14 +653,14 @@ begin
   try
     wind_name:=AufScpt.TryToString(AAuf.nargs[2]);
   except
-    AufScpt.send_error('警告：'+AAuf.nargs[0].arg+'第2个参数转为字符串失败，代码未执行！');
+    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
     exit;
   end;
   try
     tmp:=AufScpt.RamVar(AAuf.nargs[1]);
     if tmp.size<4 then raise Exception.Create('');
   except
-    AufScpt.send_error('警告：'+AAuf.nargs[0].arg+'第1个参数需要是四位及以上整型变量，代码未执行！');
+    AufScpt.send_error('警告：第1个参数需要是四位及以上整型变量，代码未执行！');
     exit;
   end;
 
@@ -685,7 +689,7 @@ begin
   try
     str:=AufScpt.TryToString(AAuf.nargs[2]);
   except
-    AufScpt.send_error('警告：'+AAuf.nargs[2].arg+'第2个参数转为字符串失败，代码未执行！');
+    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
     exit;
   end;
   str:=utf8towincp(str);
@@ -765,7 +769,7 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if AAuf.ArgsCount<4 then begin
-    AufScpt.send_error('警告：keybd指令需要3个参数，代码未执行！');
+    AufScpt.send_error('警告：指令需要3个参数，代码未执行！');
     exit;
   end;
   hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
@@ -773,7 +777,7 @@ begin
     buttonmode:=AufScpt.TryToString(AAuf.nargs[2]);
     if length(buttonmode)<>1 then raise Exception.Create('');
   except
-    AufScpt.send_error('警告：keybd指令第2参数需要是长度为1的字符串，代码未执行！');
+    AufScpt.send_error('警告：指令第2参数需要是长度为1的字符串，代码未执行！');
     exit;
   end;
   case AAuf.nargs[3].pre of
@@ -782,7 +786,7 @@ begin
             str:=AufScpt.TryToString(AAuf.nargs[3]);
             if length(str)<>1 then raise Exception.Create('');
           except
-            AufScpt.send_error('警告：keybd指令第3参数需要是长度为1的字符串（或字节类型），代码未执行！');
+            AufScpt.send_error('警告：指令第3参数需要是长度为1的字符串（或字节类型），代码未执行！');
             exit;
           end;
           key:=ord(str[1]);
@@ -790,7 +794,7 @@ begin
     else try
            key:=AufScpt.TryToDWord(AAuf.nargs[3]);
          except
-           AufScpt.send_error('警告：keybd指令第3参数需要是字节类型（或长度为1的字符串），代码未执行！');
+           AufScpt.send_error('警告：指令第3参数需要是字节类型（或长度为1的字符串），代码未执行！');
            exit;
          end;
   end;
@@ -800,7 +804,7 @@ begin
     'd','D':msg:=WM_KeyDown+alt_offset;
     'u','U':msg:=WM_KeyUp+alt_offset;
     else begin
-      AufScpt.send_error('警告：keybd指令第2参数错误，代码未执行！');
+      AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
       exit;
     end;
   end;
@@ -818,7 +822,7 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if AAuf.ArgsCount<4 then begin
-    AufScpt.send_error('警告：keypress指令需要3个参数，代码未执行！');
+    AufScpt.send_error('警告：指令需要3个参数，代码未执行！');
     exit;
   end;
   hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
@@ -830,9 +834,9 @@ begin
   else alt_offset:=0;
   delay:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
   if delay=0 then delay:=50;
-  PostMessage(hd,WM_KeyDown+alt_offset,key,(key shl 32)+1);
+  PostMessage(hd,WM_KeyDown+alt_offset,key,{(key shl 32)+}1);
   process_sleep(delay);
-  PostMessage(hd,WM_KeyUp+alt_offset,key,(key shl 32)+1);
+  PostMessage(hd,WM_KeyUp+alt_offset,key,{(key shl 32)+}1);
 
 end;
 
@@ -846,7 +850,7 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if AAuf.ArgsCount<5 then begin
-    AufScpt.send_error('警告：mouse指令需要4个参数，代码未执行！');
+    AufScpt.send_error('警告：指令需要4个参数，代码未执行！');
     exit;
   end;
   hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
@@ -854,19 +858,19 @@ begin
     buttonmode:=AufScpt.TryToString(AAuf.nargs[2]);
     if length(buttonmode)<>2 then raise Exception.Create('');
   except
-    AufScpt.send_error('警告：mouse指令第2参数需要是长度为2的字符串，代码未执行！');
+    AufScpt.send_error('警告：指令第2参数需要是长度为2的字符串，代码未执行！');
     exit;
   end;
   try
     x:=AufScpt.TryToDWord(AAuf.nargs[3]);
   except
-    AufScpt.send_error('警告：mouse指令第3参数错误，代码未执行！');
+    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
     exit;
   end;
   try
     y:=AufScpt.TryToDWord(AAuf.nargs[4]);
   except
-    AufScpt.send_error('警告：mouse指令第4参数错误，代码未执行！');
+    AufScpt.send_error('警告：指令第4参数错误，代码未执行！');
     exit;
   end;
   case lowercase(buttonmode) of
@@ -880,7 +884,7 @@ begin
     'mb':msg:=WM_MBUTTONDBLCLK;
     'rb':msg:=WM_RBUTTONDBLCLK;
     else begin
-      AufScpt.send_error('警告：mouse指令第2参数错误，代码未执行！');
+      AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
       exit;
     end;
   end;
@@ -907,25 +911,25 @@ begin
     buttonmode:=AufScpt.TryToString(AAuf.nargs[2]);
     if length(buttonmode)<>1 then raise Exception.Create('');
   except
-    AufScpt.send_error('警告：mouseclk指令第2参数需要是长度为1的字符串，代码未执行！');
+    AufScpt.send_error('警告：指令第2参数需要是长度为1的字符串，代码未执行！');
     exit;
   end;
   try
     x:=AufScpt.TryToDWord(AAuf.nargs[3]);
   except
-    AufScpt.send_error('警告：mouseclk指令第3参数错误，代码未执行！');
+    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
     exit;
   end;
   try
     y:=AufScpt.TryToDWord(AAuf.nargs[4]);
   except
-    AufScpt.send_error('警告：mouseclk指令第4参数错误，代码未执行！');
+    AufScpt.send_error('警告：指令第4参数错误，代码未执行！');
     exit;
   end;
   try
     delay:=AufScpt.TryToDWord(AAuf.nargs[5]);
   except
-    AufScpt.send_error('警告：mouseclk指令第5参数错误，代码未执行！');
+    AufScpt.send_error('警告：指令第5参数错误，代码未执行！');
     exit;
   end;
   if delay=0 then delay:=50;
@@ -934,7 +938,7 @@ begin
     'm','M':msg:=WM_MButtonDown;
     'r','R':msg:=WM_RButtonDown;
     else begin
-      AufScpt.send_error('警告：mouse指令第2参数错误，代码未执行！');
+      AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
       exit;
     end;
   end;
@@ -946,6 +950,179 @@ begin
 
 end;
 
+function FunningColorExchange(ori:dword):dword;//  ABCD -> CBAD
+var arr:array[0..3]of byte;
+    tmp:byte;
+    ptr:pbyte;
+begin
+  ptr:=@arr;
+  pdword(ptr)^:=ori;
+  tmp:=arr[2];
+  arr[2]:=arr[0];
+  arr[0]:=tmp;
+  result:=pdword(ptr)^;
+end;
+
+procedure _GetPixel(Sender:TObject);//getpixel hwnd,col,row,@var
+var hd:longint;
+    x,y:word;
+    res:dword;
+    tmp:TAufRamVar;
+    AAuf:TAuf;
+    AufScpt:TAufScript;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if AAuf.ArgsCount<5 then begin
+    AufScpt.send_error('警告：指令需要4个参数，代码未执行！');
+    exit;
+  end;
+  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
+  if hd=0 then begin     AufScpt.send_error('警告：窗体句柄无效，代码未执行！');exit end;
+  hd:=GetDC(hd);
+  if hd=0 then begin     AufScpt.send_error('警告：窗体句柄无对应HDC，代码未执行！');exit end;
+  try
+    x:=AufScpt.TryToDWord(AAuf.nargs[2]);
+  except
+    AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
+    exit;
+  end;
+  try
+    y:=AufScpt.TryToDWord(AAuf.nargs[3]);
+  except
+    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
+    exit;
+  end;
+  try
+    tmp:=AufScpt.RamVar(AAuf.nargs[4]);
+    if (tmp.size<4) or (tmp.VarType<>ARV_FixNum) then raise Exception.Create('');
+  except
+    AufScpt.send_error('警告：指令第4参数不是四位以上整数变量，代码未执行！');
+    exit;
+  end;
+  res:=FunningColorExchange(GetPixel(hd,x,y));
+  dword_to_arv(res,tmp);
+end;
+
+procedure _GetPixelRect(Sender:TObject);//getrect hwnd,x1,x2,y1,y2,@var
+var hd:longint;
+    x1,x2,y1,y2,x,y,px,py:word;
+    img_size:dword;
+    tmp:TAufRamVar;
+    AAuf:TAuf;
+    AufScpt:TAufScript;
+    BDBitmapData:TBDBitmapData;
+    tp,mp:dword;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if AAuf.ArgsCount<7 then begin
+    AufScpt.send_error('警告：指令需要6个参数，代码未执行！');
+    exit;
+  end;
+  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
+  if hd=0 then begin     AufScpt.send_error('警告：窗体句柄无效，代码未执行！');exit end;
+  try
+    x1:=AufScpt.TryToDWord(AAuf.nargs[2]);
+  except
+    AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
+    exit;
+  end;
+  try
+    x2:=AufScpt.TryToDWord(AAuf.nargs[3]);
+  except
+    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
+    exit;
+  end;
+  try
+    y1:=AufScpt.TryToDWord(AAuf.nargs[4]);
+  except
+    AufScpt.send_error('警告：指令第4参数错误，代码未执行！');
+    exit;
+  end;
+  try
+    y2:=AufScpt.TryToDWord(AAuf.nargs[5]);
+  except
+    AufScpt.send_error('警告：指令第5参数错误，代码未执行！');
+    exit;
+  end;
+  if (x2<x1) or (y2<y1) then begin AufScpt.send_error('警告：未选中任何一个像素，代码未执行！');exit end;
+  img_size:=(x2-x1+1)*(y2-y1+1);
+  try
+    tmp:=AufScpt.RamVar(AAuf.nargs[6]);
+    if (tmp.size<>img_size*4) or (tmp.VarType<>ARV_FixNum) then raise Exception.Create('');
+  except
+    AufScpt.send_error('警告：指令第6参数不是'+IntToStr(img_size*4)+'位整数变量，代码未执行！');
+    exit;
+  end;
+  BDBitmapData:=TBDBitmapData.Create;
+  try
+    BDBitmapData.CopyFormScreen(hd,x1,y1,x2-x1+1,y2-y1+1);
+    px:=BDBitmapData.Width;
+    py:=BDBitmapData.Height;
+    for y:=y1 to y2 do
+      for x:=x1 to x2 do
+        begin
+          tp:=4*((x2-x1+1)*(y-y1)+(x-x1));
+          mp:=3*(px*(py-(y-y1)-1)+(x-x1));
+          pbyte(tmp.Head+tp)^:=(pbyte(BDBitmapData.Bits+mp))^;
+          pbyte(tmp.Head+tp+1)^:=(pbyte(BDBitmapData.Bits+mp+1))^;
+          pbyte(tmp.Head+tp+2)^:=(pbyte(BDBitmapData.Bits+mp+2))^;
+          pbyte(tmp.Head+tp+3)^:=$ff;
+        end;
+  finally
+    BDBitmapData.Free;
+  end;
+end;
+
+
+procedure _RamImage(Sender:TObject);//ramimg col,row,@var
+var x,y:word;
+    pos,pot:longint;
+    dit:pbyte;
+    tmp:TAufRamVar;
+    AAuf:TAuf;
+    AufScpt:TAufScript;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if AAuf.ArgsCount<4 then begin
+    AufScpt.send_error('警告：指令需要3个参数，代码未执行！');
+    exit;
+  end;
+  try
+    x:=AufScpt.TryToDWord(AAuf.nargs[1]);
+  except
+    AufScpt.send_error('警告：指令第1参数错误，代码未执行！');
+    exit;
+  end;
+  try
+    y:=AufScpt.TryToDWord(AAuf.nargs[2]);
+  except
+    AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
+    exit;
+  end;
+  try
+    tmp:=AufScpt.RamVar(AAuf.nargs[3]);
+    if (tmp.size<>x*y*4) then raise Exception.Create('');
+  except
+    AufScpt.send_error('警告：指令第3参数不是'+IntToStr(x*y*4)+'位整数变量，代码未执行！');
+    exit;
+  end;
+  Form_Routiner.Image_Ram.Picture.Free;
+  Form_Routiner.Image_Ram.Picture:=TPicture.Create;
+  Form_Routiner.Image_Ram.Picture.BitMap.PixelFormat:=pf32bit;
+  Form_Routiner.Image_Ram.Picture.Bitmap.SetSize(x,y);
+  CopyMemory(Form_Routiner.Image_Ram.Picture.Bitmap.ScanLine[0],tmp.Head,tmp.size);
+
+  Form_Routiner.Image_Ram.Picture.Bitmap.SaveToFile('ram.bmp');
+  Form_Routiner.Image_Ram.Refresh;
+  Form_Routiner.ScrollBox_SynchronicResize(Form_Routiner.ScrollBox_Synchronic);
+  Form_Routiner.ScrollBox_WndListResize(Form_Routiner.ScrollBox_Synchronic);
+  Form_Routiner.ScrollBox_WndListResize(Form_Routiner.ScrollBox_WndList);
+  Form_Routiner.ScrollBox_RecOptionResize(Form_Routiner.ScrollBox_RecOption);
+
+end;
 
 procedure Routiner_Setting(Sender:TObject);
 var AufScpt:TAufScript;
@@ -997,7 +1174,18 @@ begin
               try Form_Routiner.Splitter_RecH.Top:=StrToInt(AAuf.nargs[3].arg);
               except AufScpt.send_error('参数错误，未成功设置！');end;
             end;
-          else AufScpt.send_error('Axis之后需要使用MainV=,SyncV=,ButtonV=,LeftH=,RightH=,RecH=进行设置。');
+          'codev=':
+            begin
+              try
+                if AAuf.ArgsCount<5 then
+                  fo:=-1
+                else
+                  fo:=StrToInt(AAuf.nargs[4].arg);
+                if (fo<0) or (fo>RuleCount) then fo:=Form_Routiner.PageControl.PageIndex;
+                Form_Routiner.AufScriptFrames[fo].Frame.TrackBar.Position:=StrToInt(AAuf.nargs[3].arg);
+              except AufScpt.send_error('参数错误，未成功设置！');end;
+            end;
+          else AufScpt.send_error('Axis之后需要使用MainV=,SyncV=,ButtonV=,LeftH=,RightH=,RecH=,CodeV=进行设置。');
         end;
       end;
     'form':
@@ -1043,6 +1231,7 @@ begin
         except AufScpt.send_error('Layout之后的参数需要是数字，未设置成功。');exit end;
         Form_Routiner.Layout.LayoutCode:=TLayoutSet(fo);
         Form_Routiner.SetLayout(byte(Form_Routiner.Layout.LayoutCode));
+        Form_Routiner.FormResize(Form_Routiner);
       end;
     'customer_layout':
       begin
@@ -1167,7 +1356,10 @@ begin
   AAuf.Script.add_func('mouseclk',@_MouseClk,'hwnd,"L/M/R",x,y,delay','向hwnd窗口发送一对间隔delay毫秒的鼠标消息');
   AAuf.Script.add_func('post',@PostM,'hwnd,msg,w,l','调用Postmessage');
   AAuf.Script.add_func('send',@SendM,'hwnd,msg,w,l','调用Sendmessage');
-  AAuf.Script.add_func('getwnd_v',@getwind_str,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
+  AAuf.Script.add_func('getwnd_v',@getwind_name,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
+  AAuf.Script.add_func('getpixel',@_GetPixel,'hwnd,x,y,out_var','返回窗体指定像素点颜色');
+  AAuf.Script.add_func('getrect',@_GetPixelRect,'hwnd,x1,x2,y1,y2,out_var','返回窗体指定矩形范围内像素点颜色');
+  AAuf.Script.add_func('ramimg',@_RamImage,'col,row,in_var','根据内存变量显示图片');
 
 end;
 procedure GlobalExpressionInitialize;
@@ -1414,11 +1606,12 @@ end;
 
 { TWindow }
 
-constructor TWindow.Create(_hd:HWND;_name:utf8string;_Left,_Top,_Width,_Height:word);
+constructor TWindow.Create(_hd:HWND;_name,_classname:string;_Left,_Top,_Width,_Height:word);
 begin
   inherited Create;
   info.hd:=_hd;
   info.name:=_name;
+  info.classname:=_classname;
   info.Left:=_Left;
   info.Top:=_Top;
   info.Width:=_Width;
@@ -1432,7 +1625,11 @@ end;
 procedure TForm_Routiner.MouseHook;
 begin
   if Self.MouseHookEnabled = true then exit;
+  {$ifndef HookAdapter}
   SetCallHandleM(Self.Handle);
+  {$else}
+  SetCallHandleM(AdapterForm.Handle);
+  {$endif}
   if not StartHookM(WM_USER+MessageOffset) then
   begin
     ShowMessage('挂钩失败！');
@@ -1440,6 +1637,9 @@ begin
     SetTrackMouseMoveM(1);
     Self.MouseHookEnabled:=true;
     Self.StatusBar.Panels.Items[2].Text:='鼠标';
+    {$ifdef HookAdpater}
+    FormRunPerformance.CheckGroup_HookEnabled.Checked[1]:=true;
+    {$endif}
   end;
 end;
 procedure TForm_Routiner.MouseUnHook;
@@ -1448,17 +1648,27 @@ begin
   StopHookM;
   Self.MouseHookEnabled:=false;
   Self.StatusBar.Panels.Items[2].Text:='';
+  {$ifdef HookAdpater}
+  FormRunPerformance.CheckGroup_HookEnabled.Checked[1]:=false;
+  {$endif}
 end;
 procedure TForm_Routiner.KeybdHook;
 begin
   if Self.KeybdHookEnabled = true then exit;
+  {$ifndef HookAdapter}
   SetCallHandleK(Self.Handle);
+  {$else}
+  SetCallHandleK(AdapterForm.Handle);
+  {$endif}
   if not StartHookK(WM_USER+MessageOffset) then
   begin
     ShowMessage('挂钩失败！');
   end else begin
     Self.KeybdHookEnabled:=true;
     Self.StatusBar.Panels.Items[1].Text:='键盘';
+    {$ifdef HookAdpater}
+    FormRunPerformance.CheckGroup_HookEnabled.Checked[0]:=true;
+    {$endif}
   end;
 end;
 procedure TForm_Routiner.KeybdUnHook;
@@ -1467,6 +1677,9 @@ begin
   StopHookK;
   Self.KeybdHookEnabled:=false;
   Self.StatusBar.Panels.Items[1].Text:='';
+  {$ifdef HookAdpater}
+  FormRunPerformance.CheckGroup_HookEnabled.Checked[0]:=false;
+  {$endif}
 end;
 
 {$define ByteModeRec}
@@ -1657,19 +1870,16 @@ var sav:TMemoryStream;
     begin
       sav.Position:=pos;
       result:=sav.ReadByte;
-      //MessageBox(0,PChar('get_byte('+IntToStr(pos)+')='+IntToStr(result)),'',MB_OK);
     end;
     function get_long(pos:int64):longint;
     begin
       sav.Position:=pos;
       result:=sav.ReadDWord;
-      //MessageBox(0,PChar('get_long('+IntToStr(pos)+')='+IntToStr(result)),'',MB_OK);
     end;
     function get_str(pos:int64):string;
     begin
       sav.Position:=pos;
       result:=sav.ReadAnsiString;
-      //MessageBox(0,PChar(result),'',MB_OK);
     end;
 begin
   {$ifdef ByteModeRec}
@@ -1711,10 +1921,6 @@ begin
     if get_byte(12288+5) and $80 <> 0 then Self.Splitter_RecH.Top:=get_long(12288+128+20);
     if get_byte(12288+1) and $80 <> 0 then Self.Splitter_SyncV.Left:=get_long(12288+128+4);
     if get_byte(12288+2) and $80 <> 0 then Self.Splitter_ButtonV.Left:=get_long(12288+128+8);
-    {
-    if get_byte(12288+6) and $80 <> 0 then 预留轴①  :=get_long(12288+128+24);
-    if get_byte(12288+7) and $80 <> 0 then 预留轴②  :=get_long(12288+128+28);
-    }
     ww:=get_long(12288+32+6*4);
     hh:=get_long(12288+32+7*4);
     if ww*hh<>0 then begin
@@ -1736,7 +1942,6 @@ begin
         taddr:=256 + i*8;
         stmp:='XXXX';
         for j:=0 to 3 do stmp[j+1]:=chr(get_byte(taddr+j));
-        //while stmp[length(stmp)]=#0 do delete(stmp,length(stmp),1);
         Self.HoldButtons[i].Caption:=wincptoutf8(stmp);
         for j:=0 to 3 do Self.HoldButtons[i].keymessage[j]:=get_byte(taddr+4+j);
       end;
@@ -1801,7 +2006,7 @@ end;
 procedure TForm_Routiner.WindowsFilter;
 begin
   TreeView_Wnd.items.clear;
-  WndFinder(Edit_TreeView.Text);
+  WndFinder(utf8towincp(Edit_TreeView.Text));
 end;
 
 procedure TForm_Routiner.CurrentAufStrAdd(str:string);inline;
@@ -2197,12 +2402,6 @@ begin
   Self.AufScriptFrames[PageControl.ActivePageIndex].Frame.FrameResize(nil);
 end;
 
-procedure TForm_Routiner.RadioGroup_RecHookModeSelectionChanged(Sender: TObject
-  );
-begin
-  (Sender as TRadioGroup).ItemIndex:=0;
-end;
-
 procedure TForm_Routiner.RadioGroup_RecSyntaxModeSelectionChanged(
   Sender: TObject);
 var radiogroup:TRadioGroup;
@@ -2284,6 +2483,18 @@ begin
       Self.CheckBoxs[i].Left:=SyncW-100;
       Self.CheckBoxs[i].Top:=Self.Buttons[i].Top+3;
     end;
+  Self.ScrollBox_ImageView.Top:=Self.CheckBoxs[SynCount].Top+Self.CheckBoxs[SynCount].Height+gap;
+  Self.ScrollBox_ImageView.Height:=Self.ScrollBox_Synchronic.Height-Self.ScrollBox_ImageView.Top-gap;
+  if Self.ScrollBox_ImageView.Height<48 then Self.CheckBox_ViewEnabled.Visible:=false
+  else Self.CheckBox_ViewEnabled.Visible:=true;
+  Self.Image_Ram.Height:=max(0,Self.ScrollBox_ImageView.Height-48);
+  with Self.Image_Ram do Width:=Height * Picture.Bitmap.Width div Picture.Bitmap.Height;
+  if Self.Image_Ram.Width+2*gap>(Sender as TScrollBox).Width then
+    begin
+      Self.Image_Ram.Width:=(Sender as TScrollBox).Width-2*gap;
+      with Self.Image_Ram do Height:=Width * Picture.Bitmap.Height div Picture.Bitmap.Width;
+    end;
+
 end;
 
 procedure TForm_Routiner.ScrollBox_WndListResize(Sender: TObject);
@@ -2354,7 +2565,7 @@ begin
 
 end;
 
-procedure TForm_Routiner.GroupBox_RecOptionResize(Sender: TObject);
+procedure TForm_Routiner.ScrollBox_RecOptionResize(Sender: TObject);
 begin
   ////
 end;
@@ -2571,10 +2782,14 @@ begin
   end;
   SetTrackMouseMoveM(1);
   }
+
+  //删去，改成在AdapterFormCreate中Hook
+  {$ifndef HookAdapter}
   Self.KeybdHookEnabled:=false;
   Self.MouseHookEnabled:=false;
   Self.KeybdHook;
   //Self.MouseHook;//初始不开鼠标钩子
+  {$endif}
 
   //AdapterForm.Show;
 
@@ -2660,7 +2875,7 @@ begin
   Self.ScrollBox_AufButtonResize(Self.ScrollBox_AufButton);
   Self.ScrollBox_HoldButtonResize(Self.ScrollBox_HoldButton);
   Self.ScrollBox_WndListResize(Self.ScrollBox_WndList);
-  Self.GroupBox_RecOptionResize(Self.GroupBox_RecOption);
+  Self.ScrollBox_RecOptionResize(Self.ScrollBox_RecOption);
 end;
 
 procedure TForm_Routiner.Button_advancedClick(Sender: TObject);
@@ -2757,6 +2972,11 @@ end;
 procedure TForm_Routiner.Button_Wnd_SynthesisMouseLeave(Sender: TObject);
 begin
   Self.ShowManual('');
+end;
+
+procedure TForm_Routiner.CheckBox_ViewEnabledChange(Sender: TObject);
+begin
+  Self.Image_Ram.Visible:=(Sender as TCheckBox).Checked;
 end;
 
 procedure TForm_Routiner.CheckGroup_KeyMouseItemClick(Sender: TObject;

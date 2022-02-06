@@ -1,27 +1,27 @@
 object AdapterForm: TAdapterForm
-  Left = 0
-  Height = 213
-  Top = 0
-  Width = 466
+  Left = 729
+  Height = 467
+  Top = 224
+  Width = 534
   Caption = 'Apiglio Message Routiner Adapter'
-  ClientHeight = 213
-  ClientWidth = 466
+  ClientHeight = 467
+  ClientWidth = 534
   DesignTimePPI = 120
   OnCreate = FormCreate
   OnHide = FormHide
   OnShow = FormShow
   LCLVersion = '1.8.4.0'
-  object Memo1: TMemo
+  object Memo_debug: TMemo
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = Owner
     AnchorSideRight.Control = Owner
     AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = Button_Clear
     Left = 8
-    Height = 161
-    Top = 8
-    Width = 450
-    Anchors = [akTop, akLeft, akRight, akBottom]
+    Height = 100
+    Top = 323
+    Width = 518
+    Anchors = [akLeft, akRight, akBottom]
     BorderSpacing.Left = 8
     BorderSpacing.Top = 8
     BorderSpacing.Right = 8
@@ -37,8 +37,8 @@ object AdapterForm: TAdapterForm
     AnchorSideBottom.Side = asrBottom
     Left = 8
     Height = 28
-    Top = 177
-    Width = 220
+    Top = 431
+    Width = 254
     Anchors = [akLeft, akRight, akBottom]
     BorderSpacing.Left = 8
     BorderSpacing.Right = 8
@@ -53,9 +53,9 @@ object AdapterForm: TAdapterForm
     AnchorSideTop.Control = Button_Clear
     AnchorSideBottom.Control = Button_Clear
     AnchorSideBottom.Side = asrBottom
-    Left = 230
+    Left = 264
     Height = 28
-    Top = 177
+    Top = 431
     Width = 6
     Align = alNone
     Anchors = [akTop, akLeft, akBottom]
@@ -66,10 +66,10 @@ object AdapterForm: TAdapterForm
     AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
-    Left = 238
+    Left = 272
     Height = 28
-    Top = 177
-    Width = 220
+    Top = 431
+    Width = 254
     Anchors = [akLeft, akRight, akBottom]
     BorderSpacing.Left = 8
     BorderSpacing.Right = 8
