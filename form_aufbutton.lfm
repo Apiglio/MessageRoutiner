@@ -1,7 +1,7 @@
 object AufButtonForm: TAufButtonForm
-  Left = 1250
+  Left = 891
   Height = 385
-  Top = 461
+  Top = 443
   Width = 544
   BorderIcons = [biSystemMenu]
   Caption = '面板按键设置'
@@ -604,6 +604,15 @@ object AufButtonForm: TAufButtonForm
     Caption = '重置修改'
     OnClick = Button_ReEditClick
     TabOrder = 6
+  end
+  object Button_Stop: TButton
+    Left = 384
+    Height = 28
+    Top = 344
+    Width = 96
+    Caption = '强制结束'
+    OnClick = Button_StopClick
+    TabOrder = 7
   end
   object OpenDialog: TOpenDialog
     left = 432

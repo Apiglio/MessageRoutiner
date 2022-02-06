@@ -36,7 +36,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="6">
+    <Units Count="9">
       <Unit0>
         <Filename Value="MessageRoutiner.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -76,6 +76,23 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Form_Manual"/>
       </Unit5>
+      <Unit6>
+        <Filename Value="form_runperformance.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormRunPerformance"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="format_layout_option.txt"/>
+        <IsPartOfProject Value="True"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="unit_holdbuttonsetting.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form_HoldButtonSetting"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit8>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

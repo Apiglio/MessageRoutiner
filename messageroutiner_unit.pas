@@ -13,9 +13,9 @@ uses
 
 const
 
-  version_number='0.1.0-pre2';
+  version_number='0.1.0-pre4';
 
-  RuleCount = 9;
+  RuleCount = 9;{不能大于31，否则设置保存会出问题}
   SynCount = 4;{不能大于9，也不推荐9}
   ButtonColumn = 9;{不能大于31，否则设置保存会出问题}
 
@@ -25,6 +25,7 @@ const
   ARVControlW=150;
   SynchronicH=28;
   MainMenuH=24;
+  MinAufButtonW=450;
 
   {
 
@@ -80,17 +81,20 @@ type
       constructor Create(AOwner:TComponent);
   end;
   TARVCheckBox = class(TCheckBox)
-    published
-      TheLabel:TLabel;
     public
       procedure CheckOnChange(Sender:TObject);
   end;
-  TARVLabel = class(TLabel)
-  published
-    CheckBox:TCheckBox;
+
+  THoldButton = class(TButton)
   public
-    procedure LabelOnClick(Sender:TObject);
+    keymessage:array[0..3]of byte;
+  private
+    procedure HoldMouseDown(Sender: TObject;Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure HoldMouseUp(Sender: TObject;Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+  public
+    constructor Create(AOwner:TComponent);
   end;
+
   TTimerLag = class(TTimer)
   public
     next_message:record
@@ -145,7 +149,11 @@ type
     GroupBox_RecOption: TScrollBox;
     Label_filter: TLabel;
     MainMenu: TMainMenu;
-    Memo_tmp: TMemo;
+    WindowPosPad: TShape;
+    MenuItem_Exit: TMenuItem;
+    MenuItem2: TMenuItem;
+    MenuItem_Func_Basic: TMenuItem;
+    MenuItem_RunPerformance: TMenuItem;
     MenuItem_Func_Rec: TMenuItem;
     MenuItem_Func_Buttons: TMenuItem;
     MenuItem_Func_Diff: TMenuItem;
@@ -169,6 +177,8 @@ type
     RadioGroup_RecHookMode: TRadioGroup;
     RadioGroup_RecSyntaxMode: TRadioGroup;
     TreeView_Wnd: TTreeView;
+    HoldButtonScrollBox: TScrollBox;
+    WindowPosPadWind: TShape;
     {
     procedure Button_endClick(Sender: TObject);
     procedure Button_runClick(Sender: TObject);
@@ -176,6 +186,22 @@ type
     procedure Button_advancedClick(Sender: TObject);
     procedure Button_excelClick(Sender: TObject);
     procedure Button_excelMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button_Tmp_DMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button_Tmp_DMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button_Tmp_LMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button_Tmp_LMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button_Tmp_RMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button_Tmp_RMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button_Tmp_UMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Button_Tmp_UMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure Button_TreeViewFreshClick(Sender: TObject);
     procedure Button_Wnd_RecordClick(Sender: TObject);
@@ -188,7 +214,10 @@ type
     procedure Memo_cmdKeyPress(Sender: TObject; var Key: char);
 
     procedure GetMessageUpdate(var Msg:TMessage);message WM_USER+100;
+    procedure Memo_tmpChange(Sender: TObject);
+    procedure MenuItem_ExitClick(Sender: TObject);
     procedure MenuItem_Func_AufClick(Sender: TObject);
+    procedure MenuItem_Func_BasicClick(Sender: TObject);
     procedure MenuItem_Func_ButtonsClick(Sender: TObject);
     procedure MenuItem_Func_DiffClick(Sender: TObject);
     procedure MenuItem_Func_KeyClick(Sender: TObject);
@@ -201,11 +230,14 @@ type
     procedure MenuItem_Lay_SynChronicClick(Sender: TObject);
     procedure MenuItem_Opt_AboutClick(Sender: TObject);
     procedure MenuItem_Opt_licenceClick(Sender: TObject);
+    procedure MenuItem_RunPerformanceClick(Sender: TObject);
     procedure MenuItem_Setting_LagClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
     procedure PageControlResize(Sender: TObject);
     procedure RadioGroup_RecHookModeSelectionChanged(Sender: TObject);
     procedure RadioGroup_RecSyntaxModeSelectionChanged(Sender: TObject);
+    procedure TreeView_WndChange(Sender: TObject; Node: TTreeNode);
+    procedure WindowPosPadViceChange(Sender: TObject);
     procedure WindowsFilter;
 
   private
@@ -218,10 +250,11 @@ type
     { public declarations }
     WinAuf:array[0..SynCount]of TWinAuf;//每个窗口的专用Auf
     AufButtons:array[0..SynCount,0..ButtonColumn]of TAufButton;//面板按键
+    HoldButtons:array[0..31]of THoldButton;//鼠标代键
 
     Edits:array[0..SynCount]of TARVEdit;
     Buttons:array[0..SynCount]of TARVButton;
-    Labels:array[0..SynCount]of TARVLabel;
+    //Labels:array[0..SynCount]of TARVLabel;
     CheckBoxs:array[0..SynCount]of TARVCheckBox;
     AufScriptFrames:array[0..RuleCount] of TAufScriptFrame;
     Synthesis_mode:boolean;//为真时向所有选中的TARVButton.sel_hwnd窗体广播
@@ -247,14 +280,18 @@ type
     procedure SaveOption;
     procedure LoadOption;
     procedure SetLayout(layout:byte);
+    procedure ReDrawWndPos;
   end;
 
 var
   Form_Routiner: TForm_Routiner;
   WndRoot:TWindow;
+  Desktop:record
+    Width,Height:longint;
+  end;
 
 implementation
-uses form_settinglag, form_aufbutton, form_manual;
+uses form_settinglag, form_aufbutton, form_manual, form_runperformance, unit_holdbuttonsetting;
 
 {$R *.lfm}
 
@@ -356,17 +393,17 @@ procedure GetChildWindows(wnd:TWindow;filter:string='');
 var hd:HWND;
     info:tagWindowInfo;
     w,h:word;
-    title:PChar;
+    title:string;
+    ttmp:{PChar}array[0..199]of char;
     new_wnd:TWindow;
 begin
   hd:=GetWindow(wnd.info.hd,GW_CHILD);
-  //renew_writeln('First='+IntToHex(hd,8)+title);
-  //Application.ProcessMessages;
-
   while hd<>0 do
     begin
-      getmem(title,200);
-      GetWindowText(hd,title,200);
+      //getmem(ttmp,200);
+      GetWindowText(hd,ttmp,200);
+      title:=ttmp;
+      ////freemem(ttmp);
       title:=Usf.ExPChar(wincptoutf8(title));
       GetWindowInfo(hd,info);
       w:=info.rcWindow.Right-info.rcWindow.Left;
@@ -376,17 +413,18 @@ begin
       wnd.child.add(new_wnd);
 
       IF (filter='') or (pos(lowercase(filter),lowercase(title))>0) THEN BEGIN
-
-      if (new_wnd.parent.node)=nil then
-        Form_Routiner.TreeView_Wnd.Items.add(nil,'['+IntToHex(hd,8)+']'+title)
-      else
-        Form_Routiner.TreeView_Wnd.Items.addchild((new_wnd.parent.node) as TTreeNode,'['+IntToHex(hd,8)+']'+title);
-      new_wnd.node:=Form_Routiner.TreeView_Wnd.Items[Form_Routiner.TreeView_Wnd.Items.count-1];
-      (new_wnd.node as TTreeNode).data:=new_wnd;
-
-
-      GetChildWindows(new_wnd);
-
+        if (new_wnd.parent.node)=nil then begin
+          Form_Routiner.TreeView_Wnd.Items.add(
+            nil,
+            '['+IntToHex(hd,8)+']'+title)
+        end else begin
+          Form_Routiner.TreeView_Wnd.Items.addchild(
+            (new_wnd.parent.node) as TTreeNode,
+            '['+IntToHex(hd,8)+']'+title);
+        end;
+        new_wnd.node:=Form_Routiner.TreeView_Wnd.Items[Form_Routiner.TreeView_Wnd.Items.count-1];
+        (new_wnd.node as TTreeNode).data:=new_wnd;
+        GetChildWindows(new_wnd);
       END;
 
       hd:=GetNextWindow(hd,GW_HWNDNEXT);
@@ -397,12 +435,17 @@ end;
 
 procedure WndFinder(filter:string='');
 var hd:HWND;
+    info:tagWindowInfo;
 begin
   ClearWindows(WndRoot);
   hd:=GetDesktopWindow;//得到桌面窗口
   WndRoot:=TWindow.Create(hd,'WndRoot',0,0,0,0);
   WndRoot.parent:=nil;
   WndRoot.node:=nil;
+
+  GetWindowInfo(hd,info);
+  Desktop.Width:=info.rcWindow.Right-info.rcWindow.Left;
+  Desktop.Height:=info.rcWindow.Bottom-info.rcWindow.Top;
 
   GetChildWindows(WndRoot,filter);
 end;
@@ -533,17 +576,160 @@ begin
 end;
 procedure GlobalExpressionInitialize;
 begin
+  GlobalExpressionList.TryAddExp('WM_CREATE',narg('','1',''));
+  GlobalExpressionList.TryAddExp('WM_DESTROY',narg('','2',''));
+  GlobalExpressionList.TryAddExp('WM_MOVE',narg('','3',''));
+  GlobalExpressionList.TryAddExp('WM_SIZE',narg('','5',''));
+  GlobalExpressionList.TryAddExp('WM_ACTIVATE',narg('','6',''));
+  GlobalExpressionList.TryAddExp('WM_SETFOCUS',narg('','7',''));
+  GlobalExpressionList.TryAddExp('WM_KILLFOCUS',narg('','8',''));
+  GlobalExpressionList.TryAddExp('WM_ENABLE',narg('','10',''));
+  GlobalExpressionList.TryAddExp('WM_SETREDRAW',narg('','11',''));
+  GlobalExpressionList.TryAddExp('WM_SETTEXT',narg('','12',''));
+  GlobalExpressionList.TryAddExp('WM_GETTEXT',narg('','13',''));
+  GlobalExpressionList.TryAddExp('WM_GETTEXTLENGTH',narg('','14',''));
+  GlobalExpressionList.TryAddExp('WM_PAINT',narg('','15',''));
+  GlobalExpressionList.TryAddExp('WM_CLOSE',narg('','16',''));
+  GlobalExpressionList.TryAddExp('WM_QUERYENDSESSION',narg('','17',''));
+  GlobalExpressionList.TryAddExp('WM_QUIT',narg('','18',''));
+  GlobalExpressionList.TryAddExp('WM_QUERYOPEN',narg('','19',''));
+  GlobalExpressionList.TryAddExp('WM_ERASEBKGND',narg('','20',''));
+  GlobalExpressionList.TryAddExp('WM_SYSCOLORCHANGE',narg('','21',''));
+  GlobalExpressionList.TryAddExp('WM_ENDSESSION',narg('','22',''));
+  GlobalExpressionList.TryAddExp('WM_SHOWWINDOW',narg('','24',''));
+  GlobalExpressionList.TryAddExp('WM_ACTIVATEAPP',narg('','28',''));
+  GlobalExpressionList.TryAddExp('WM_FONTCHANGE',narg('','29',''));
+  GlobalExpressionList.TryAddExp('WM_TIMECHANGE',narg('','30',''));
+  GlobalExpressionList.TryAddExp('WM_CANCELMODE',narg('','31',''));
+  GlobalExpressionList.TryAddExp('WM_SETCURSOR',narg('','32',''));
+  GlobalExpressionList.TryAddExp('WM_MOUSEACTIVATE',narg('','33',''));
+  GlobalExpressionList.TryAddExp('WM_CHILDACTIVATE',narg('','34',''));
+  GlobalExpressionList.TryAddExp('WM_QUEUESYNC',narg('','35',''));
+  GlobalExpressionList.TryAddExp('WM_GETMINMAXINFO',narg('','36',''));
+  GlobalExpressionList.TryAddExp('WM_PAINTICON',narg('','38',''));
+  GlobalExpressionList.TryAddExp('WM_ICONERASEBKGND',narg('','39',''));
+  GlobalExpressionList.TryAddExp('WM_NEXTDLGCTL',narg('','40',''));
+  GlobalExpressionList.TryAddExp('WM_SPOOLERSTATUS',narg('','42',''));
+  GlobalExpressionList.TryAddExp('WM_DRAWITEM',narg('','43',''));
+  GlobalExpressionList.TryAddExp('WM_MEASUREITEM',narg('','44',''));
+  GlobalExpressionList.TryAddExp('WM_DELETEITEM',narg('','45',''));
+  GlobalExpressionList.TryAddExp('WM_VKEYTOITEM',narg('','46',''));
+  GlobalExpressionList.TryAddExp('WM_CHARTOITEM',narg('','47',''));
+  GlobalExpressionList.TryAddExp('WM_SETFONT',narg('','48',''));
+  GlobalExpressionList.TryAddExp('WM_GETFONT',narg('','49',''));
+  GlobalExpressionList.TryAddExp('WM_SETHOTKEY',narg('','50',''));
+  GlobalExpressionList.TryAddExp('WM_GETHOTKEY',narg('','51',''));
+  GlobalExpressionList.TryAddExp('WM_QUERYDRAGICON',narg('','55',''));
+  GlobalExpressionList.TryAddExp('WM_COMPAREITEM',narg('','57',''));
+  GlobalExpressionList.TryAddExp('WM_COMPACTING',narg('','65',''));
+  GlobalExpressionList.TryAddExp('WM_WINDOWPOSCHANGING',narg('','70',''));
+  GlobalExpressionList.TryAddExp('WM_WINDOWPOSCHANGED',narg('','71',''));
+  GlobalExpressionList.TryAddExp('WM_POWER',narg('','72',''));
+  GlobalExpressionList.TryAddExp('WM_COPYDATA',narg('','74',''));
+  GlobalExpressionList.TryAddExp('WM_CANCELJOURNAL',narg('','75',''));
+  GlobalExpressionList.TryAddExp('WM_NOTIFY',narg('','78',''));
+  GlobalExpressionList.TryAddExp('WM_INPUTLANGCHANGEREQUEST',narg('','80',''));
+  GlobalExpressionList.TryAddExp('WM_INPUTLANGCHANGE',narg('','81',''));
+  GlobalExpressionList.TryAddExp('WM_TCARD',narg('','82',''));
+  GlobalExpressionList.TryAddExp('WM_HELP',narg('','83',''));
+  GlobalExpressionList.TryAddExp('WM_USERCHANGED',narg('','84',''));
+  GlobalExpressionList.TryAddExp('WM_NOTIFYFORMAT',narg('','85',''));
+  GlobalExpressionList.TryAddExp('WM_CONTEXTMENU',narg('','123',''));
+  GlobalExpressionList.TryAddExp('WM_STYLECHANGING',narg('','124',''));
+  GlobalExpressionList.TryAddExp('WM_STYLECHANGED',narg('','125',''));
+  GlobalExpressionList.TryAddExp('WM_DISPLAYCHANGE',narg('','126',''));
+  GlobalExpressionList.TryAddExp('WM_GETICON',narg('','127',''));
+  GlobalExpressionList.TryAddExp('WM_SETICON',narg('','128',''));
+  GlobalExpressionList.TryAddExp('WM_NCCREATE',narg('','129',''));
+  GlobalExpressionList.TryAddExp('WM_NCDESTROY',narg('','130',''));
+  GlobalExpressionList.TryAddExp('WM_NCCALCSIZE',narg('','131',''));
+  GlobalExpressionList.TryAddExp('WM_NCHITTEST',narg('','132',''));
+  GlobalExpressionList.TryAddExp('WM_NCPAINT',narg('','133',''));
+  GlobalExpressionList.TryAddExp('WM_NCACTIVATE',narg('','134',''));
+  GlobalExpressionList.TryAddExp('WM_GETDLGCODE',narg('','135',''));
+  GlobalExpressionList.TryAddExp('WM_NCMOUSEMOVE',narg('','160',''));
+  GlobalExpressionList.TryAddExp('WM_NCLBUTTONDOWN',narg('','161',''));
+  GlobalExpressionList.TryAddExp('WM_NCLBUTTONUP',narg('','162',''));
+  GlobalExpressionList.TryAddExp('WM_NCLBUTTONDBLCLK',narg('','163',''));
+  GlobalExpressionList.TryAddExp('WM_NCRBUTTONDOWN',narg('','164',''));
+  GlobalExpressionList.TryAddExp('WM_NCRBUTTONUP',narg('','165',''));
+  GlobalExpressionList.TryAddExp('WM_NCRBUTTONDBLCLK',narg('','166',''));
+  GlobalExpressionList.TryAddExp('WM_NCMBUTTONDOWN',narg('','167',''));
+  GlobalExpressionList.TryAddExp('WM_NCMBUTTONUP',narg('','168',''));
+  GlobalExpressionList.TryAddExp('WM_NCMBUTTONDBLCLK',narg('','169',''));
   GlobalExpressionList.TryAddExp('WM_KEYDOWN',narg('','256',''));
   GlobalExpressionList.TryAddExp('WM_KEYUP',narg('','257',''));
   GlobalExpressionList.TryAddExp('WM_CHAR',narg('','258',''));
   GlobalExpressionList.TryAddExp('WM_DEADCHAR',narg('','259',''));
   GlobalExpressionList.TryAddExp('WM_SYSKEYDOWN',narg('','260',''));
   GlobalExpressionList.TryAddExp('WM_SYSKEYUP',narg('','261',''));
-  GlobalExpressionList.TryAddExp('WM_SYSKEYCHAR',narg('','262',''));
+  GlobalExpressionList.TryAddExp('WM_SYSCHAR',narg('','262',''));
   GlobalExpressionList.TryAddExp('WM_SYSDEADCHAR',narg('','263',''));
+  GlobalExpressionList.TryAddExp('WM_INITDIALOG',narg('','272',''));
+  GlobalExpressionList.TryAddExp('WM_COMMAND',narg('','273',''));
+  GlobalExpressionList.TryAddExp('WM_SYSCOMMAND',narg('','274',''));
+  GlobalExpressionList.TryAddExp('WM_TIMER',narg('','275',''));
+  GlobalExpressionList.TryAddExp('WM_HSCROLL',narg('','276',''));
+  GlobalExpressionList.TryAddExp('WM_VSCROLL',narg('','277',''));
+  GlobalExpressionList.TryAddExp('WM_INITMENU',narg('','278',''));
+  GlobalExpressionList.TryAddExp('WM_INITMENUPOPUP',narg('','279',''));
+  GlobalExpressionList.TryAddExp('WM_MENUSELECT',narg('','287',''));
+  GlobalExpressionList.TryAddExp('WM_MENUCHAR',narg('','288',''));
+  GlobalExpressionList.TryAddExp('WM_ENTERIDLE',narg('','289',''));
+  GlobalExpressionList.TryAddExp('WM_CTLCOLORMSGBOX',narg('','306',''));
+  GlobalExpressionList.TryAddExp('WM_CTLCOLOREDIT',narg('','307',''));
+  GlobalExpressionList.TryAddExp('WM_CTLCOLORLISTBOX',narg('','308',''));
+  GlobalExpressionList.TryAddExp('WM_CTLCOLORBTN',narg('','309',''));
+  GlobalExpressionList.TryAddExp('WM_CTLCOLORDLG',narg('','310',''));
+  GlobalExpressionList.TryAddExp('WM_CTLCOLORSCROLLBAR',narg('','311',''));
+  GlobalExpressionList.TryAddExp('WM_CTLCOLORSTATIC',narg('','312',''));
+  GlobalExpressionList.TryAddExp('WM_MOUSEMOVE',narg('','512',''));
+  GlobalExpressionList.TryAddExp('WM_LBUTTONDOWN',narg('','513',''));
+  GlobalExpressionList.TryAddExp('WM_LBUTTONUP',narg('','514',''));
+  GlobalExpressionList.TryAddExp('WM_LBUTTONDBLCLK',narg('','515',''));
+  GlobalExpressionList.TryAddExp('WM_RBUTTONDOWN',narg('','516',''));
+  GlobalExpressionList.TryAddExp('WM_RBUTTONUP',narg('','517',''));
+  GlobalExpressionList.TryAddExp('WM_RBUTTONDBLCLK',narg('','518',''));
+  GlobalExpressionList.TryAddExp('WM_MBUTTONDOWN',narg('','519',''));
+  GlobalExpressionList.TryAddExp('WM_MBUTTONUP',narg('','520',''));
+  GlobalExpressionList.TryAddExp('WM_MBUTTONDBLCLK',narg('','521',''));
+  GlobalExpressionList.TryAddExp('WM_MOUSEWHEEL',narg('','522',''));
+  GlobalExpressionList.TryAddExp('WM_PARENTNOTIFY',narg('','528',''));
+  GlobalExpressionList.TryAddExp('WM_ENTERMENULOOP',narg('','529',''));
+  GlobalExpressionList.TryAddExp('WM_EXITMENULOOP',narg('','530',''));
+  GlobalExpressionList.TryAddExp('WM_SIZING',narg('','532',''));
+  GlobalExpressionList.TryAddExp('WM_CAPTURECHANGED',narg('','533',''));
+  GlobalExpressionList.TryAddExp('WM_MOVING',narg('','534',''));
+  GlobalExpressionList.TryAddExp('WM_POWERBROADCAST',narg('','536',''));
+  GlobalExpressionList.TryAddExp('WM_DEVICECHANGE',narg('','537',''));
+  GlobalExpressionList.TryAddExp('WM_MDICREATE',narg('','544',''));
+  GlobalExpressionList.TryAddExp('WM_MDIDESTROY',narg('','545',''));
+  GlobalExpressionList.TryAddExp('WM_MDIACTIVATE',narg('','546',''));
+  GlobalExpressionList.TryAddExp('WM_MDIRESTORE',narg('','547',''));
+  GlobalExpressionList.TryAddExp('WM_MDINEXT',narg('','548',''));
+  GlobalExpressionList.TryAddExp('WM_MDIMAXIMIZE',narg('','549',''));
+  GlobalExpressionList.TryAddExp('WM_MDITILE',narg('','550',''));
+  GlobalExpressionList.TryAddExp('WM_MDICASCADE',narg('','551',''));
+  GlobalExpressionList.TryAddExp('WM_MDIICONARRANGE',narg('','552',''));
+  GlobalExpressionList.TryAddExp('WM_MDIGETACTIVE',narg('','553',''));
+  GlobalExpressionList.TryAddExp('WM_MDISETMENU',narg('','560',''));
+  GlobalExpressionList.TryAddExp('WM_CUT',narg('','768',''));
+  GlobalExpressionList.TryAddExp('WM_COPY',narg('','769',''));
+  GlobalExpressionList.TryAddExp('WM_PASTE',narg('','770',''));
+  GlobalExpressionList.TryAddExp('WM_CLEAR',narg('','771',''));
+  GlobalExpressionList.TryAddExp('WM_UNDO',narg('','772',''));
+  GlobalExpressionList.TryAddExp('WM_DESTROYCLIPBOARD',narg('','775',''));
+  GlobalExpressionList.TryAddExp('WM_DRAWCLIPBOARD',narg('','776',''));
+  GlobalExpressionList.TryAddExp('WM_PAINTCLIPBOARD',narg('','777',''));
+  GlobalExpressionList.TryAddExp('WM_SIZECLIPBOARD',narg('','779',''));
+  GlobalExpressionList.TryAddExp('WM_ASKCBFORMATNAME',narg('','780',''));
+  GlobalExpressionList.TryAddExp('WM_CHANGECBCHAIN',narg('','781',''));
+  GlobalExpressionList.TryAddExp('WM_HSCROLLCLIPBOARD',narg('','782',''));
+  GlobalExpressionList.TryAddExp('WM_QUERYNEWPALETTE',narg('','783',''));
+  GlobalExpressionList.TryAddExp('WM_PALETTEISCHANGING',narg('','784',''));
+  GlobalExpressionList.TryAddExp('WM_PALETTECHANGED',narg('','785',''));
+  GlobalExpressionList.TryAddExp('WM_HOTKEY',narg('','786',''));
 
-  GlobalExpressionList.TryAddExp('WM_COMMAND',narg('','265',''));
-  GlobalExpressionList.TryAddExp('WM_SYSCOMMAND',narg('','266',''));
 
   GlobalExpressionList.TryAddExp('k_bksp',narg('','8',''));
   GlobalExpressionList.TryAddExp('k_tab',narg('','9',''));
@@ -641,8 +827,10 @@ end;
 
 procedure TForm_Routiner.SaveOption;
 var sav:TMemoryStream;
-    i,j,tmpb:byte;
+    i,j,fo:byte;
     taddr:int64;
+    forms:array[1..6]of TForm;
+    stmp:string;
     procedure rec_byte(pos:int64;value:byte);
     begin
       sav.Position:=pos;
@@ -666,23 +854,20 @@ begin
   for taddr:=0 to $2FFFF do sav.WriteByte(0);
 
   rec_str(0,'Apiglio MR'+version_number);
-  rec_long(24,longint(Self.InitialLayout));
-  rec_long(32,Self.Top);
-  rec_long(32+4,Self.Left);
-  rec_long(32+8,Self.Width);
-  rec_long(32+12,Self.Height);
-  rec_long(64,AufButtonForm.Top);
-  rec_long(64+4,AufButtonForm.Left);
-  rec_long(64+8,AufButtonForm.Width);
-  rec_long(64+12,AufButtonForm.Height);
-  rec_long(96,SettingLagForm.Top);
-  rec_long(96+4,SettingLagForm.Left);
-  rec_long(96+8,SettingLagForm.Width);
-  rec_long(96+12,SettingLagForm.Height);
-  rec_long(128,ManualForm.Top);
-  rec_long(128+4,ManualForm.Left);
-  rec_long(128+8,ManualForm.Width);
-  rec_long(128+12,ManualForm.Height);
+  rec_byte(24,longint(Self.InitialLayout));
+
+  forms[1]:=Self;
+  forms[2]:=AufButtonForm;
+  forms[3]:=SettingLagForm;
+  forms[4]:=ManualForm;
+  forms[5]:=FormRunPerformance;
+  forms[6]:=Form_HoldButtonSetting;
+  FOR fo:=1 TO 6 DO BEGIN
+    rec_long(32*fo,forms[fo].Top);
+    rec_long(32*fo+4,forms[fo].Left);
+    rec_long(32*fo+8,forms[fo].Width);
+    rec_long(32*fo+12,forms[fo].Height);
+  END;
 
   for i:=0 to SynCount do
     for j:=0 to ButtonColumn do
@@ -695,15 +880,28 @@ begin
         else rec_byte(0,taddr+507);
       end;
 
+  for i:=0 to 31 do
+    begin
+      taddr:=256 + i*8;
+      stmp:=utf8towincp(Self.HoldButtons[i].Caption);
+      //messagebox(0,PChar(IntToStr(length(stmp))),'E',MB_OK);
+      while length(stmp)<4 do stmp:=stmp+#0;
+      for j:=0 to 3 do rec_byte(taddr+j,ord(stmp[j+1]));
+      for j:=0 to 3 do rec_byte(taddr+4+j,Self.HoldButtons[i].keymessage[j]);
+    end;
+
    sav.SaveToFile('option.lay');
    sav.Free;
 
 end;
 procedure TForm_Routiner.LoadOption;
 var sav:TMemoryStream;
-    i,j,tmpb:byte;
+    i,j,fo:byte;
     taddr:int64;
     error_text:string;
+    hh,ww:longint;
+    stmp:string;
+    forms:array[1..6]of TForm;
     function get_byte(pos:int64):byte;
     begin
       sav.Position:=pos;
@@ -727,27 +925,37 @@ begin
     sav:=TmemoryStream.Create;
     sav.LoadFromFile('option.lay');
 
-    Self.InitialLayout:=TLayoutSet(get_long(24));
+    Self.InitialLayout:=TLayoutSet(get_byte(24));
     for i:=0 to Self.MainMenu.Items[1].Count - 1 do
       Self.MainMenu.Items[1].Items[i].Enabled:=true;
     Self.MainMenu.Items[1].Items[byte(Self.InitialLayout)].Enabled:=false;
 
-    Self.Top:=get_long(32);
-    Self.Left:=get_long(32+4);
-    Self.Width:=get_long(32+8);
-    Self.Height:=get_long(32+12);
-    AufButtonForm.Top:=get_long(64);
-    AufButtonForm.Left:=get_long(64+4);
-    AufButtonForm.Width:=get_long(64+8);
-    AufButtonForm.Height:=get_long(64+12);
-    SettingLagForm.Top:=get_long(96);
-    SettingLagForm.Left:=get_long(96+4);
-    SettingLagForm.Width:=get_long(96+8);
-    SettingLagForm.Height:=get_long(96+12);
-    ManualForm.Top:=get_long(128);
-    ManualForm.Left:=get_long(128+4);
-    ManualForm.Width:=get_long(128+8);
-    ManualForm.Height:=get_long(128+12);
+    forms[1]:=Self;
+    forms[2]:=AufButtonForm;
+    forms[3]:=SettingLagForm;
+    forms[4]:=ManualForm;
+    forms[5]:=FormRunPerformance;
+    forms[6]:=Form_HoldButtonSetting;
+    FOR fo:=1 TO 6 DO BEGIN
+      ww:=get_long(32*fo+8);
+      hh:=get_long(32*fo+12);
+      if ww*hh<>0 then begin
+        forms[fo].Width:=ww;
+        forms[fo].Height:=hh;
+        forms[fo].Top:=get_long(32*fo);
+        forms[fo].Left:=get_long(32*fo+4);
+      end;
+    END;
+
+    for i:=0 to 31 do
+      begin
+        taddr:=256 + i*8;
+        stmp:='XXXX';
+        for j:=0 to 3 do stmp[j+1]:=chr(get_byte(taddr+j));
+        //while stmp[length(stmp)]=#0 do delete(stmp,length(stmp),1);
+        Self.HoldButtons[i].Caption:=wincptoutf8(stmp);
+        for j:=0 to 3 do Self.HoldButtons[i].keymessage[j]:=get_byte(taddr+4+j);
+      end;
 
     error_text:='';
     for i:=0 to SynCount do
@@ -772,14 +980,13 @@ begin
   except
     MessageBox(0,PChar(utf8towincp('布局文件读取失败')),'Error',MB_OK);
   end;
-  //{
+
   for i:=0 to SynCount do
     for j:=0 to ButtonColumn do
       begin
         Self.AufButtons[i,j].RenewCmd;
-        //qkm('AufButton['+INtToStr(i)+','+INtToStr(j)+']');
       end;
-  //}
+
 
 end;
 
@@ -796,19 +1003,6 @@ var x,y:integer;
 begin
   x := pMouseHookStruct(Msg.LParam)^.pt.X;
   y := pMouseHookStruct(Msg.LParam)^.pt.Y;
-
-  //if Trace then Self.Memo_cmd.lines.add('更新消息：n='+IntToStr(Msg.WParam)+' x='+IntToStr(x)+' y='+IntToStr(y));
-  //AufScriptFrames[PageControl.ActivePageIndex].Frame.Auf.Script.IO_fptr.echo(AufScriptFrames[PageControl.ActivePageIndex].Frame,'更新消息：n='+IntToStr(Msg.WParam)+' x='+IntToStr(x)+' y='+IntToStr(y));
-
-  {
-  lctrl=162,29
-  rctrl=163,29
-  lshift=160,42
-  rshift=161,54
-  lalt=164,56
-  ralt=165,56
-  }
-
   case Msg.wParam of
     WM_KeyUp,WM_KeyDown,WM_Char,WM_SysKeyUp,WM_SysKeyDown,WM_IME_Char:
       begin
@@ -923,10 +1117,26 @@ begin
 
 end;
 
+procedure TForm_Routiner.Memo_tmpChange(Sender: TObject);
+begin
+  (Sender as TMemo).clear;
+end;
+
+procedure TForm_Routiner.MenuItem_ExitClick(Sender: TObject);
+begin
+  Self.Close;
+end;
+
 procedure TForm_Routiner.MenuItem_Func_AufClick(Sender: TObject);
 begin
   ManualForm.Show;
   ManualForm.CastHtml('Manual\AufScript.html');
+end;
+
+procedure TForm_Routiner.MenuItem_Func_BasicClick(Sender: TObject);
+begin
+  ManualForm.Show;
+  ManualForm.CastHtml('Manual\BasicManual.html');
 end;
 
 procedure TForm_Routiner.MenuItem_Func_ButtonsClick(Sender: TObject);
@@ -997,6 +1207,11 @@ begin
   //
 end;
 
+procedure TForm_Routiner.MenuItem_RunPerformanceClick(Sender: TObject);
+begin
+  FormRunPerformance.Show;
+end;
+
 procedure TForm_Routiner.MenuItem_Setting_LagClick(Sender: TObject);
 begin
   SettingLagForm.Show;
@@ -1023,6 +1238,16 @@ procedure TForm_Routiner.RadioGroup_RecSyntaxModeSelectionChanged(
   Sender: TObject);
 begin
   (Sender as TRadioGroup).ItemIndex:=0;
+end;
+
+procedure TForm_Routiner.TreeView_WndChange(Sender: TObject; Node: TTreeNode);
+begin
+  ReDrawWndPos;
+end;
+
+procedure TForm_Routiner.WindowPosPadViceChange(Sender: TObject);
+begin
+  (Sender as TMemo).Clear;
 end;
 
 procedure TForm_Routiner.FormCreate(Sender: TObject);
@@ -1073,6 +1298,11 @@ begin
       SynSetting[i].adjusting_lag:=0;
     end;
 
+  for i:=0 to 31 do
+    begin
+      Self.HoldButtons[i]:=THoldButton.Create(Self);
+      Self.HoldButtons[i].Parent:=Self.HoldButtonScrollBox;
+    end;
   for i:=0 to SynCount do
     begin
 
@@ -1113,24 +1343,17 @@ begin
       GlobalExpressionList.TryAddExp(Self.Buttons[i].expression,narg('','0',''));
       Self.Buttons[i].expression:=Self.Buttons[i].expression;
 
-      Self.Labels[i]:=TARVLabel.Create(Self);
-      Self.Labels[i].Parent:=Self;
-      Self.Labels[i].Caption:='键盘同步';
       Self.CheckBoxs[i]:=TARVCheckBox.Create(Self);
+      Self.CheckBoxs[i].Caption:='键盘同步';
+      Self.CheckBoxs[i].Font.Bold:=true;
+      Self.CheckBoxs[i].Font.Bold:=false;
       Self.CheckBoxs[i].Parent:=Self;
       Self.CheckBoxs[i].Checked:=false;
 
-      Self.CheckBoxs[i].TheLabel:=Self.Labels[i];
       Self.CheckBoxs[i].OnChange:=@Self.CheckBoxs[i].CheckOnChange;
-
-      Self.Labels[i].CheckBox:=Self.CheckBoxs[i];
-      Self.Labels[i].OnClick:=@Self.Labels[i].LabelOnClick;
 
       Self.CheckBoxs[i].ShowHint:=true;
       Self.CheckBoxs[i].Hint:='按Ctrl+'+IntToStr(i+1)+'切换状态';
-      Self.Labels[i].ShowHint:=true;
-      Self.Labels[i].Hint:='按Ctrl+'+IntToStr(i+1)+'切换状态';
-      Self.Labels[i].Color:=clForm;
 
       Self.SynSetting[i].mode_lag:=true;
       Self.SynSetting[i].adjusting_step:=5;
@@ -1142,7 +1365,7 @@ begin
 
   //Self.BorderStyle:=bsSingle;
 
-
+  WindowsFilter;
   FormResize(nil);
 
   tim:=TTimer.Create(Self);
@@ -1164,6 +1387,8 @@ end;
 procedure TForm_Routiner.FormResize(Sender: TObject);
 var i,j:byte;
     divi_vertical,divi_horizontal,ARVControlH,ButtonsTop,TreeViewTop,RecorderTop,AufButtonW,AufButtonH:longint;
+    TreeViewFinalTop,TreeViewFinalLeft,TreeViewFinalHeight,TreeViewFinalWidth:longint;
+    WindowPosPadH,HoldButtonH,HoldButtonW,AufButtonL:longint;
     page:integer;
 begin
   ARVControlH:=(SynCount+1)*(gap+SynchronicH);
@@ -1190,9 +1415,9 @@ begin
       end;
     Lay_Synchronic:
       begin
-        divi_vertical:=Self.Width;
+        divi_vertical:=max(450,Self.Width-MinAufButtonW);//divi_vertical:=Self.Width;
         divi_horizontal:=MainMenuH;
-        ButtonsTop:=Self.Height;
+        ButtonsTop:=0;//ButtonsTop:=Self.Height;
         RecorderTop:=divi_horizontal + ARVControlH;
         TreeViewTop:=0;
         Self.PageControl.Hide;
@@ -1253,7 +1478,6 @@ begin
   end;
   Self.AufScriptFrames[PageControl.ActivePageIndex].Frame.FrameResize(nil);
 
-
   if Self.InitialLayout = Lay_Buttons then Button_advanced.Left:=divi_vertical + gap
   else Button_advanced.Left:=gap;
   Button_advanced.Top:=divi_horizontal - 24 - gap - MainMenuH;
@@ -1287,35 +1511,71 @@ begin
   Button_excel.Height:=28;
   Button_excel.Width:=ARVControlW;
 
-  Memo_tmp.Top:=divi_horizontal + 3 * 28 + 3 * gap - MainMenuH;
-  Memo_tmp.Left:=gap;
-  Memo_tmp.Height:=Self.Height - gap - Memo_tmp.Top - MainMenuH;
-  Memo_tmp.Width:=ARVControlW;
+  WindowPosPadH:=Self.Height - gap - WindowPosPad.Top - MainMenuH;
 
-  TreeView_Wnd.Top:=TreeViewTop + gap;
-  TreeView_Wnd.Height:=Self.Height - 36 - 2 * gap- MainMenuH;
-  TreeView_Wnd.Left:=divi_vertical + gap;
-  TreeView_Wnd.Width:=WindowsListW - 2 * gap;
+  WindowPosPad.Top:=divi_horizontal + 3 * 28 + 3 * gap - MainMenuH;
+  WindowPosPad.Left:=gap;
+  WindowPosPad.Width:=ARVControlW;
+  WindowPosPad.Height:={min(}WindowPosPad.Width*Desktop.Height div Desktop.Width{,WindowPosPadH)};
 
-  Label_Filter.Top:=TreeViewTop + Self.Height - 28 - MainMenuH;
-  Edit_TreeView.Top:=TreeViewTop + Self.Height - 34 - MainMenuH;
-  Button_TreeViewFresh.Top:=TreeViewTop + Self.Height - 34 - MainMenuH;
+  HoldButtonScrollBox.Top:=WindowPosPad.Top+gap+WindowPosPad.Height;
+  HoldButtonScrollBox.Left:=gap;
+  HoldButtonScrollBox.Height:=WindowPosPadH-gap-WindowPosPad.Height;
+  HoldButtonScrollBox.Width:=ARVControlW;
 
+  HoldButtonW:=(ARVControlW-5*gap) div 4;
+  HoldButtonH:=HoldButtonW{ div 2};
+  for i:=0 to 31 do
+    begin
+      Self.HoldButtons[i].Top:=gap+(i div 4)*(HoldButtonH+gap);
+      Self.HoldButtons[i].Left:=gap+(i mod 4)*(HoldBUttonW+gap);
+      Self.HoldButtons[i].Width:=HoldButtonW;
+      Self.HoldButtons[i].Height:=HoldButtonH;
+    end;
+
+  IF Self.InitialLayout = Lay_SynChronic THEN BEGIN
+    TreeViewFinalTop:=divi_horizontal+(28+gap)*(SynCount+1)-MainMenuH;
+    TreeViewFinalLeft:=ARVControlW+gap;
+    TreeViewFinalWidth:=Self.Width-ARVControlW-gap;
+    TreeViewFinalHeight:=Self.Height-TreeViewFinalTop-gap;
+  END ELSE BEGIN
+    TreeViewFinalTop:=TreeViewTop;
+    TreeViewFinalLeft:=divi_vertical;
+    TreeViewFinalWidth:=WindowsListW;
+    TreeViewFinalHeight:=Self.Height;
+  END;
+  TreeView_Wnd.Top:=TreeViewFinalTop + gap;
+  TreeView_Wnd.Height:=TreeViewFinalHeight - 36 - 2 * gap- MainMenuH;
+  TreeView_Wnd.Left:=TreeViewFinalLeft + gap;
+  TreeView_Wnd.Width:=TreeViewFinalWidth - 2 * gap;
+  //Label_Filter.Top:=TreeViewFinalTop + TreeViewFinalHeight - 28 - MainMenuH;
+  //Edit_TreeView.Top:=TreeViewFinalTop + TreeViewFinalHeight - 34 - MainMenuH;
+  //Button_TreeViewFresh.Top:=TreeViewFinalTop + TreeViewFinalHeight - 34 - MainMenuH;
+  Label_Filter.Top:=TreeView_Wnd.Top+TreeView_Wnd.Height+gap+12;
+  Edit_TreeView.Top:=TreeView_Wnd.Top+TreeView_Wnd.Height+gap+4;
+  Button_TreeViewFresh.Top:=TreeView_Wnd.Top+TreeView_Wnd.Height+gap+4;
   //Label_Filter.Width:=45;
   Edit_TreeView.Width:=TreeView_Wnd.Width - Label_Filter.Width - Button_TreeViewFresh.Width - 4*gap;
   //Button_TreeViewFresh.Width:=72;
-
   Label_Filter.Left:=TreeView_Wnd.Left;
   Edit_TreeView.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width;
   Button_TreeViewFresh.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width + 10 + Edit_TreeView.Width;
+
 
   GroupBox_RecOption.Top:=RecorderTop + 2*gap + 28;
   GroupBox_RecOption.Left:=TreeView_Wnd.Left;
   GroupBox_RecOption.Width:=TreeView_Wnd.Width - gap;
   GroupBox_RecOption.Height:=PageControl.Height - gap - 28;
 
-  AufButtonW:=(Self.Width - (ButtonColumn + 2 )*gap) div (ButtonColumn+1);
-  AufButtonH:=(Self.Height - (SynCount + 2 )*gap - MainMenuH) div (SYnCount+1);
+  if Self.InitialLayout=Lay_Synchronic then begin
+    AufButtonL:=max(Self.Width-(ButtonColumn+2)*gap-MinAufButtonW+60,450);
+    AufButtonW:=(MinAufButtonW-60)  div (ButtonColumn+1);
+    AufButtonH:=28;
+  end else begin
+    AufButtonL:=0;
+    AufButtonW:=(Self.Width - (ButtonColumn + 2 )*gap) div (ButtonColumn+1);
+    AufButtonH:=(Self.Height - (SynCount + 2 )*gap - MainMenuH) div (SYnCount+1);
+  end;
 
   for i:=0 to SynCount do
     begin
@@ -1323,29 +1583,24 @@ begin
       Self.Edits[i].Width:=60;
       Self.Edits[i].Left:=ARVControlW+2*gap;
       Self.Edits[i].Height:=28;
-
       Self.Buttons[i].Top:=Self.Edits[i].Top;
       Self.Buttons[i].Width:=divi_vertical-ARVControlW-2*gap-160;
       Self.Buttons[i].Left:=Self.Edits[i].Left+Self.Edits[i].Width+gap;
       Self.Buttons[i].Height:=28;
-
       Self.CheckBoxs[i].Left:=divi_vertical-90;
       Self.CheckBoxs[i].Top:=Self.Buttons[i].Top+3;
-
-      Self.Labels[i].Left:=divi_vertical-70;
-      Self.Labels[i].Top:=Self.Buttons[i].Top+5;
-
-
       for j:=0 to ButtonColumn do
         begin
           Self.AufButtons[i,j].Width:=AufButtonW;
-          Self.AufButtons[i,j].Left:=j*(gap + AufButtonW)+gap;
+          Self.AufButtons[i,j].Left:=j*(gap + AufButtonW)+gap+AufButtonL;
           Self.AufButtons[i,j].Height:=AufButtonH;
-          Self.AufButtons[i,j].Top:=ButtonsTop + gap + i*(gap+AufButtonH);
+          if Self.InitialLayout=Lay_Synchronic then
+            Self.AufButtons[i,j].Top:=ButtonsTop + gap + i*(gap+AufButtonH)-5
+          else
+            Self.AufButtons[i,j].Top:=ButtonsTop + gap + i*(gap+AufButtonH);
         end;
-
     end;
-
+  ReDrawWndPos;
 end;
 
 procedure TForm_Routiner.Memo_cmdEditingDone(Sender: TObject);
@@ -1363,8 +1618,20 @@ begin
 end;
 
 procedure TForm_Routiner.Button_excelClick(Sender: TObject);
+var i:byte;
+    btn:TButton;
 begin
-  SettingLagForm.Show;
+  btn:=Sender as TButton;
+  if btn.Caption = '锁定窗口设置按钮' then
+    begin
+      btn.Caption:='解锁窗口设置按钮';
+      for i:=0 to SynCount do Self.Buttons[i].Enabled:=false;
+    end
+  else
+    begin
+      btn.Caption:='锁定窗口设置按钮';
+      for i:=0 to SynCount do Self.Buttons[i].Enabled:=true;
+    end;
 end;
 
 procedure TForm_Routiner.Button_excelMouseUp(Sender: TObject;
@@ -1375,6 +1642,78 @@ begin
       //MessageBox(0,PChar('pos('+IntToStr(x)+','+IntToStr(y)+')'),'Apiglio',MB_OK);
     end
   else exit;
+end;
+
+procedure TForm_Routiner.Button_Tmp_DMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync:byte;
+begin
+  for sync:=0 to SynCount do
+    if Self.CheckBoxs[sync].Checked then
+      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYDOWN,40,40 shl 32 + 1);
+end;
+
+procedure TForm_Routiner.Button_Tmp_DMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync:byte;
+begin
+  for sync:=0 to SynCount do
+    if Self.CheckBoxs[sync].Checked then
+      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYUP,40,40 shl 32 + 1);
+end;
+
+procedure TForm_Routiner.Button_Tmp_LMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync:byte;
+begin
+  for sync:=0 to SynCount do
+    if Self.CheckBoxs[sync].Checked then
+      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYDOWN,37,37 shl 32 + 1);
+end;
+
+procedure TForm_Routiner.Button_Tmp_LMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync:byte;
+begin
+  for sync:=0 to SynCount do
+    if Self.CheckBoxs[sync].Checked then
+      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYUP,37,37 shl 32 + 1);
+end;
+
+procedure TForm_Routiner.Button_Tmp_RMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync:byte;
+begin
+  for sync:=0 to SynCount do
+    if Self.CheckBoxs[sync].Checked then
+      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYDOWN,39,39 shl 32 + 1);
+end;
+
+procedure TForm_Routiner.Button_Tmp_RMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync:byte;
+begin
+  for sync:=0 to SynCount do
+    if Self.CheckBoxs[sync].Checked then
+      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYUP,39,39 shl 32 + 1);
+end;
+
+procedure TForm_Routiner.Button_Tmp_UMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync:byte;
+begin
+  for sync:=0 to SynCount do
+    if Self.CheckBoxs[sync].Checked then
+      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYDOWN,38,38 shl 32 + 1);
+end;
+
+procedure TForm_Routiner.Button_Tmp_UMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync:byte;
+begin
+  for sync:=0 to SynCount do
+    if Self.CheckBoxs[sync].Checked then
+      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYUP,38,38 shl 32 + 1);
 end;
 
 procedure TForm_Routiner.Button_TreeViewFreshClick(Sender: TObject);
@@ -1479,6 +1818,26 @@ begin
   Self.FormResize(nil);
 end;
 
+procedure TForm_Routiner.ReDrawWndPos;
+var tmp:TTreeNode;
+    ww,hh,ll,tt:longint;
+begin
+  tmp:=Self.TreeView_Wnd.Selected;
+  if tmp = nil then begin
+    ww:=0;ll:=0;tt:=0;hh:=0;
+  end else with TWindow(tmp.Data).info do begin
+    ww:=Width;
+    hh:=Height;
+    ll:=Left;
+    tt:=Top;
+  end;
+  Self.WindowPosPadWind.Top:=Self.WindowPosPad.Top+tt*Self.WindowPosPad.Height div Desktop.Height;
+  Self.WindowPosPadWind.Left:=Self.WindowPosPad.Left+ll*Self.WindowPosPad.Width div Desktop.Width;
+  Self.WindowPosPadWind.Width:=ww*Self.WindowPosPad.Width div Desktop.Width;
+  Self.WindowPosPadWind.Height:=hh*Self.WindowPosPad.Height div Desktop.Height;
+
+end;
+
 procedure TForm_Routiner.FormClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
@@ -1566,14 +1925,15 @@ end;
 
 procedure TARVCheckBox.CheckOnChange(Sender:TObject);
 begin
-  with (Sender as TARVCheckBox) do TheLabel.font.bold:=checked
+  //with (Sender as TARVCheckBox) do TheLabel.font.bold:=checked
+  (Sender as TARVCheckBox).Font.bold:=checked;
 end;
-
+{
 procedure TARVLabel.LabelOnClick(Sender:TObject);
 begin
   with Sender as TARVLabel do CheckBox.Checked:=not CheckBox.Checked;
 end;
-
+}
 constructor TAufButton.Create(AOwner:TComponent;AWinAuf:TWinAuf);
 begin
   inherited Create(AOwner);
@@ -1653,6 +2013,45 @@ begin
   //qkm('E-AufButton['+INtToStr(Self.WindowIndex)+','+INtToStr(Self.ColumnIndex)+']');
 
 end;
+
+procedure THoldButton.HoldMouseDown(Sender: TObject;Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync,step:byte;
+begin
+  if (Button=mbRight) then begin
+    exit;
+  end;
+  for step:=0 to 2 do if Self.keymessage[step]<>0 then BEGIN
+    for sync:=0 to SynCount do
+      if Form_Routiner.CheckBoxs[sync].Checked then
+        postmessage(Form_Routiner.Buttons[sync].sel_hwnd,WM_KEYDOWN,Self.keymessage[step],Self.keymessage[step] shl 32 + 1);
+    sleep(Self.keymessage[3]);
+  END;
+end;
+procedure THoldButton.HoldMouseUp(Sender: TObject;Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var sync,step:byte;
+begin
+  if (Button=mbRight) then begin
+    Form_HoldButtonSetting.TargetButton:=Self;
+    Form_HoldButtonSetting.Show;
+    exit;
+  end;
+  for step:=2 downto 0 do if Self.keymessage[step]<>0 then BEGIN
+    for sync:=0 to SynCount do
+      if Form_Routiner.CheckBoxs[sync].Checked then
+        postmessage(Form_Routiner.Buttons[sync].sel_hwnd,WM_KEYUP,Self.keymessage[step],Self.keymessage[step] shl 32 + 1);
+    sleep(Self.keymessage[3]);
+  END;
+end;
+constructor THoldButton.Create(AOwner:TComponent);
+var step:byte;
+begin
+  inherited Create(AOwner);
+  Self.OnMouseDown:=@Self.HoldMouseDown;
+  Self.OnMouseUp:=@Self.HoldMouseUp;
+  for step:=0 to 3 do Self.keymessage[step]:=0;
+  Self.Caption:='';
+end;
+
 
 end.
 

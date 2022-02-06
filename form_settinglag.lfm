@@ -11,9 +11,9 @@ object SettingLagForm: TSettingLagForm
   OnCreate = FormCreate
   LCLVersion = '1.8.4.0'
   object ScrollBox: TScrollBox
-    Left = 120
+    Left = 72
     Height = 123
-    Top = 80
+    Top = 32
     Width = 200
     HorzScrollBar.Page = 1
     VertScrollBar.Page = 1

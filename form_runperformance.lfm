@@ -1,0 +1,50 @@
+object FormRunPerformance: TFormRunPerformance
+  Left = 785
+  Height = 180
+  Top = 514
+  Width = 355
+  BorderStyle = bsSingle
+  Caption = '性能设置'
+  ClientHeight = 180
+  ClientWidth = 355
+  DesignTimePPI = 120
+  OnCreate = FormCreate
+  LCLVersion = '1.8.4.0'
+  object CheckGroup_Performance: TCheckGroup
+    Left = 8
+    Height = 128
+    Top = 8
+    Width = 336
+    AutoFill = False
+    Caption = '性能选项'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.TopBottomSpacing = 6
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 2
+    ClientHeight = 108
+    ClientWidth = 332
+    Columns = 2
+    Items.Strings = (
+      '全局快捷键'
+      '录制到文件'
+      '临时编辑框实时清空'
+      '面板按键无输出模式'
+    )
+    OnItemClick = CheckGroup_PerformanceItemClick
+    TabOrder = 0
+    Data = {
+      0400000002020202
+    }
+  end
+  object Button_Okay: TButton
+    Left = 128
+    Height = 31
+    Top = 144
+    Width = 94
+    Caption = '确认设置'
+    OnClick = Button_OkayClick
+    TabOrder = 1
+  end
+end
