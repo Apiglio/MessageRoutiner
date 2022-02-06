@@ -19,6 +19,7 @@ type
   { TSettingLagForm }
 
   TSettingLagForm = class(TForm)
+    Label_Lag_tmp: TLabel;
     ScrollBox: TScrollBox;
     procedure FormCreate(Sender: TObject);
   private

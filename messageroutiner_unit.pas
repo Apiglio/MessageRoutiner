@@ -1,6 +1,6 @@
 //{$define insert}
 
-//{$define HookAdapter}//form_adapter单元也有一个需要同步修改
+{$define HookAdapter}//form_adapter单元也有一个需要同步修改
 
 unit MessageRoutiner_Unit;
 
@@ -17,7 +17,7 @@ uses
 
 const
 
-  version_number='0.1.8';
+  version_number='0.1.9';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -119,6 +119,10 @@ type
   public
     WindowIndex:byte;
   end;
+  TSCAuf = class(TAuf)
+  public
+    ShortcutIndex:byte;
+  end;
 
   TAufButton = class(TButton)
     constructor Create(AOwner:TComponent;AWinAuf:TWinAuf);
@@ -208,7 +212,6 @@ type
     Splitter_LeftV: TSplitter;
     StatusBar: TStatusBar;
     WindowPosPad: TShape;
-    MenuItem_Exit: TMenuItem;
     MenuItem_Opt_Div: TMenuItem;
     MenuItem_Func_Basic: TMenuItem;
     MenuItem_RunPerformance: TMenuItem;
@@ -344,6 +347,7 @@ type
     end;
   public
     WinAuf:array[0..SynCount]of TWinAuf;//每个窗口的专用Auf
+    SCAufs:array[0..ShortcutCount]of TSCAuf;//每个快捷键的专用Auf
     AufButtons:array[0..SynCount,0..ButtonColumn]of TAufButton;//面板按键
     HoldButtons:array[0..31]of THoldButton;//鼠标代键
     Edits:array[0..SynCount]of TARVEdit;
@@ -499,30 +503,7 @@ begin
     Application.ProcessMessages;
   until t1>=t2;
 end;
-{
-procedure _gettime(Sender:TObject);
-var AufScpt:TAufScript;
-    AAuf:TAuf;
-begin
-  AufScpt:=Sender as TAufScript;
-  AAuf:=AufScpt.Auf as TAuf;
-  AufScpt.IO_fptr.echo(AAuf.Owner,'TimeStr='+GetTimeStr);
-  AufScpt.IO_fptr.echo(AAuf.Owner,'TimeNum='+IntToStr(GetTimeNumber));
-end;
 
-procedure _resize(Sender:TObject);
-var AufScpt:TAufScript;
-    AAuf:TAuf;
-    w,h:word;
-begin
-  AufScpt:=Sender as TAufScript;
-  AAuf:=AufScpt.Auf as TAuf;
-  w:=round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  h:=round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[2].arg));
-  Form_Routiner.Width:=w;
-  Form_Routiner.Height:=h;
-end;
-}
 procedure WinAufEnding(Sender:TObject);
 var i,j:byte;
 begin
@@ -533,6 +514,25 @@ begin
       Form_Routiner.AufButtons[i,j].Font.Bold:=false;
     end;
 end;
+procedure SCAufBeginning(Sender:TObject);
+var AufScpt:TAufScript;
+    AAuf:TSCAuf;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TSCAuf;
+  FormRunPerformance.FileCtrls[AAuf.ShortcutIndex].Enabled:=true;
+end;
+procedure SCAufEnding(Sender:TObject);
+var AufScpt:TAufScript;
+    AAuf:TSCAuf;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TSCAuf;
+  FormRunPerformance.FileCtrls[AAuf.ShortcutIndex].Enabled:=false;
+end;
+
+
+
 
 procedure WinAufStr(Sender:TObject;str:string);
 var tmp:byte;
@@ -540,6 +540,15 @@ begin
   if str='' then exit;
   if (Sender as TAufScript).PSW.haltoff then exit;
   tmp:=MessageBox(0,PChar(utf8towincp('是否继续执行？')+#13+#10+utf8towincp('错误信息：'+str)),'WinAuf',MB_RETRYCANCEL);
+  if tmp=IDCANCEL then (Sender as TAufScript).Stop;
+end;
+procedure SCAufStr(Sender:TObject;str:string);
+var tmp:byte;
+begin
+  //ShowMessage(str);
+  if str='' then exit;
+  //if (Sender as TAufScript).PSW.haltoff then exit;
+  tmp:=MessageBox(0,PChar(utf8towincp('是否继续执行？')+#13+#10+utf8towincp('错误信息：'+str)),'SCAuf',MB_RETRYCANCEL);
   if tmp=IDCANCEL then (Sender as TAufScript).Stop;
 end;
 
@@ -638,7 +647,7 @@ begin
   AufScpt.writeln('- by Apiglio -');
 end;
 
-procedure getwind_name(Sender:TObject);
+procedure getwind_name_visible(Sender:TObject);
 var AAuf:TAuf;
     AufScpt:TAufScript;
     wind_name:string;
@@ -674,6 +683,41 @@ begin
   end;
   dword_to_arv(hd,tmp);
 
+end;
+
+procedure getwind_top(Sender:TObject);
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    tmp,name_tmp:TAufRamVar;
+    hd:hwnd;
+    ntmp:array[0..255]of char;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(2) then exit;
+  try
+    tmp:=AufScpt.RamVar(AAuf.nargs[1]);
+    if (tmp.size<4) or (tmp.VarType<>ARV_FixNum)then raise Exception.Create('');
+  except
+    AufScpt.send_error('警告：'+AAuf.args[0]+'的参数需要是不小于4字节的整型变量，代码未执行！');
+    exit;
+  end;
+  if AAuf.ArgsCount>2 then begin
+    try
+      name_tmp:=AufScpt.RamVar(AAuf.nargs[2]);
+      if name_tmp.VarType<>ARV_Char then raise Exception.Create('');
+    except
+      AufScpt.send_error('警告：'+AAuf.args[0]+'的第二个参数需要是字符型变量，代码按照单参数执行！');
+      exit;
+    end;
+  end else name_tmp.size:=0;
+  hd:=GetForegroundWindow;
+  dword_to_arv(hd,tmp);
+  if name_tmp.size<>0 then
+    begin
+      GetWindowText(hd,ntmp,min(name_tmp.size,240));
+      initiate_arv_str(wincptoutf8(ntmp),name_tmp);
+    end;
 end;
 
 procedure SendString(Sender:TObject);
@@ -889,7 +933,7 @@ begin
     end;
   end;
   wparam:=0;
-  lparam:=(x shl 16) + y;
+  lparam:=(y shl 16) + x;
   SendMessage(hd,msg,wparam,lparam);
 end;
 
@@ -943,7 +987,7 @@ begin
     end;
   end;
   wparam:=0;
-  lparam:=(x shl 16) + y;
+  lparam:=(y shl 16) + x;
   SendMessage(hd,msg,wparam,lparam);
   process_sleep(delay);
   SendMessage(hd,msg+1,wparam,lparam);
@@ -1140,7 +1184,7 @@ begin
       begin
         if AAuf.ArgsCount<4 then
           begin
-            AufScpt.send_error('Axis需要3个参数，未成功设置！');
+            AufScpt.send_error('set Axis需要3个参数，未成功设置！');
             exit
           end;
         case lowercase(AAuf.args[2]) of
@@ -1185,14 +1229,14 @@ begin
                 Form_Routiner.AufScriptFrames[fo].Frame.TrackBar.Position:=StrToInt(AAuf.nargs[3].arg);
               except AufScpt.send_error('参数错误，未成功设置！');end;
             end;
-          else AufScpt.send_error('Axis之后需要使用MainV=,SyncV=,ButtonV=,LeftH=,RightH=,RecH=,CodeV=进行设置。');
+          else AufScpt.send_error('set Axis之后需要使用MainV=,SyncV=,ButtonV=,LeftH=,RightH=,RecH=,CodeV=进行设置。');
         end;
       end;
     'form':
       begin
         if AAuf.ArgsCount<7 then
           begin
-            AufScpt.send_error('Form需要6个参数，未成功设置！');exit
+            AufScpt.send_error('set Form需要6个参数，未成功设置！');exit
           end;
         try
           fo:=StrToInt(AAuf.nargs[2].arg);
@@ -1201,7 +1245,7 @@ begin
           ww:=StrToInt(AAuf.nargs[5].arg);
           hh:=StrToInt(AAuf.nargs[6].arg);
         except
-          AufScpt.send_error('Form之后的参数需要是数字，未设置成功。');exit
+          AufScpt.send_error('set Form之后的参数需要是数字，未设置成功。');exit
         end;
         case fo of
           1:pf:=Form_Routiner;
@@ -1224,11 +1268,11 @@ begin
       begin
         if AAuf.ArgsCount<3 then
           begin
-            AufScpt.send_error('Layout需要2个参数，未成功设置！');
+            AufScpt.send_error('set Layout需要2个参数，未成功设置！');
             exit
           end;
         try fo:=StrToInt(AAuf.nargs[2].arg);
-        except AufScpt.send_error('Layout之后的参数需要是数字，未设置成功。');exit end;
+        except AufScpt.send_error('set Layout之后的参数需要是数字，未设置成功。');exit end;
         Form_Routiner.Layout.LayoutCode:=TLayoutSet(fo);
         Form_Routiner.SetLayout(byte(Form_Routiner.Layout.LayoutCode));
         Form_Routiner.FormResize(Form_Routiner);
@@ -1237,7 +1281,7 @@ begin
       begin
         if AAuf.ArgsCount<10 then
           begin
-            AufScpt.send_error('Customer_Layout需要9个参数，未成功设置！');exit
+            AufScpt.send_error('set Customer_Layout需要9个参数，未成功设置！');exit
           end;
         try
           Form_Routiner.Layout.customer_layout.Width:=StrToInt(AAuf.nargs[2].arg);
@@ -1256,7 +1300,7 @@ begin
       begin
         if AAuf.ArgsCount<7 then
           begin
-            AufScpt.send_error('AufButton需要6个参数，未成功设置！');exit
+            AufScpt.send_error('set AufButton需要6个参数，未成功设置！');exit
           end;
         try
           {winID}ww:=StrToInt(AAuf.nargs[2].arg);
@@ -1276,7 +1320,7 @@ begin
       begin
         if AAuf.ArgsCount<8 then
           begin
-            AufScpt.send_error('HoldButton需要7个参数，未成功设置！');exit
+            AufScpt.send_error('set HoldButton需要7个参数，未成功设置！');exit
           end;
         try
           {ID}fo:=StrToInt(AAuf.nargs[2].arg);
@@ -1302,7 +1346,7 @@ begin
       begin
         if AAuf.ArgsCount<4 then
           begin
-            AufScpt.send_error('action_setting需要3个参数，未成功设置！');exit
+            AufScpt.send_error('set Action_Setting需要3个参数，未成功设置！');exit
           end;
         try
           case lowercase(AAuf.nargs[2].arg) of
@@ -1311,19 +1355,19 @@ begin
             'ab_halt=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.Halt1,Form_Routiner.Setting.AufButton.Halt2);
             'ab_opt=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.Setting1,Form_Routiner.Setting.AufButton.Setting2);
             'hb_opt=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.HoldButton.Setting1,Form_Routiner.Setting.HoldButton.Setting2);
-            else AufScpt.send_error('action_setting之后需要使用ab_act=,ab_adv,ab_halt=,ab_opt=,hb_opt=进行设置。');
+            else AufScpt.send_error('set Action_Setting之后需要使用ab_act=,ab_adv,ab_halt=,ab_opt=,hb_opt=进行设置。');
           end;
         except
           AufScpt.send_error('参数只能包含LMR12CSA几个字符，未完成设置！');exit
         end;
       end;
-    //
     'wndlist':
       begin
         if AAuf.ArgsCount<4 then
           begin
-            AufScpt.send_error('wndlist需要3个参数，未成功设置！');exit
+            AufScpt.send_error('set Wndlist需要3个参数，未成功设置！');exit
           end;
+        AAuf.CheckArgs(4);
         try
           with Form_Routiner.Setting.WndListShowingOption do begin
             case lowercase(AAuf.nargs[2].arg) of
@@ -1333,11 +1377,62 @@ begin
               'class=':case lowercase(AAuf.nargs[3].arg) of 'true','t','on','y','yes':ClassNameVisible:=true; else ClassNameVisible:=false;end;
               'namecell=':try NameCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('namecell 需要数字参数') end;
               'aligncell=':try AlignCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('aligncell 需要数字参数') end;
-              else AufScpt.send_error('action_setting之后需要使用hwnd=,name=,class,namecell=,aligncell=进行设置。');
+              else AufScpt.send_error('Action_Setting之后需要使用hwnd=,name=,class,namecell=,aligncell=进行设置。');
             end;
           end;
         except
           AufScpt.send_error('参数只能包含LMR12CSA几个字符，未完成设置！');exit
+        end;
+      end;
+    'shortcut':
+      begin
+        if AAuf.ArgsCount<4 then
+          begin
+            AufScpt.send_error('set Shortcut需要3个参数，未成功设置！');exit
+          end;
+        try
+          fo:=AufScpt.TryToDWord(AAuf.nargs[3]);
+        except
+          AufScpt.send_error('第2个参数需要是整数，未成功设置！');exit;
+        end;
+        case lowercase(AAuf.nargs[2].arg) of
+          'mode=':
+            if (fo<0) or (fo>3) then AufScpt.send_error('第3个参数无效，未成功设置！')
+            else AdapterForm.Option.Shortcut.Mode:=TShortcutMode(fo);
+          'startkey=':
+            if (fo<0) or (fo>255) then AufScpt.send_error('第3个参数无效，未成功设置！')
+            else AdapterForm.Option.Shortcut.StartKey:=fo;
+          'endkey=':
+            if (fo<0) or (fo>255) then AufScpt.send_error('第3个参数无效，未成功设置！')
+            else AdapterForm.Option.Shortcut.EndKey:=fo;
+          'downupkey=':
+            if (fo<0) or (fo>255) then AufScpt.send_error('第3个参数无效，未成功设置！')
+            else AdapterForm.Option.Shortcut.DownUpKey:=fo;
+          else AufScpt.send_error('Action_Setting之后需要使用Mode=,StartKey=,EndKey=,DownUpKey=进行设置。');exit    ;
+        end
+      end;
+    'shortcut_command':
+      begin
+        if AAuf.ArgsCount<5 then
+          begin
+            AufScpt.send_error('set Shortcut_Command需要4个参数，未成功设置！');exit
+          end;
+        try
+          fo:=AufScpt.TryToDWord(AAuf.nargs[2]);
+          if (fo<0) or (fo>ShortcutCount) then raise Exception.Create('');
+        except
+          AufScpt.send_error('第2个参数需要在0-'+IntToStr(ShortcutCount)+'范围内，未成功设置！');
+          exit;
+        end;
+        try
+          AdapterForm.Option.Shortcut.ScriptFiles[fo].command:=AufScpt.TryToString(AAuf.nargs[3]);
+        except
+          AufScpt.send_error('第3个参数转换为字符串失败，未成功设置！');exit
+        end;
+        try
+          AdapterForm.Option.Shortcut.ScriptFiles[fo].filename:=AufScpt.TryToString(AAuf.nargs[4]);
+        except
+          AufScpt.send_error('第4个参数转换为字符串失败，未成功设置！');exit
         end;
       end;
     //
@@ -1356,7 +1451,8 @@ begin
   AAuf.Script.add_func('mouseclk',@_MouseClk,'hwnd,"L/M/R",x,y,delay','向hwnd窗口发送一对间隔delay毫秒的鼠标消息');
   AAuf.Script.add_func('post',@PostM,'hwnd,msg,w,l','调用Postmessage');
   AAuf.Script.add_func('send',@SendM,'hwnd,msg,w,l','调用Sendmessage');
-  AAuf.Script.add_func('getwnd_v',@getwind_name,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
+  AAuf.Script.add_func('getwnd_v',@getwind_name_visible,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
+  AAuf.Script.add_func('getwnd_t',@getwind_top,'','返回当前置顶的窗体句柄');
   AAuf.Script.add_func('getpixel',@_GetPixel,'hwnd,x,y,out_var','返回窗体指定像素点颜色');
   AAuf.Script.add_func('getrect',@_GetPixelRect,'hwnd,x1,x2,y1,y2,out_var','返回窗体指定矩形范围内像素点颜色');
   AAuf.Script.add_func('ramimg',@_RamImage,'col,row,in_var','根据内存变量显示图片');
@@ -1637,7 +1733,7 @@ begin
     SetTrackMouseMoveM(1);
     Self.MouseHookEnabled:=true;
     Self.StatusBar.Panels.Items[2].Text:='鼠标';
-    {$ifdef HookAdpater}
+    {$ifdef HookAdapter}
     FormRunPerformance.CheckGroup_HookEnabled.Checked[1]:=true;
     {$endif}
   end;
@@ -1648,7 +1744,7 @@ begin
   StopHookM;
   Self.MouseHookEnabled:=false;
   Self.StatusBar.Panels.Items[2].Text:='';
-  {$ifdef HookAdpater}
+  {$ifdef HookAdapter}
   FormRunPerformance.CheckGroup_HookEnabled.Checked[1]:=false;
   {$endif}
 end;
@@ -1666,7 +1762,7 @@ begin
   end else begin
     Self.KeybdHookEnabled:=true;
     Self.StatusBar.Panels.Items[1].Text:='键盘';
-    {$ifdef HookAdpater}
+    {$ifdef HookAdapter}
     FormRunPerformance.CheckGroup_HookEnabled.Checked[0]:=true;
     {$endif}
   end;
@@ -1677,7 +1773,7 @@ begin
   StopHookK;
   Self.KeybdHookEnabled:=false;
   Self.StatusBar.Panels.Items[1].Text:='';
-  {$ifdef HookAdpater}
+  {$ifdef HookAdapter}
   FormRunPerformance.CheckGroup_HookEnabled.Checked[0]:=false;
   {$endif}
 end;
@@ -1849,6 +1945,21 @@ begin
     writeln(sat,'set Action_Setting '+'HB_opt= "'+(MouseActSettingToMouseActCode(Self.Setting.HoldButton.Setting1,Self.Setting.HoldButton.Setting2))+'"');
     {$endif}
 
+
+    {$ifdef CodeModeRec}
+    with AdapterForm.Option.Shortcut do
+      begin
+        writeln(sat,'set Shortcut '+'Mode= '+IntToStr(byte(Mode)));
+        writeln(sat,'set Shortcut '+'StartKey= '+IntToStr(byte(StartKey)));
+        writeln(sat,'set Shortcut '+'EndtKey= '+IntToStr(byte(EndKey)));
+        writeln(sat,'set Shortcut '+'DownUpKey= '+IntToStr(byte(DownUpKey)));
+        for i:=0 to ShortcutCount do
+          begin
+            writeln(sat,'set Shortcut_Command '+IntToStr(i)+',"'+ScriptFiles[i].command+'","'+ScriptFiles[i].filename+'"');
+          end;
+      end;
+    {$endif}
+
     {$ifdef ByteModeRec}
     sav.SaveToFile('option.lay');
     sav.Free;
@@ -1882,117 +1993,116 @@ var sav:TMemoryStream;
       result:=sav.ReadAnsiString;
     end;
 begin
-  {$ifdef ByteModeRec}
-  {$ifdef CodeModeRec}
-  sav:=TmemoryStream.Create;
-  forms[1]:=Self;
-  forms[2]:=AufButtonForm;
-  forms[3]:=SettingLagForm;
-  forms[4]:=ManualForm;
-  forms[5]:=FormRunPerformance;
-  forms[6]:=Form_HoldButtonSetting;
-  try
-    sav.LoadFromFile('option.lay');
-    if sav.Size<$40000 then
-      begin
-        taddr:=sav.Size;
-        sav.size:=$40000;
-        while taddr<sav.size do
-          begin
-            sav.position:=taddr;
-            sav.WriteByte(0);
-            inc(taddr);
-          end;
-      end;
-    Self.Layout.LayoutCode:=TLayoutSet(get_byte(24));
-    FOR fo:=1 TO 6 DO BEGIN
-      ww:=get_long(32*fo+8);
-      hh:=get_long(32*fo+12);
-      if ww*hh<>0 then begin
-        forms[fo].Width:=ww;
-        forms[fo].Height:=hh;
-        forms[fo].Top:=get_long(32*fo);
-        forms[fo].Left:=get_long(32*fo+4);
-      end;
-    END;
-    if get_byte(12288+0) and $80 <> 0 then Self.Splitter_MainV.Left:=get_long(12288+128+0);
-    if get_byte(12288+3) and $80 <> 0 then Self.Splitter_LeftH.Top:=get_long(12288+128+12);
-    if get_byte(12288+4) and $80 <> 0 then Self.Splitter_RightH.Top:=get_long(12288+128+16);
-    if get_byte(12288+5) and $80 <> 0 then Self.Splitter_RecH.Top:=get_long(12288+128+20);
-    if get_byte(12288+1) and $80 <> 0 then Self.Splitter_SyncV.Left:=get_long(12288+128+4);
-    if get_byte(12288+2) and $80 <> 0 then Self.Splitter_ButtonV.Left:=get_long(12288+128+8);
-    ww:=get_long(12288+32+6*4);
-    hh:=get_long(12288+32+7*4);
-    if ww*hh<>0 then begin
-      Self.Layout.customer_layout.Width:=ww;
-      Self.Layout.customer_layout.Height:=hh;
-      Self.Layout.customer_layout.MainV:=get_long(12288+32+0*4);
-      Self.Layout.customer_layout.SyncV:=get_long(12288+32+1*4);
-      Self.Layout.customer_layout.ButtV:=get_long(12288+32+2*4);
-      Self.Layout.customer_layout.LeftH:=get_long(12288+32+3*4);
-      Self.Layout.customer_layout.RightH:=get_long(12288+32+4*4);
-      Self.Layout.customer_layout.RecH:=get_long(12288+32+5*4);
-    end;
-    for i:=0 to Self.MainMenu.Items[1].Count - 1 do
-      Self.MainMenu.Items[1].Items[i].Enabled:=true;
-    if Self.Layout.LayoutCode<>Lay_Customer then Self.MainMenu.Items[1].Items[byte(Self.Layout.LayoutCode)].Enabled:=false;
 
-    for i:=0 to 31 do
-      begin
-        taddr:=256 + i*8;
-        stmp:='XXXX';
-        for j:=0 to 3 do stmp[j+1]:=chr(get_byte(taddr+j));
-        Self.HoldButtons[i].Caption:=wincptoutf8(stmp);
-        for j:=0 to 3 do Self.HoldButtons[i].keymessage[j]:=get_byte(taddr+4+j);
-      end;
-
-    error_text:='';
-    for i:=0 to SynCount do
-      for j:=0 to ButtonColumn do
+  IF FileExists('option.auf.lay') THEN
+    Self.AufScriptFrames[RuleCount].Frame.Auf.Script.command('load "option.auf.lay"')
+  ELSE BEGIN
+    sav:=TmemoryStream.Create;
+    forms[1]:=Self;
+    forms[2]:=AufButtonForm;
+    forms[3]:=SettingLagForm;
+    forms[4]:=ManualForm;
+    forms[5]:=FormRunPerformance;
+    forms[6]:=Form_HoldButtonSetting;
+    try
+      sav.LoadFromFile('option.lay');
+      if sav.Size<$40000 then
         begin
-          try
-            taddr:=512 + ((i*32)+j)*512;
-            Self.AufButtons[i,j].ScriptFile.CommaText:=get_str(taddr);
-            Self.AufButtons[i,j].Caption:=get_str(taddr+256);
-            Self.AufButtons[i,j].WindowChangeable:=get_byte(taddr+507)<>0;
-            if Self.AufButtons[i,j].WindowChangeable then Self.AufButtons[i,j].WindowIndex:=get_long(taddr+508)
-            else Self.AufButtons[i,j].WindowIndex:=i;
-          except
-            error_text:=error_text+', ['+IntToStr(i)+','+IntToStr(j)+']'
-          end;
+          taddr:=sav.Size;
+          sav.size:=$40000;
+          while taddr<sav.size do
+            begin
+              sav.position:=taddr;
+              sav.WriteByte(0);
+              inc(taddr);
+            end;
         end;
-    if error_text<>'' then begin
-      delete(error_text,1,1);
-      MessageBox(0,PChar(utf8towincp('以下面板按键未找到先前的设置：'+#13+#10+error_text)+'.'),'Error',MB_OK);
-    end;
+      Self.Layout.LayoutCode:=TLayoutSet(get_byte(24));
+      FOR fo:=1 TO 6 DO BEGIN
+        ww:=get_long(32*fo+8);
+        hh:=get_long(32*fo+12);
+        if ww*hh<>0 then begin
+          forms[fo].Width:=ww;
+          forms[fo].Height:=hh;
+          forms[fo].Top:=get_long(32*fo);
+          forms[fo].Left:=get_long(32*fo+4);
+        end;
+      END;
+      if get_byte(12288+0) and $80 <> 0 then Self.Splitter_MainV.Left:=get_long(12288+128+0);
+      if get_byte(12288+3) and $80 <> 0 then Self.Splitter_LeftH.Top:=get_long(12288+128+12);
+      if get_byte(12288+4) and $80 <> 0 then Self.Splitter_RightH.Top:=get_long(12288+128+16);
+      if get_byte(12288+5) and $80 <> 0 then Self.Splitter_RecH.Top:=get_long(12288+128+20);
+      if get_byte(12288+1) and $80 <> 0 then Self.Splitter_SyncV.Left:=get_long(12288+128+4);
+      if get_byte(12288+2) and $80 <> 0 then Self.Splitter_ButtonV.Left:=get_long(12288+128+8);
+      ww:=get_long(12288+32+6*4);
+      hh:=get_long(12288+32+7*4);
+      if ww*hh<>0 then begin
+        Self.Layout.customer_layout.Width:=ww;
+        Self.Layout.customer_layout.Height:=hh;
+        Self.Layout.customer_layout.MainV:=get_long(12288+32+0*4);
+        Self.Layout.customer_layout.SyncV:=get_long(12288+32+1*4);
+        Self.Layout.customer_layout.ButtV:=get_long(12288+32+2*4);
+        Self.Layout.customer_layout.LeftH:=get_long(12288+32+3*4);
+        Self.Layout.customer_layout.RightH:=get_long(12288+32+4*4);
+        Self.Layout.customer_layout.RecH:=get_long(12288+32+5*4);
+      end;
+      for i:=0 to Self.MainMenu.Items[1].Count - 1 do
+        Self.MainMenu.Items[1].Items[i].Enabled:=true;
+      if Self.Layout.LayoutCode<>Lay_Customer then Self.MainMenu.Items[1].Items[byte(Self.Layout.LayoutCode)].Enabled:=false;
 
-    try MouseActByteToMouseActSetting(get_byte(12288+8),Self.Setting.AufButton.Act1,Self.Setting.AufButton.Act2);
-      except MouseActByteToMouseActSetting($07,Self.Setting.AufButton.Act1,Self.Setting.AufButton.Act2);
-    end;
-    try MouseActByteToMouseActSetting(get_byte(12288+9),Self.Setting.AufButton.Setting1,Self.Setting.AufButton.Setting2);
-      except MouseActByteToMouseActSetting($06,Self.Setting.AufButton.Setting1,Self.Setting.AufButton.Setting2);
-    end;
-    try MouseActByteToMouseActSetting(get_byte(12288+10),Self.Setting.AufButton.Halt1,Self.Setting.AufButton.Halt2);
-      except MouseActByteToMouseActSetting($05,Self.Setting.AufButton.Halt1,Self.Setting.AufButton.Halt2);
-    end;
-    try MouseActByteToMouseActSetting(get_byte(12288+11),Self.Setting.HoldButton.Setting1,Self.Setting.HoldButton.Setting2);
-      except MouseActByteToMouseActSetting($06,Self.Setting.HoldButton.Setting1,Self.Setting.HoldButton.Setting2);
-    end;
-    try MouseActByteToMouseActSetting(get_byte(12288+12),Self.Setting.AufButton.ExtraAct1,Self.Setting.AufButton.ExtraAct2);
-      except MouseActByteToMouseActSetting($87,Self.Setting.AufButton.ExtraAct1,Self.Setting.AufButton.ExtraAct2);
-    end;
+      for i:=0 to 31 do
+        begin
+          taddr:=256 + i*8;
+          stmp:='XXXX';
+          for j:=0 to 3 do stmp[j+1]:=chr(get_byte(taddr+j));
+          Self.HoldButtons[i].Caption:=wincptoutf8(stmp);
+          for j:=0 to 3 do Self.HoldButtons[i].keymessage[j]:=get_byte(taddr+4+j);
+        end;
 
-  except
-    MessageBox(0,PChar(utf8towincp('布局文件读取失败')),'Error',MB_OK);
-    FOR fo:=1 TO 6 DO BEGIN
-      forms[fo].Position:=poScreenCenter;
-    END;
-  end;
-  sav.Free;
-  {$endif}
-  {$else}
-  Self.AufScriptFrames[RuleCount].Frame.Auf.Script.command('load "option.auf.lay"');
-  {$endif}
+      error_text:='';
+      for i:=0 to SynCount do
+        for j:=0 to ButtonColumn do
+          begin
+            try
+              taddr:=512 + ((i*32)+j)*512;
+              Self.AufButtons[i,j].ScriptFile.CommaText:=get_str(taddr);
+              Self.AufButtons[i,j].Caption:=get_str(taddr+256);
+              Self.AufButtons[i,j].WindowChangeable:=get_byte(taddr+507)<>0;
+              if Self.AufButtons[i,j].WindowChangeable then Self.AufButtons[i,j].WindowIndex:=get_long(taddr+508)
+              else Self.AufButtons[i,j].WindowIndex:=i;
+            except
+              error_text:=error_text+', ['+IntToStr(i)+','+IntToStr(j)+']'
+            end;
+          end;
+      if error_text<>'' then begin
+        delete(error_text,1,1);
+        MessageBox(0,PChar(utf8towincp('以下面板按键未找到先前的设置：'+#13+#10+error_text)+'.'),'Error',MB_OK);
+      end;
+
+      try MouseActByteToMouseActSetting(get_byte(12288+8),Self.Setting.AufButton.Act1,Self.Setting.AufButton.Act2);
+        except MouseActByteToMouseActSetting($07,Self.Setting.AufButton.Act1,Self.Setting.AufButton.Act2);
+      end;
+      try MouseActByteToMouseActSetting(get_byte(12288+9),Self.Setting.AufButton.Setting1,Self.Setting.AufButton.Setting2);
+        except MouseActByteToMouseActSetting($06,Self.Setting.AufButton.Setting1,Self.Setting.AufButton.Setting2);
+      end;
+      try MouseActByteToMouseActSetting(get_byte(12288+10),Self.Setting.AufButton.Halt1,Self.Setting.AufButton.Halt2);
+        except MouseActByteToMouseActSetting($05,Self.Setting.AufButton.Halt1,Self.Setting.AufButton.Halt2);
+      end;
+      try MouseActByteToMouseActSetting(get_byte(12288+11),Self.Setting.HoldButton.Setting1,Self.Setting.HoldButton.Setting2);
+        except MouseActByteToMouseActSetting($06,Self.Setting.HoldButton.Setting1,Self.Setting.HoldButton.Setting2);
+      end;
+      try MouseActByteToMouseActSetting(get_byte(12288+12),Self.Setting.AufButton.ExtraAct1,Self.Setting.AufButton.ExtraAct2);
+        except MouseActByteToMouseActSetting($87,Self.Setting.AufButton.ExtraAct1,Self.Setting.AufButton.ExtraAct2);
+      end;
+
+    except
+      MessageBox(0,PChar(utf8towincp('布局文件读取失败')),'Error',MB_OK);
+      FOR fo:=1 TO 6 DO BEGIN
+        forms[fo].Position:=poScreenCenter;
+      END;
+    end;
+    sav.Free;
+  END;
 
   for i:=0 to SynCount do
     for j:=0 to ButtonColumn do
@@ -2408,11 +2518,19 @@ var radiogroup:TRadioGroup;
 begin
   radiogroup:=Sender as TRadioGroup;
   with radiogroup do if ItemIndex=2 then ItemIndex:=0;
+  {$ifndef HookAdapter}
   case radiogroup.ItemIndex of
     0:Self.Setting.RecOption.RecSyntaxMode:=smRapid;
     1:Self.Setting.RecOption.RecSyntaxMode:=smChar;
     2:Self.Setting.RecOption.RecSyntaxMode:=smMono;
   end;
+  {$else}
+  case radiogroup.ItemIndex of
+    0:AdapterForm.Option.Rec.SyntaxMode:=smRapid;
+    1:AdapterForm.Option.Rec.SyntaxMode:=smChar;
+    2:AdapterForm.Option.Rec.SyntaxMode:=smMono;
+  end;
+  {$endif}
 end;
 
 procedure TForm_Routiner.ScrollBox_AufButtonResize(Sender: TObject);
@@ -2721,6 +2839,24 @@ begin
 
     end;
 
+  for i:=0 to ShortcutCount do
+    begin
+      Self.SCAufs[i]:=TSCAuf.Create(Self);
+      Self.SCAufs[i].ShortcutIndex:=i;
+      Self.SCAufs[i].Script.InternalFuncDefine;
+      CostumerFuncInitialize(SCAufs[i]);
+      with Self.SCAufs[i].Script do
+        begin
+          IO_fptr.pause:=nil;
+          IO_fptr.echo:=nil;
+          IO_fptr.print:=nil;
+          IO_fptr.error:=@SCAufStr;
+          Func_Process.beginning:=@SCAufBeginning;
+          Func_Process.ending:=@SCAufEnding;
+          Func_process.Setting:=@Routiner_Setting;
+        end;
+    end;
+
   Self.AufPopupMenu:=TAufPopupMenu.Create(Self);
 
   //Self.BorderStyle:=bsSingle;
@@ -2942,7 +3078,11 @@ procedure TForm_Routiner.Button_MouseOriMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if not Self.MouseHookEnabled then exit;
+  {$ifndef HookAdapter}
   Self.SettingOri:=true;
+  {$else}
+  AdapterForm.SetMouseOriMode:=true;
+  {$endif}
   with Sender as TButton do
     begin
       Enabled:=false;
@@ -2985,8 +3125,13 @@ var msgtext:string;
 begin
   with Sender as TCheckGroup do
     begin
+      {$ifndef HookAdapter}
       Self.Setting.RecOption.RecKey:=Checked[0];
       Self.Setting.RecOption.RecMouse:=Checked[1];
+      {$else}
+      AdapterForm.Option.Rec.BKeybd:=Checked[0];
+      AdapterForm.Option.Rec.BMouse:=Checked[1];
+      {$endif}
     end;
   msgtext:='';
   if (not Self.MouseHookEnabled) and Self.Setting.RecOption.RecMouse then msgtext:=msgtext + '鼠标钩子未启用，鼠标录制功能无效。'+#13+#10;
@@ -3006,7 +3151,11 @@ end;
 
 procedure TForm_Routiner.Edit_TimerOffsetMouseEnter(Sender: TObject);
 begin
+  {$ifndef HookAdapter}
   Self.ShowManual('起始累计时间，为0时开始录制时自动加入settimer代码。仅累计计时模式有效。');
+  {$else}
+  Self.ShowManual('起始累计时间，当前版本不再支持。');
+  {$endif}
 end;
 
 procedure TForm_Routiner.Edit_TimerOffsetMouseLeave(Sender: TObject);
@@ -3047,7 +3196,11 @@ procedure TForm_Routiner.RadioGroup_DelayModeClick(Sender: TObject);
 begin
   with Sender as TRadioGroup do
     begin
+      {$ifndef HookAdapter}
       Self.Setting.RecOption.RecTimeMode:=TRecTimeMode(ItemIndex);
+      {$else}
+      AdapterForm.Option.Rec.TimeMode:=TRecTimeMode(ItemIndex);
+      {$endif}
     end;
 end;
 
@@ -3078,43 +3231,59 @@ end;
 
 procedure TForm_Routiner.Button_Wnd_RecordClick(Sender: TObject);
 begin
-  if not Self.Record_Mode then
+  if not {$ifndef HookAdapter}Self.Record_Mode{$else}AdapterForm.RecordMode{$endif} then
     begin
-      Self.Record_Mode:=true;
       (Sender as TButton).Caption:='结束录制键盘';
       (Sender as TButton).Font.Bold:=true;
       (Sender as TButton).Font.Color:=clRed;
+      Self.StatusBar.Panels.Items[5].Text:='录制';
+      {$ifndef HookAdapter}
+      Self.Record_Mode:=true;
       Self.LastRecTime:=GetTimeNumber;
       Self.FirstRecTime:=GetTimeNumber;
       Self.TimeOffset:=Usf.to_i(Self.Edit_TimerOffset.Caption);
       if (Self.Setting.RecOption.RecTimeMode=rtmWaittimer) and (Self.TimeOffset=0) then CurrentAufStrAdd('settimer');
-      Self.StatusBar.Panels.Items[5].Text:='录制';
+      {$else}
+      AdapterForm.StartRecord;
+      {$endif}
     end
   else
     begin
-      Self.Record_Mode:=false;
       (Sender as TButton).Caption:='开始录制键盘';
       (Sender as TButton).Font.Bold:=false;
       (Sender as TButton).Font.Color:=clDefault;
       Self.StatusBar.Panels.Items[5].Text:='';
+      {$ifndef HookAdapter}
+      Self.Record_Mode:=false;
+      {$else}
+      AdapterForm.EndRecord;
+      {$endif}
     end;
 end;
 
 procedure TForm_Routiner.Button_Wnd_SynthesisClick(Sender: TObject);
 begin
-  if not Self.Synthesis_mode then
+  if not {$ifndef HookAdapter}Self.Synthesis_mode{$else}AdapterForm.SynchronicMode{$endif} then
     begin
-      Self.Synthesis_mode:=true;
       (Sender as TButton).Caption:='结束同步键盘';
       (Sender as TButton).Font.Bold:=true;
       Self.StatusBar.Panels.Items[3].Text:='同步';
+      {$ifndef HookAdapter}
+      Self.Synthesis_mode:=true;
+      {$else}
+      AdapterForm.SynchronicMode:=true;
+      {$endif}
     end
   else
     begin
-      Self.Synthesis_mode:=false;
       (Sender as TButton).Caption:='开始同步键盘';
       (Sender as TButton).Font.Bold:=false;
       Self.StatusBar.Panels.Items[3].Text:='';
+      {$ifndef HookAdapter}
+      Self.Synthesis_mode:=false;
+      {$else}
+      AdapterForm.SynchronicMode:=false;
+      {$endif}
     end;
 end;
 
@@ -3504,11 +3673,8 @@ var str:string;
 begin
   Self.cmd.Clear;
   Self.cmd.add('define win, @'+Form_Routiner.Buttons[Self.WindowIndex].expression);
-  //qkm('M-AufButton['+INtToStr(Self.WindowIndex)+','+INtToStr(Self.ColumnIndex)+']');
   Self.cmd.add('jmp +'+IntToStr(Self.SkipLine));
   for str in Self.ScriptFile do Self.cmd.Add('load "'+str+'"');
-  //Self.cmd.add('load "'+Self.ScriptFile+'"');
-  //qkm('E-AufButton['+INtToStr(Self.WindowIndex)+','+INtToStr(Self.ColumnIndex)+']');
 
 end;
 
