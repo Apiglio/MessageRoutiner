@@ -8,7 +8,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Messages,
-  Windows, StdCtrls, ComCtrls, ExtCtrls, Menus, LazUTF8{$ifndef insert}, Apiglio_Useful{$endif};
+  Windows, StdCtrls, ComCtrls, LazUTF8{$ifndef insert}, Apiglio_Useful{$endif};
 
 type
 
@@ -43,41 +43,24 @@ type
       procedure EditOnChange(Sender:TObject);
       constructor Create(AOwner:TComponent);
   end;
-  TARVCheckBox = class(TCheckBox)
-    published
-      TheLabel:TLabel;
-    public
-      procedure CheckOnChange(Sender:TObject);
-  end;
-  TARVLabel = class(TLabel)
-  published
-    CheckBox:TCheckBox;
-  public
-    procedure LabelOnClick(Sender:TObject);
-  end;
 
 
   { TForm_Routiner }
 
   TForm_Routiner = class(TForm)
-    Button_TreeViewFresh: TButton;
     Button_Wnd_Fresh: TButton;
     Button_advanced: TButton;
     Button_end: TButton;
     Button_run: TButton;
     Button_Wnd_Synthesis: TButton;
-    Edit_TreeView: TEdit;
-    Label_filter: TLabel;
     Memo_output: TMemo;
     Memo_cmd: TMemo;
     TreeView_Wnd: TTreeView;
     procedure Button_endClick(Sender: TObject);
     procedure Button_runClick(Sender: TObject);
     procedure Button_advancedClick(Sender: TObject);
-    procedure Button_TreeViewFreshClick(Sender: TObject);
     procedure Button_Wnd_FreshClick(Sender: TObject);
     procedure Button_Wnd_SynthesisClick(Sender: TObject);
-    procedure Edit_TreeViewChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -85,7 +68,6 @@ type
     procedure Memo_cmdKeyPress(Sender: TObject; var Key: char);
 
     procedure GetMessageUpdate(var Msg:TMessage);message WM_USER+100;
-    procedure WindowsFilter;
   private
     { private declarations }
     Show_Advanced_Seting:boolean;//是否显示高级设置
@@ -95,19 +77,12 @@ type
     { public declarations }
     Edits:array[0..4]of TARVEdit;
     Buttons:array[0..4]of TARVButton;
-    Labels:array[0..4]of TARVLabel;
-    CheckBoxs:array[0..4]of TARVCheckBox;
+    Labels:array[0..4]of TLabel;
+    CheckBoxs:array[0..4]of TCheckBox;
     Synthesis_mode:boolean;//为真时向所有选中的TARVButton.sel_hwnd窗体广播
     State:record
       ctrl,alt,shift,win:boolean;
-      Number:array[0..4]of boolean;//是否抬起，用于放置一次按下触发多次事件
-      Gross:boolean;//总闸是否抬起，用于放置一次按下触发多次事件
     end;
-
-    //Timer_Auf:TTimer;//Auf中的SynMoTimer
-    Tim:TTimer;//因为不知道怎么处理汉字输入法造成连续的OnChange事件，迫不得已采用延时50ms检测连续输入的办法。
-    procedure TreeViewEditOnChange(Sender:TObject);
-
   end;
 
 var
@@ -212,7 +187,7 @@ begin
   wnd.free;
 end;
 
-procedure GetChildWindows(wnd:TWindow;filter:string='');
+procedure GetChildWindows(wnd:TWindow);
 var hd:HWND;
     info:tagWindowInfo;
     w,h:word;
@@ -237,8 +212,6 @@ begin
       new_wnd.parent:=Wnd;
       wnd.child.add(new_wnd);
 
-      IF (filter='') or (pos(lowercase(filter),lowercase(title))>0) THEN BEGIN
-
       if (new_wnd.parent.node)=nil then
         Form_Routiner.TreeView_Wnd.Items.add(nil,'['+IntToHex(hd,8)+']'+title)
       else
@@ -249,15 +222,13 @@ begin
 
       GetChildWindows(new_wnd);
 
-      END;
-
       hd:=GetNextWindow(hd,GW_HWNDNEXT);
 
     end;
 end;
 
 
-procedure WndFinder(filter:string='');
+procedure WndFinder;
 var hd:HWND;
 begin
 
@@ -270,20 +241,18 @@ begin
   WndRoot.parent:=nil;
   WndRoot.node:=nil;
 
-  GetChildWindows(WndRoot,filter);
+  GetChildWindows(WndRoot);
 
   //PrintWindows(WndRoot);
 
 end;
-
-
 
 { COMMAND }
 
 procedure print_version;
 begin
   renew_writeln('Apiglio Message Routiner');
-  renew_writeln('- version 0.0.4 -');
+  renew_writeln('- version 0.0.2 -');
   renew_writeln('- by Apiglio -');
 
 end;
@@ -344,7 +313,7 @@ begin
   delay:=Round(Auf.Script.to_double(Auf.nargs[3].pre,Auf.nargs[3].arg));
   if delay=0 then delay:=50;
   PostMessage(hd,WM_KeyDown,key,(key shl 32)+1);
-  sleep(delay);//改成防止假死的
+  sleep(delay);
   PostMessage(hd,WM_KeyUp,key,(key shl 32)+1);
 
 end;
@@ -365,13 +334,6 @@ begin
 end;
 
 { TForm_Routiner }
-
-procedure TForm_Routiner.WindowsFilter;
-begin
-  //Auf.Script.IO_fptr.echo(Edit_TreeView.Text);
-  TreeView_Wnd.items.clear;
-  WndFinder(Edit_TreeView.Text);
-end;
 
 procedure TForm_Routiner.GetMessageUpdate(var Msg:TMessage);
 var x,y:integer;
@@ -411,22 +373,11 @@ begin
                 160,161:Self.State.Shift:=false;
                 164,165:Self.State.Alt:=false;
                 91,92:Self.State.Win:=false;
-                49..53:Self.State.Number[x-49]:=true;
-                192:Self.State.Gross:=true;
               end;
             end;
         end;
 
-        if Self.State.ctrl and Self.State.Gross and (Msg.wParam=WM_KeyDown) and (x = 192) and (y = 41) then
-          begin
-            Self.Button_Wnd_SynthesisClick(Self.Button_Wnd_Synthesis);
-            Self.State.Gross:=false;
-          end;
-        if Self.State.ctrl and (Msg.wParam=WM_KeyDown) and (x in [49..53]) then
-          begin
-            if Self.State.Number[x-49] then Self.CheckBoxs[x-49].Checked:=not Self.CheckBoxs[x-49].Checked;
-            Self.State.Number[x-49]:=false;
-          end;
+        if Self.State.ctrl and (Msg.wParam=WM_KeyUp) and(x in [49..53]) then Self.CheckBoxs[x-49].Checked:=not Self.CheckBoxs[x-49].Checked;
 
         if Self.Synthesis_mode then begin
         for i:=0 to 4 do
@@ -448,12 +399,6 @@ begin
   Height_Advanced_Seting:=200+72;
   Left_Column_Width:=300+120;
   Synthesis_mode:=false;
-  Button_Wnd_Synthesis.ShowHint:=true;
-  Button_Wnd_Synthesis.Hint:='按Ctrl+`切换状态';
-
-  //默认尺寸状态
-  Self.Width:=615;
-  Self.Height:=305;
 
   Self.Position:=poScreenCenter;
 
@@ -468,30 +413,16 @@ begin
       Self.Edits[i].Text:='@'+IntToStr(i*8);
       Self.Buttons[i].Text:='<<窗体句柄';
 
-      Self.Labels[i]:=TARVLabel.Create(Self);
+      Self.Labels[i]:=TLabel.Create(Self);
       Self.Labels[i].Parent:=Self;
       Self.Labels[i].Caption:='键盘同步';
-      Self.CheckBoxs[i]:=TARVCheckBox.Create(Self);
+      Self.CheckBoxs[i]:=TCheckBox.Create(Self);
       Self.CheckBoxs[i].Parent:=Self;
       Self.CheckBoxs[i].Checked:=false;
 
-      Self.CheckBoxs[i].TheLabel:=Self.Labels[i];
-      Self.CheckBoxs[i].OnChange:=@Self.CheckBoxs[i].CheckOnChange;
-
-      Self.Labels[i].CheckBox:=Self.CheckBoxs[i];
-      Self.Labels[i].OnClick:=@Self.Labels[i].LabelOnClick;
-
-      Self.CheckBoxs[i].ShowHint:=true;
-      Self.CheckBoxs[i].Hint:='按Ctrl+'+IntToStr(i+1)+'切换状态';
       Self.Labels[i].ShowHint:=true;
       Self.Labels[i].Hint:='按Ctrl+'+IntToStr(i+1)+'切换状态';
-      Self.Labels[i].Color:=clForm;
     end;
-
-
-  Auf.Free;
-  Auf:=TAuf.Create(Self);
-  Auf.Script.InternalFuncDefine;
 
   Auf.Script.Func_Process.pre:=@renew_pre;
   Auf.Script.Func_Process.post:=@renew_post;
@@ -509,14 +440,11 @@ begin
   Auf.Script.add_func('post',@PostM,'调用Postmessage(hwnd,msg,wparam,lparam)');
   Auf.Script.add_func('send',@SendM,'调用Sendmessage(hwnd,msg,wparam,lparam)');
   Auf.Script.add_func('keypress',@KeyPress_Event,'调用KeyPress_Event(hwnd,key,deley)');
-  Auf.Script.add_func('string',@SendString,'向窗口输入字符串');
-  Auf.Script.add_func('widestring',@SendWideString,'向窗口输入汉字字符串');
+  Auf.Script.add_func('str',@SendString,'向窗口输入字符串');
+  Auf.Script.add_func('str',@SendWideString,'向窗口输入汉字字符串');
 
-  //WndFinder(Edit_TreeView.Caption);
+  WndFinder;
   FormResize(nil);
-
-  tim:=TTimer.Create(Self);
-  tim.OnTimer:=@Self.TreeViewEditOnChange;
 
   SetCallHandleK(Self.Handle);
   if not StartHookK(WM_USER+100) then
@@ -572,21 +500,9 @@ begin
       Button_Wnd_Synthesis.Width:=Memo_cmd.Width;
 
       TreeView_Wnd.Top:=Memo_output.Height+10+10+50;
-      TreeView_Wnd.Height:=Height_Advanced_Seting-20+trunc(0.4*Self.Height)-40;
+      TreeView_Wnd.Height:=Height_Advanced_Seting-20+trunc(0.4*Self.Height);
       TreeView_Wnd.Left:=20+Memo_cmd.Width;
       TreeView_Wnd.Width:=Self.Width-30-Memo_cmd.Width;
-
-      Label_Filter.Top:=Edit_TreeView.Top+6;
-      Edit_TreeView.Top:=TreeView_Wnd.Top+TreeView_Wnd.Height+10;
-      Button_TreeViewFresh.Top:=Edit_TreeView.Top;
-
-      //Label_Filter.Width:=45;
-      Edit_TreeView.Width:=TreeView_Wnd.Width - Label_Filter.Width - Button_TreeViewFresh.Width - 20;
-      //Button_TreeViewFresh.Width:=72;
-
-      Label_Filter.Left:=TreeView_Wnd.Left;
-      Edit_TreeView.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width;
-      Button_TreeViewFresh.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width + 10 + Edit_TreeView.Width;
 
       for i:=0 to 4 do
         begin
@@ -649,21 +565,9 @@ begin
       Button_Wnd_Synthesis.Width:=Memo_cmd.Width;
 
       TreeView_Wnd.Top:=Memo_output.Height+10+10+50+Height_Advanced_Seting;
-      TreeView_Wnd.Height:=Height_Advanced_Seting-20-40;
+      TreeView_Wnd.Height:=Height_Advanced_Seting-20;
       TreeView_Wnd.Left:=20+Memo_cmd.Width;
       TreeView_Wnd.Width:=Self.Width-30-Memo_cmd.Width;
-
-      Label_Filter.Top:=Edit_TreeView.Top+6;
-      Edit_TreeView.Top:=TreeView_Wnd.Top+TreeView_Wnd.Height+10;
-      Button_TreeViewFresh.Top:=Edit_TreeView.Top;
-
-      //Label_Filter.Width:=45;
-      Edit_TreeView.Width:=TreeView_Wnd.Width - Label_Filter.Width - Button_TreeViewFresh.Width - 20;
-      //Button_TreeViewFresh.Width:=72;
-
-      Label_Filter.Left:=TreeView_Wnd.Left;
-      Edit_TreeView.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width;
-      Button_TreeViewFresh.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width + 10 + Edit_TreeView.Width;
 
       for i:=0 to 4 do
         begin
@@ -727,13 +631,6 @@ begin
     end;
 end;
 
-procedure TForm_Routiner.Button_TreeViewFreshClick(Sender: TObject);
-begin
-  WindowsFilter;
-end;
-
-
-
 
 
 procedure TForm_Routiner.Button_endClick(Sender: TObject);
@@ -746,9 +643,10 @@ end;
 
 procedure TForm_Routiner.Button_Wnd_FreshClick(Sender: TObject);
 begin
-  //TreeView_Wnd.items.clear;
-  //WndFinder(Edit_TreeView.Text);
-  WindowsFilter;
+  TreeView_Wnd.items.clear;
+  //TreeView_Wnd.items.addfirst(nil,'sss');
+  //TreeView_Wnd.items.addfirst(nil,'ddd');
+  WndFinder;
 end;
 
 procedure TForm_Routiner.Button_Wnd_SynthesisClick(Sender: TObject);
@@ -757,29 +655,12 @@ begin
     begin
       Self.Synthesis_mode:=true;
       (Sender as TButton).Caption:='结束同步键盘消息';
-      (Sender as TButton).Font.Bold:=true;
     end
   else
     begin
       Self.Synthesis_mode:=false;
       (Sender as TButton).Caption:='开始同步键盘消息';
-      (Sender as TButton).Font.Bold:=false;
     end;
-end;
-
-procedure TForm_Routiner.Edit_TreeViewChange(Sender: TObject);
-begin
-  //Self.Button_TreeViewFresh.OnClick(nil);
-  tim.Interval:=50;
-  tim.Enabled:=true;
-  //这个问题肯定没有结束，目前用50ms以后重新刷新的方法迟早会再暴露出问题
-  WindowsFilter;
-end;
-
-procedure TForm_Routiner.TreeViewEditOnChange(Sender:TObject);
-begin
-  WindowsFilter;
-  Self.tim.Enabled:=false;
 end;
 
 procedure TForm_Routiner.FormClose(Sender: TObject;
@@ -833,15 +714,7 @@ begin
   //
 end;
 
-procedure TARVCheckBox.CheckOnChange(Sender:TObject);
-begin
-  with (Sender as TARVCheckBox) do TheLabel.font.bold:=checked
-end;
 
-procedure TARVLabel.LabelOnClick(Sender:TObject);
-begin
-  with Sender as TARVLabel do CheckBox.Checked:=not CheckBox.Checked;
-end;
 
 end.
 

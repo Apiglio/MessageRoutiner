@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="10"/>
+    <BuildModes Active="Default"/>
+    <Units Count="6">
+      <Unit0>
+        <Filename Value="MessageRoutiner.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="37" Y="17"/>
+        <UsageCount Value="57"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form_Routiner"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="MessageRoutiner_Unit"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="404"/>
+        <CursorPos X="41" Y="414"/>
+        <UsageCount Value="57"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\..\FPC_Unit\Auf\apiglio_useful.pas"/>
+        <UnitName Value="Apiglio_Useful"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1428"/>
+        <CursorPos Y="1436"/>
+        <UsageCount Value="10"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="K:\lazarus\lcl\comctrls.pp"/>
+        <UnitName Value="ComCtrls"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="3237"/>
+        <CursorPos X="14" Y="3264"/>
+        <UsageCount Value="9"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="D:\Lazarus\lcl\stdctrls.pp"/>
+        <UnitName Value="StdCtrls"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1568"/>
+        <CursorPos X="19" Y="1579"/>
+        <UsageCount Value="9"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="D:\Lazarus\lcl\controls.pp"/>
+        <UnitName Value="Controls"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1638"/>
+        <CursorPos X="14" Y="1663"/>
+        <UsageCount Value="9"/>
+      </Unit5>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="80" Column="52" TopLine="78"/>
+      </Position1>
+      <Position2>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="78" Column="58" TopLine="58"/>
+      </Position2>
+      <Position3>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="718" Column="61" TopLine="702"/>
+      </Position3>
+      <Position4>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="706" Column="16" TopLine="697"/>
+      </Position4>
+      <Position5>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="725" Column="13" TopLine="700"/>
+      </Position5>
+      <Position6>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="364" Column="5" TopLine="350"/>
+      </Position6>
+      <Position7>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="748" Column="3" TopLine="728"/>
+      </Position7>
+      <Position8>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="775" Column="60" TopLine="767"/>
+      </Position8>
+      <Position9>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="106" Column="52" TopLine="86"/>
+      </Position9>
+      <Position10>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="366" TopLine="362"/>
+      </Position10>
+      <Position11>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="14" Column="62"/>
+      </Position11>
+      <Position12>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="674" Column="32" TopLine="575"/>
+      </Position12>
+      <Position13>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="678" TopLine="664"/>
+      </Position13>
+      <Position14>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="329" Column="14" TopLine="312"/>
+      </Position14>
+      <Position15>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="89" Column="35" TopLine="80"/>
+      </Position15>
+      <Position16>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="71" Column="44" TopLine="62"/>
+      </Position16>
+      <Position17>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="501" Column="14" TopLine="488"/>
+      </Position17>
+      <Position18>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="500" Column="14" TopLine="487"/>
+      </Position18>
+      <Position19>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="502" Column="58" TopLine="487"/>
+      </Position19>
+      <Position20>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="105" Column="14" TopLine="83"/>
+      </Position20>
+      <Position21>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Column="3"/>
+      </Position21>
+      <Position22>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="501" Column="3" TopLine="485"/>
+      </Position22>
+      <Position23>
+        <Filename Value="messageroutiner_unit.pas"/>
+      </Position23>
+      <Position24>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="11" Column="86"/>
+      </Position24>
+      <Position25>
+        <Filename Value="messageroutiner_unit.pas"/>
+      </Position25>
+      <Position26>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="15" Column="55"/>
+      </Position26>
+      <Position27>
+        <Filename Value="messageroutiner_unit.pas"/>
+      </Position27>
+      <Position28>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="414" Column="41" TopLine="404"/>
+      </Position28>
+      <Position29>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="415" Column="41" TopLine="405"/>
+      </Position29>
+      <Position30>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="414" Column="41" TopLine="404"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectSession>
+  <Debugging>
+    <BreakPoints Count="2">
+      <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="messageroutiner_unit.pas"/>
+        <Line Value="709"/>
+      </Item1>
+      <Item2>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="messageroutiner_unit.pas"/>
+        <Line Value="347"/>
+      </Item2>
+    </BreakPoints>
+  </Debugging>
+</CONFIG>
