@@ -1,0 +1,126 @@
+object Form_Routiner: TForm_Routiner
+  Left = 997
+  Height = 687
+  Top = 240
+  Width = 863
+  Caption = 'Apiglio Message Routiner'
+  ClientHeight = 687
+  ClientWidth = 863
+  DesignTimePPI = 120
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnResize = FormResize
+  Position = poScreenCenter
+  LCLVersion = '1.8.4.0'
+  object Memo_cmd: TMemo
+    Left = 8
+    Height = 288
+    Top = 8
+    Width = 192
+    Font.CharSet = ANSI_CHARSET
+    Font.Height = -17
+    Font.Name = 'Consolas'
+    Font.Pitch = fpFixed
+    Font.Quality = fqDraft
+    HideSelection = False
+    OnEditingDone = Memo_cmdEditingDone
+    OnKeyPress = Memo_cmdKeyPress
+    ParentFont = False
+    ScrollBars = ssAutoBoth
+    TabOrder = 0
+    WordWrap = False
+  end
+  object Button_end: TButton
+    Left = 216
+    Height = 31
+    Top = 265
+    Width = 92
+    Caption = '停止'
+    Enabled = False
+    OnClick = Button_endClick
+    TabOrder = 1
+  end
+  object Button_run: TButton
+    Left = 320
+    Height = 31
+    Top = 264
+    Width = 92
+    Caption = '开始'
+    OnClick = Button_runClick
+    TabOrder = 2
+  end
+  object Memo_output: TMemo
+    Left = 216
+    Height = 250
+    Top = 8
+    Width = 384
+    Font.CharSet = ANSI_CHARSET
+    Font.Height = -17
+    Font.Name = 'Consolas'
+    Font.Pitch = fpFixed
+    Font.Quality = fqDraft
+    ParentFont = False
+    ScrollBars = ssAutoBoth
+    TabOrder = 3
+    WordWrap = False
+  end
+  object Button_advanced: TButton
+    Left = 416
+    Height = 30
+    Top = 264
+    Width = 192
+    Caption = '展开高级设置'
+    OnClick = Button_advancedClick
+    TabOrder = 4
+  end
+  object TreeView_Wnd: TTreeView
+    Left = 216
+    Height = 180
+    Top = 312
+    Width = 384
+    TabOrder = 5
+  end
+  object Button_Wnd_Fresh: TButton
+    Left = 8
+    Height = 28
+    Top = 432
+    Width = 194
+    Caption = '更新窗体列表'
+    OnClick = Button_Wnd_FreshClick
+    TabOrder = 6
+  end
+  object Button_Wnd_Synthesis: TButton
+    Left = 8
+    Height = 28
+    Top = 464
+    Width = 194
+    Caption = '开始同步键盘消息'
+    OnClick = Button_Wnd_SynthesisClick
+    TabOrder = 7
+  end
+  object Edit_TreeView: TEdit
+    Left = 264
+    Height = 28
+    Top = 504
+    Width = 256
+    OnChange = Edit_TreeViewChange
+    TabOrder = 8
+  end
+  object Button_TreeViewFresh: TButton
+    Left = 528
+    Height = 28
+    Top = 504
+    Width = 72
+    Caption = '刷新列表'
+    OnClick = Button_TreeViewFreshClick
+    TabOrder = 9
+  end
+  object Label_filter: TLabel
+    Left = 216
+    Height = 15
+    Top = 512
+    Width = 45
+    Caption = '查找：'
+    ParentColor = False
+  end
+end
