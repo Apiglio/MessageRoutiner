@@ -1,0 +1,37 @@
+object Form_Manual: TForm_Manual
+  Left = 876
+  Height = 600
+  Top = 336
+  Width = 800
+  BorderIcons = [biSystemMenu]
+  Caption = '操作指南'
+  ClientHeight = 600
+  ClientWidth = 800
+  DesignTimePPI = 120
+  OnResize = FormResize
+  LCLVersion = '1.8.4.0'
+  object IpHtmlPanel: TIpHtmlPanel
+    Left = 8
+    Height = 312
+    Top = 8
+    Width = 536
+    DataProvider = IpFileDataProvider
+    FixedTypeface = 'Courier New'
+    DefaultTypeFace = 'default'
+    DefaultFontSize = 12
+    FlagErrors = False
+    PrintSettings.MarginLeft = 0.5
+    PrintSettings.MarginTop = 0.5
+    PrintSettings.MarginRight = 0.5
+    PrintSettings.MarginBottom = 0.5
+    PrintSettings.Preview.Left = 480
+    PrintSettings.Preview.Top = 270
+    PrintSettings.Preview.Width = 1440
+    PrintSettings.Preview.Height = 810
+    TabOrder = 0
+  end
+  object IpFileDataProvider: TIpFileDataProvider
+    left = 192
+    top = 296
+  end
+end
