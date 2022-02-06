@@ -9,16 +9,16 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Messages,
   Windows, StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, CheckLst, Dos,
-  LazUTF8{$ifndef insert}, Apiglio_Useful, aufscript_frame{$endif};
+  LazUTF8{$ifndef insert}, Apiglio_Useful, aufscript_frame, auf_ram_var{$endif};
 
 const
 
-  version_number='0.1.5';
+  version_number='0.1.7';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
   ButtonColumn   = 9;{不能大于31，否则设置保存会出问题}
-  AufPopupCount  = 5;{不能大于255，推荐5}
+  AufPopupCount  = 5;{不能大于254，也不推荐大于5}
 
   gap=5;
   sp_thick=6;
@@ -213,7 +213,7 @@ type
     MenuItem_Lay_SynChronic: TMenuItem;
     MenuItem_Setting_Lag: TMenuItem;
     MenuItem_Function: TMenuItem;
-    MenuItem_Opt_licence: TMenuItem;
+    MenuItem_Opt_Adapter: TMenuItem;
     MenuItem_Opt_About: TMenuItem;
     MenuItem_Layout: TMenuItem;
     MenuItem_Option: TMenuItem;
@@ -288,7 +288,7 @@ type
     procedure MenuItem_Lay_simpleClick(Sender: TObject);
     procedure MenuItem_Lay_SynChronicClick(Sender: TObject);
     procedure MenuItem_Opt_AboutClick(Sender: TObject);
-    procedure MenuItem_Opt_licenceClick(Sender: TObject);
+    procedure MenuItem_Opt_AdapterClick(Sender: TObject);
     procedure MenuItem_RunPerformanceClick(Sender: TObject);
     procedure MenuItem_Setting_LagClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
@@ -301,6 +301,8 @@ type
     procedure ScrollBox_WndListResize(Sender: TObject);
     procedure ScrollBox_WndViewResize(Sender: TObject);
     procedure TreeView_WndChange(Sender: TObject; Node: TTreeNode);
+    procedure TreeView_WndMouseEnter(Sender: TObject);
+    procedure TreeView_WndMouseLeave(Sender: TObject);
     procedure WindowPosPadMouseEnter(Sender: TObject);
     procedure WindowPosPadMouseLeave(Sender: TObject);
     procedure WindowPosPadViceChange(Sender: TObject);
@@ -389,7 +391,8 @@ var
   end;
 
 implementation
-uses form_settinglag, form_aufbutton, form_manual, form_runperformance, unit_holdbuttonsetting;
+uses form_settinglag, form_aufbutton, form_manual, form_runperformance,
+     unit_holdbuttonsetting, form_adapter;
 
 {$R *.lfm}
 
@@ -418,13 +421,14 @@ begin
   gettime(h,m,s,ms);
   result:=ms*10+s*1000+m*60000+h*3600000;
 end;
+{
 function GetTimeStr:string;
 var h,m,s,ms:word;
 begin
   gettime(h,m,s,ms);
   result:=Usf.zeroplus(h,2)+':'+Usf.zeroplus(m,2)+':'+Usf.zeroplus(s,2)+'.'+Usf.zeroplus(ms,2);
 end;
-
+}
 procedure MouseActByteToMouseActSetting(MouseActByte:byte;var shift:TShiftState;var button:TMouseButton);
 var butt:byte;
 begin
@@ -455,7 +459,7 @@ begin
     Application.ProcessMessages;
   until t1>=t2;
 end;
-
+{
 procedure _gettime(Sender:TObject);
 var AufScpt:TAufScript;
     AAuf:TAuf;
@@ -465,6 +469,7 @@ begin
   AufScpt.IO_fptr.echo(AAuf.Owner,'TimeStr='+GetTimeStr);
   AufScpt.IO_fptr.echo(AAuf.Owner,'TimeNum='+IntToStr(GetTimeNumber));
 end;
+
 procedure _resize(Sender:TObject);
 var AufScpt:TAufScript;
     AAuf:TAuf;
@@ -477,7 +482,7 @@ begin
   Form_Routiner.Width:=w;
   Form_Routiner.Height:=h;
 end;
-
+}
 procedure WinAufEnding(Sender:TObject);
 var i,j:byte;
 begin
@@ -588,6 +593,44 @@ begin
   AufScpt.writeln('- by Apiglio -');
 end;
 
+procedure getwind_str(Sender:TObject);
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    wind_name:string;
+    tmp:TAufRamVar;
+    hd:hwnd;
+    info:tagWindowInfo;
+    hidden:boolean;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(3) then exit;
+  try
+    wind_name:=AufScpt.TryToString(AAuf.nargs[2]);
+  except
+    AufScpt.send_error('警告：'+AAuf.nargs[0].arg+'第2个参数转为字符串失败，代码未执行！');
+    exit;
+  end;
+  try
+    tmp:=AufScpt.RamVar(AAuf.nargs[1]);
+    if tmp.size<4 then raise Exception.Create('');
+  except
+    AufScpt.send_error('警告：'+AAuf.nargs[0].arg+'第1个参数需要是四位及以上整型变量，代码未执行！');
+    exit;
+  end;
+
+  hd:=FindWindow(nil,PChar(utf8towincp(wind_name)));
+  while (hd<>0) and hidden do begin
+    hidden:=false;
+    GetWindowInfo(hd,info);
+    if info.rcWindow.Width*info.rcWindow.Height=0 then hidden:=true;
+    if (info.rcWindow.Left<-info.rcWindow.Width) or (info.rcWindow.Left>Desktop.Width) then hidden:=true;
+    if (info.rcWindow.Top<-info.rcWindow.Height) or (info.rcWindow.Top>Desktop.Height) then hidden:=true;
+  end;
+  dword_to_arv(hd,tmp);
+
+end;
+
 procedure SendString(Sender:TObject);
 var hd:longint;
     str:string;
@@ -598,13 +641,19 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  str:=utf8towincp(AAuf.nargs[2].arg);
+  try
+    str:=AufScpt.TryToString(AAuf.nargs[2]);
+  except
+    AufScpt.send_error('警告：'+AAuf.nargs[2].arg+'第2个参数转为字符串失败，代码未执行！');
+    exit;
+  end;
+  str:=utf8towincp(str);
   for i:=1 to length(str) do
     begin
       sendmessage(hd,WM_CHAR,ord(str[i]),0);
     end;
 end;
-
+{
 procedure SendWideString(Sender:TObject);
 var hd:longint;
     str:string;
@@ -622,7 +671,7 @@ begin
       sendmessage(hd,WM_IME_CHAR,(ord(str[i-1]) shl 8) + ord(str[i]),0);
     end;
 end;
-
+}
 procedure SendM(Sender:TObject);
 var hd,msg,wparam,lparam:longint;
     AAuf:TAuf;
@@ -859,17 +908,17 @@ end;
 
 procedure CostumerFuncInitialize(AAuf:TAuf);
 begin
-  //AAuf.Script.add_func('resize',@_resize,'w,h','修改当前窗口尺寸');
   AAuf.Script.add_func('about',@print_version,'','版本信息');
-  //AAuf.Script.add_func('now',@_gettime,'','当前时间');
   AAuf.Script.add_func('string',@SendString,'hwnd,str','向窗口输入字符串');
-  AAuf.Script.add_func('widestring',@SendWideString,'hwnd,str','向窗口输入汉字字符串');
+  //AAuf.Script.add_func('widestring',@SendWideString,'hwnd,str','向窗口输入汉字字符串');
   AAuf.Script.add_func('keybd',@_KeyBd,'hwnd,"U/D",key|"char"','向hwnd窗口发送一个键盘消息');
-  AAuf.Script.add_func('mouse',@_Mouse,'hwnd,"L/M/R"+"U/P/B",x,y','向hwnd窗口发送一个鼠标消息');
+  AAuf.Script.add_func('mouse',@_Mouse,'hwnd,"L/M/R"+"U/D/B",x,y','向hwnd窗口发送一个鼠标消息');
   AAuf.Script.add_func('keypress',@_KeyPress,'hwnd,key|"char",deley','向hwnd窗口发送一对间隔delay毫秒的按键消息');
   AAuf.Script.add_func('mouseclk',@_MouseClk,'hwnd,"L/M/R",x,y,delay','向hwnd窗口发送一对间隔delay毫秒的鼠标消息');
   AAuf.Script.add_func('post',@PostM,'hwnd,msg,w,l','调用Postmessage');
   AAuf.Script.add_func('send',@SendM,'hwnd,msg,w,l','调用Sendmessage');
+  AAuf.Script.add_func('getwnd_v',@getwind_str,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
+
 end;
 procedure GlobalExpressionInitialize;
 begin
@@ -1784,9 +1833,9 @@ begin
     MB_OK);
 end;
 
-procedure TForm_Routiner.MenuItem_Opt_licenceClick(Sender: TObject);
+procedure TForm_Routiner.MenuItem_Opt_AdapterClick(Sender: TObject);
 begin
-  //
+  AdapterForm.Show;
 end;
 
 procedure TForm_Routiner.MenuItem_RunPerformanceClick(Sender: TObject);
@@ -1987,6 +2036,16 @@ begin
   ReDrawWndPos;
 end;
 
+procedure TForm_Routiner.TreeView_WndMouseEnter(Sender: TObject);
+begin
+  Self.ShowManual('窗体列表。选择具体项后可单击左侧按键设置为监听窗体，进一步用于同步器、面板按键和代码执行。');
+end;
+
+procedure TForm_Routiner.TreeView_WndMouseLeave(Sender: TObject);
+begin
+  Self.ShowManual('');
+end;
+
 procedure TForm_Routiner.WindowPosPadMouseEnter(Sender: TObject);
 begin
   Self.ShowManual('窗体列表中选中窗体在屏幕中的位置预览。');
@@ -2037,6 +2096,7 @@ begin
           AufGenerator;
           CostumerFuncInitialize(Auf);
           HighLighterReNew;
+          onHelper:=@Self.ShowManual;
         end;
     end;
 
@@ -2175,6 +2235,8 @@ begin
   Self.MouseHookEnabled:=false;
   Self.KeybdHook;
   //Self.MouseHook;//初始不开鼠标钩子
+
+  //AdapterForm.Show;
 
 end;
 
@@ -2820,9 +2882,9 @@ begin
           Form_Routiner.AufPopupMenu.PopupComponent:=Self;
           Form_Routiner.AufPopupMenu.button:=Self;
           Form_Routiner.AufPopupMenu.PopUp;
-          Self.SkipLine:=AufPopupCount+1;
+          Self.SkipLine:=AufPopupCount+2;
           Application.ProcessMessages;
-          if Self.SkipLine>AufPopupCount then exit;
+          if (Self.SkipLine>AufPopupCount+1)or(Self.SkipLine=0) then exit;
           for i:=0 to ButtonColumn do Form_Routiner.AufButtons[Self.WindowIndex,i].Enabled:=false;
           Self.Enabled:=true;
           Self.Font.Bold:=true;

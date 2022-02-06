@@ -120,6 +120,8 @@ begin
   Self.Syn_Show.Lines.Add('define win, @win_name');
   Self.Syn_Show.Lines.Add('jmp +1');
   for str in Self.MultiFile do Self.Syn_Show.Lines.Add('load "'+str+'"');
+  Self.Syn_Show.Lines.Add('end');
+  Self.Syn_Show.Lines.Add('');
   //Self.Syn_Show.Lines.Add('load "scriptfile"');
   Self.ComboBox_Window.Items.Clear;
   for i:=0 to SynCount do Self.ComboBox_Window.Items.Add(Form_Routiner.Edits[i].Text);
@@ -213,6 +215,8 @@ begin
   Self.SynEdit_FileView.Lines.Clear;
   for stmp in tmpStr do Self.SynEdit_FileView.Lines.Add(stmp);
   tmpStr.Free;
+  Self.Syn_Show.Lines.Add('end');
+  Self.Syn_Show.Lines.Add('');
 end;
 
 procedure TAufButtonForm.ComboBox_WindowChange(Sender: TObject);

@@ -2,11 +2,11 @@ object AufButtonForm: TAufButtonForm
   Left = 891
   Height = 384
   Top = 443
-  Width = 519
+  Width = 640
   BorderIcons = [biSystemMenu]
   Caption = '面板按键设置'
   ClientHeight = 384
-  ClientWidth = 519
+  ClientWidth = 640
   Constraints.MinHeight = 360
   Constraints.MinWidth = 640
   DesignTimePPI = 120
@@ -685,7 +685,7 @@ object AufButtonForm: TAufButtonForm
     Left = 246
     Height = 303
     Top = 31
-    Width = 263
+    Width = 384
     BorderSpacing.Right = 10
     BorderSpacing.Bottom = 50
     Anchors = [akTop, akLeft, akRight, akBottom]
