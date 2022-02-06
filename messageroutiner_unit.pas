@@ -17,7 +17,7 @@ uses
 
 const
 
-  version_number='0.2.0-pre';
+  version_number='0.2.0-pre2';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -385,11 +385,16 @@ type
     procedure LoadOption;
   public
     KeybdHookEnabled,MouseHookEnabled:boolean;
+    {$ifndef HookAdapter}
     procedure GetMessageUpdate(var Msg:TMessage);message WM_USER+MessageOffset;
+    {$endif}
     procedure MouseHook;
     procedure MouseUnHook;
     procedure KeybdHook;
     procedure KeybdUnHook;
+    procedure KeybdBlockOn;
+    procedure KeybdBlockOff;
+
   public
     procedure CurrentAufStrAdd(str:string);inline;
     procedure WindowsFilter;
@@ -411,9 +416,15 @@ uses form_settinglag, form_aufbutton, form_manual, form_runperformance,
 
 {$R *.lfm}
 
-function StartHookK(MsgID:Word):Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StartHook';
-function StopHookK:Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StopHook';
-procedure SetCallHandleK(sender:HWND);stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'SetCallHandle';
+//function StartHookK(MsgID:Word):Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StartHook';
+//function StopHookK:Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StopHook';
+//procedure SetCallHandleK(sender:HWND);stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'SetCallHandle';
+
+function StartHookK(MsgID:Word):Bool;stdcall;external 'AufMR_KeyBD.dll' name 'StartHook';
+function StopHookK:Bool;stdcall;external 'AufMR_KeyBD.dll' name 'StopHook';
+procedure SetCallHandleK(sender:HWND);stdcall;external 'AufMR_KeyBD.dll' name 'SetCallHandle';
+procedure BlockMsgOnK;stdcall;external 'AufMR_KeyBD.dll' name 'BlockMsgOn';
+procedure BlockMsgOffK;stdcall;external 'AufMR_KeyBD.dll' name 'BlockMsgOff';
 
 function StartHookM(MsgID:Word):Bool;stdcall;external 'DesktopCommander_mouse_dll.dll' name 'StartHook';
 function StopHookM:Bool;stdcall;external 'DesktopCommander_mouse_dll.dll' name 'StopHook';
@@ -1776,6 +1787,14 @@ begin
   FormRunPerformance.CheckGroup_HookEnabled.Checked[0]:=false;
   {$endif}
 end;
+procedure TForm_Routiner.KeybdBlockOn;
+begin
+  BlockMsgOnK;
+end;
+procedure TForm_Routiner.KeybdBlockOff;
+begin
+  BlockMsgOffK;
+end;
 
 {$define ByteModeRec}
 {$define CodeModeRec}
@@ -2123,6 +2142,7 @@ begin
   Self.AufScriptFrames[Self.PageControl.ActivePageIndex].Frame.Memo_cmd.Lines.Add(str);
 end;
 
+{$ifndef HookAdapter}
 procedure TForm_Routiner.GetMessageUpdate(var Msg:TMessage);
 var x,y:integer;
     i,kx{35转0,37转1}:byte;
@@ -2342,6 +2362,7 @@ begin
   end;
 
 end;
+{$endif}
 
 procedure TForm_Routiner.Memo_TmpKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);

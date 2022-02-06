@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  StdCtrls, EditBtn, Windows, form_adapter;
+  StdCtrls, EditBtn, ComCtrls, Windows, form_adapter;
 
 type
 
@@ -31,7 +31,6 @@ type
     Edit_SCM_KEY_End: TEdit;
     GroupBox_SCM_Filename: TGroupBox;
     GroupBox_SCM_Key: TGroupBox;
-    GroupBox_ShortcutSetting: TGroupBox;
     GroupBox_MouseSetting: TGroupBox;
     Label_SCM_KEY_Start: TLabel;
     Label_AufButtonExtraAct: TLabel;
@@ -42,8 +41,12 @@ type
     Label_SCM_KEY_End: TLabel;
     Label_SCM_KEY_DownUp: TLabel;
     OpenDialog: TOpenDialog;
+    PageControl_RunPorferance: TPageControl;
     RadioGroup_SCM: TRadioGroup;
-    ScrollBox: TScrollBox;
+    ScrollBox_KeyShort: TScrollBox;
+    TabSheet_HookOpt: TTabSheet;
+    TabSheet_ButtonOpt: TTabSheet;
+    TabSheet_KeyShortOpt: TTabSheet;
     ToggleBox_SCM_KEY_manual: TToggleBox;
     procedure Button_AufButtonActMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -168,7 +171,7 @@ begin
   Self.CheckGroup_HookEnabled.Height:=56;
   Self.GroupBox_MouseSetting.Height:=200;
   Self.GroupBox_SCM_Filename.Height:=(15+28)*(ShortcutCount+1)+30;
-  Self.GroupBox_ShortcutSetting.Height:=240+Self.GroupBox_SCM_Filename.Height;
+  //Self.GroupBox_ShortcutSetting.Height:=240+Self.GroupBox_SCM_Filename.Height;
 
   Self.OpenDialog.Title:='选择脚本文件';
   Self.OpenDialog.InitialDir:=ExtractFilePath(Application.ExeName);
