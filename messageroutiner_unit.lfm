@@ -406,6 +406,8 @@ object Form_Routiner: TForm_Routiner
       Width = 368
       TabOrder = 0
       OnChange = TreeView_WndChange
+      OnMouseEnter = TreeView_WndMouseEnter
+      OnMouseLeave = TreeView_WndMouseLeave
     end
     object Label_filter: TLabel
       Left = 16
@@ -722,20 +724,20 @@ object Form_Routiner: TForm_Routiner
           OnClick = MenuItem_RunPerformanceClick
         end
       end
-      object MenuItem_Opt_licence: TMenuItem
-        Caption = '注册'
-        OnClick = MenuItem_Opt_licenceClick
-      end
       object MenuItem_Opt_About: TMenuItem
         Caption = '关于'
         OnClick = MenuItem_Opt_AboutClick
       end
-      object MenuItem_Opt_Div: TMenuItem
-        Caption = '-'
-      end
       object MenuItem_Exit: TMenuItem
         Caption = '退出'
         OnClick = MenuItem_ExitClick
+      end
+      object MenuItem_Opt_Div: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Opt_Adapter: TMenuItem
+        Caption = '消息调试窗口'
+        OnClick = MenuItem_Opt_AdapterClick
       end
     end
   end

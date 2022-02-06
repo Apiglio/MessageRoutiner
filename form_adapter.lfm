@@ -1,0 +1,83 @@
+object AdapterForm: TAdapterForm
+  Left = 0
+  Height = 213
+  Top = 0
+  Width = 466
+  Caption = 'Apiglio Message Routiner Adapter'
+  ClientHeight = 213
+  ClientWidth = 466
+  DesignTimePPI = 120
+  OnCreate = FormCreate
+  OnHide = FormHide
+  OnShow = FormShow
+  LCLVersion = '1.8.4.0'
+  object Memo1: TMemo
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Button_Clear
+    Left = 8
+    Height = 161
+    Top = 8
+    Width = 450
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BorderSpacing.Left = 8
+    BorderSpacing.Top = 8
+    BorderSpacing.Right = 8
+    BorderSpacing.Bottom = 8
+    ScrollBars = ssAutoVertical
+    TabOrder = 0
+  end
+  object Button_Clear: TButton
+    AnchorSideLeft.Control = Owner
+    AnchorSideRight.Control = Splitter1
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 8
+    Height = 28
+    Top = 177
+    Width = 220
+    Anchors = [akLeft, akRight, akBottom]
+    BorderSpacing.Left = 8
+    BorderSpacing.Right = 8
+    BorderSpacing.Bottom = 8
+    Caption = '清屏'
+    OnClick = Button_ClearClick
+    TabOrder = 1
+  end
+  object Splitter1: TSplitter
+    AnchorSideLeft.Control = Owner
+    AnchorSideLeft.Side = asrCenter
+    AnchorSideTop.Control = Button_Clear
+    AnchorSideBottom.Control = Button_Clear
+    AnchorSideBottom.Side = asrBottom
+    Left = 230
+    Height = 28
+    Top = 177
+    Width = 6
+    Align = alNone
+    Anchors = [akTop, akLeft, akBottom]
+  end
+  object Button_MemoRec: TToggleBox
+    AnchorSideLeft.Control = Splitter1
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 238
+    Height = 28
+    Top = 177
+    Width = 220
+    Anchors = [akLeft, akRight, akBottom]
+    BorderSpacing.Left = 8
+    BorderSpacing.Right = 8
+    BorderSpacing.Bottom = 8
+    Caption = '显示记录'
+    Checked = True
+    OnChange = Button_MemoRecChange
+    State = cbChecked
+    TabOrder = 3
+  end
+end
