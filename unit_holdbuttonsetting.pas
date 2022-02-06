@@ -21,6 +21,7 @@ type
     LabeledEdit_Key2: TLabeledEdit;
     LabeledEdit_Key3: TLabeledEdit;
     LabeledEdit_Interval: TLabeledEdit;
+    ToggleBox_KeyRead: TToggleBox;
     procedure Button_CancelClick(Sender: TObject);
     procedure Button_OkayClick(Sender: TObject);
     procedure Button_ResetClick(Sender: TObject);
@@ -117,20 +118,24 @@ end;
 procedure TForm_HoldButtonSetting.LabeledEdit_Key1KeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
+  if not Self.ToggleBox_KeyRead.Checked then
   (Sender as TLabeledEdit).Text:=IntToStr(Key mod 256);
 end;
 
 procedure TForm_HoldButtonSetting.LabeledEdit_Key2KeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
+  if not Self.ToggleBox_KeyRead.Checked then
   (Sender as TLabeledEdit).Text:=IntToStr(Key mod 256);
 end;
 
 procedure TForm_HoldButtonSetting.LabeledEdit_Key3KeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
+  if not Self.ToggleBox_KeyRead.Checked then
   (Sender as TLabeledEdit).Text:=IntToStr(Key mod 256);
 end;
+
 
 end.
 

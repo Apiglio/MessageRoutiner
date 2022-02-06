@@ -20,7 +20,7 @@ type
     Button_Okay: TButton;
     Button_Reset: TButton;
     Button_Cancel: TButton;
-    CheckGroup_Performance: TCheckGroup;
+    CheckGroup_HookEnabled: TCheckGroup;
     GroupBox_MouseSetting: TGroupBox;
     Label_AufButtonAct: TLabel;
     Label_HoldButtonSetting: TLabel;
@@ -89,10 +89,8 @@ end;
 
 procedure TFormRunPerformance.FormCreate(Sender: TObject);
 begin
-  Self.CheckGroup_Performance.Checked[0]:=true;
-  Self.CheckGroup_Performance.Checked[1]:=false;
-  Self.CheckGroup_Performance.Checked[2]:=true;
-  Self.CheckGroup_Performance.Checked[3]:=false;
+  FormRunPerformance.CheckGroup_HookEnabled.Checked[0]:=Form_Routiner.KeybdHookEnabled;
+  FormRunPerformance.CheckGroup_HookEnabled.Checked[1]:=Form_Routiner.MouseHookEnabled;
 end;
 
 procedure TFormRunPerformance.Button_OkayClick(Sender: TObject);
@@ -107,15 +105,41 @@ begin
       Form_Routiner.Setting.AufButtonHalt2:=AufButtonHalt2;
       Form_Routiner.Setting.HoldButtonSetting1:=HoldButtonSetting1*[ssAlt,ssShift,ssCtrl];
       Form_Routiner.Setting.HoldButtonSetting2:=HoldButtonSetting2;
-      //messagebox(0,PChar(),'',MB_OK);
     end;
+
+    if Self.CheckGroup_HookEnabled.Checked[0] then begin
+      Form_Routiner.KeybdHook;
+    end else begin
+      Form_Routiner.KeybdUnHook;
+    end;
+    if Self.CheckGroup_HookEnabled.Checked[1] then begin
+      Form_Routiner.MouseHook;
+    end else begin
+      Form_Routiner.MouseUnHook;
+    end;
+
   Self.Hide;
 end;
 
 procedure TFormRunPerformance.Button_ResetClick(Sender: TObject);
 begin
-  //
+  with Self.Setting do
+    begin
+      Form_Routiner.Setting.AufButtonAct1:=[];//AufButtonAct1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.AufButtonAct2:=mbLeft;//AufButtonAct2;
+      Form_Routiner.Setting.AufButtonSetting1:=[];//AufButtonSetting1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.AufButtonSetting2:=mbRight;//AufButtonSetting2;
+      Form_Routiner.Setting.AufButtonHalt1:=[];//AufButtonHalt1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.AufButtonHalt2:=mbMiddle;//AufButtonHalt2;
+      Form_Routiner.Setting.HoldButtonSetting1:=[];//HoldButtonSetting1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.HoldButtonSetting2:=mbRight;//HoldButtonSetting2;
+    end;
+  Self.CheckGroup_HookEnabled.Checked[0]:=true;
+  Self.CheckGroup_HookEnabled.Checked[1]:=false;
+  Self.FormActivate(Self);
 end;
+
+
 
 procedure TFormRunPerformance.Button_AufButtonActMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -157,10 +181,7 @@ end;
 procedure TFormRunPerformance.CheckGroup_PerformanceItemClick(Sender: TObject;
   Index: integer);
 begin
-  Self.CheckGroup_Performance.Checked[0]:=true;
-  Self.CheckGroup_Performance.Checked[1]:=false;
-  Self.CheckGroup_Performance.Checked[2]:=true;
-  Self.CheckGroup_Performance.Checked[3]:=false;
+
 end;
 
 procedure TFormRunPerformance.FormActivate(Sender: TObject);
