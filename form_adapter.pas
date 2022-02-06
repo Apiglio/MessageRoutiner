@@ -273,14 +273,17 @@ begin
     goto inherit;
   end;
 
-  if Self.FSynchronicMode then SynchronicProc(Translated_Msg);//同步器
+  if (Self.FSynchronicMode) and (not Self.Status.Shortcut.ListenKey) then
+    SynchronicProc(Translated_Msg);//同步器
 
-  if Self.FShortcutMode then ShortcutProc(Translated_Msg);//键盘快捷键
+  if Self.FShortcutMode then
+    ShortcutProc(Translated_Msg);//键盘快捷键
 
   if (Self.Status.Rec.SettingOri)and(Translated_Msg.msg=WM_LButtonUp) then
     Self.MouseOriSetting(Translated_Msg);//鼠标录制原点设置
 
-  if Self.FRecordMode then RecordProc(Translated_Msg);//录制器
+  if Self.FRecordMode then
+    RecordProc(Translated_Msg);//录制器
 
 
 inherit:
@@ -339,7 +342,7 @@ begin
     'about':RecordAufScript('about');
     else
       begin
-        RecordAufScript('|'+StrToHex(Self.Status.Shortcut.Exec_Command)+'|');
+        //RecordAufScript('|'+StrToHex(Self.Status.Shortcut.Exec_Command)+'|');
         pi:=0;
         for pi:=0 to ShortcutCount do
           begin
@@ -437,6 +440,7 @@ begin
       END;
     ELSE ;
   END;
+  Self.Status.Rec.LastMessage:=Msg;
 end;
 procedure TAdapterForm.ShortcutProc(Msg:TMessage);//快捷方式过程
 var key:byte;
@@ -505,7 +509,17 @@ begin
 end;
 procedure TAdapterForm.DuplicateProc(Msg:TMessage);//转发器过程
 begin
-  Self.MessageBroadcast(Msg);
+  case Msg.msg of
+    WM_CHAR,WM_SYSCHAR,WM_KEYDOWN,
+    WM_KEYUP,WM_SYSKEYDOWN,WM_SYSKEYUP,
+    WM_LButtonDown,WM_LButtonUp,WM_LButtonDblClk,
+    WM_RButtonDown,WM_RButtonUp,WM_RButtonDblClk,
+    WM_MButtonDown,WM_MButtonUp,WM_MButtonDblClk:
+      begin
+        Self.MessageBroadcast(Msg);
+      end;
+    else ;
+  end;
 end;
 procedure TAdapterForm.MouseOriSetting(Msg:TMessage);//鼠标原点设置过程
 begin

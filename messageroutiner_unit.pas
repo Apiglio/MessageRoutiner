@@ -17,7 +17,7 @@ uses
 
 const
 
-  version_number='0.1.9';
+  version_number='0.2.0-pre';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -1442,20 +1442,19 @@ end;
 
 procedure CostumerFuncInitialize(AAuf:TAuf);
 begin
-  AAuf.Script.add_func('about',@print_version,'','版本信息');
-  AAuf.Script.add_func('string',@SendString,'hwnd,str','向窗口输入字符串');
-  //AAuf.Script.add_func('widestring',@SendWideString,'hwnd,str','向窗口输入汉字字符串');
-  AAuf.Script.add_func('keybd',@_KeyBd,'hwnd,"U/D",key|"char"','向hwnd窗口发送一个键盘消息');
-  AAuf.Script.add_func('mouse',@_Mouse,'hwnd,"L/M/R"+"U/D/B",x,y','向hwnd窗口发送一个鼠标消息');
-  AAuf.Script.add_func('keypress',@_KeyPress,'hwnd,key|"char",deley','向hwnd窗口发送一对间隔delay毫秒的按键消息');
-  AAuf.Script.add_func('mouseclk',@_MouseClk,'hwnd,"L/M/R",x,y,delay','向hwnd窗口发送一对间隔delay毫秒的鼠标消息');
-  AAuf.Script.add_func('post',@PostM,'hwnd,msg,w,l','调用Postmessage');
-  AAuf.Script.add_func('send',@SendM,'hwnd,msg,w,l','调用Sendmessage');
-  AAuf.Script.add_func('getwnd_v',@getwind_name_visible,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
-  AAuf.Script.add_func('getwnd_t',@getwind_top,'','返回当前置顶的窗体句柄');
-  AAuf.Script.add_func('getpixel',@_GetPixel,'hwnd,x,y,out_var','返回窗体指定像素点颜色');
-  AAuf.Script.add_func('getrect',@_GetPixelRect,'hwnd,x1,x2,y1,y2,out_var','返回窗体指定矩形范围内像素点颜色');
-  AAuf.Script.add_func('ramimg',@_RamImage,'col,row,in_var','根据内存变量显示图片');
+  AAuf.Script.add_func('about,软件信息',@print_version,'','版本信息');
+  AAuf.Script.add_func('string,发送字符串',@SendString,'hwnd,str','向窗口输入字符串');
+  AAuf.Script.add_func('keybd,键盘动作',@_KeyBd,'hwnd,"U/D",key|"char"','向hwnd窗口发送一个键盘消息');
+  AAuf.Script.add_func('mouse,鼠标动作',@_Mouse,'hwnd,"L/M/R"+"U/D/B",x,y','向hwnd窗口发送一个鼠标消息');
+  AAuf.Script.add_func('keypress,键盘按键',@_KeyPress,'hwnd,key|"char",deley','向hwnd窗口发送一对间隔delay毫秒的按键消息');
+  AAuf.Script.add_func('mouseclk,鼠标按键',@_MouseClk,'hwnd,"L/M/R",x,y,delay','向hwnd窗口发送一对间隔delay毫秒的鼠标消息');
+  AAuf.Script.add_func('post,发送消息',@PostM,'hwnd,msg,w,l','调用Postmessage');
+  AAuf.Script.add_func('send,发送消息并等待处理',@SendM,'hwnd,msg,w,l','调用Sendmessage');
+  AAuf.Script.add_func('getwnd_v,返回指定名称窗体',@getwind_name_visible,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
+  AAuf.Script.add_func('getwnd_t,返回指定窗体',@getwind_top,'','返回当前置顶的窗体句柄');
+  AAuf.Script.add_func('getpixel,获取像素点',@_GetPixel,'hwnd,x,y,out_var','返回窗体指定像素点颜色');
+  AAuf.Script.add_func('getrect,获取画面',@_GetPixelRect,'hwnd,x1,x2,y1,y2,out_var','返回窗体指定矩形范围内像素点颜色');
+  AAuf.Script.add_func('ramimg,显示画面',@_RamImage,'col,row,in_var','根据内存变量显示图片');
 
 end;
 procedure GlobalExpressionInitialize;
@@ -1951,7 +1950,7 @@ begin
       begin
         writeln(sat,'set Shortcut '+'Mode= '+IntToStr(byte(Mode)));
         writeln(sat,'set Shortcut '+'StartKey= '+IntToStr(byte(StartKey)));
-        writeln(sat,'set Shortcut '+'EndtKey= '+IntToStr(byte(EndKey)));
+        writeln(sat,'set Shortcut '+'EndKey= '+IntToStr(byte(EndKey)));
         writeln(sat,'set Shortcut '+'DownUpKey= '+IntToStr(byte(DownUpKey)));
         for i:=0 to ShortcutCount do
           begin
