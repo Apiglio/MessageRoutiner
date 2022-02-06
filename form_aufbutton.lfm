@@ -1,7 +1,7 @@
 object AufButtonForm: TAufButtonForm
-  Left = 891
+  Left = 929
   Height = 384
-  Top = 443
+  Top = 474
   Width = 640
   BorderIcons = [biSystemMenu]
   Caption = '面板按键设置'

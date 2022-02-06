@@ -1,22 +1,32 @@
 object SettingLagForm: TSettingLagForm
-  Left = 1312
-  Height = 251
-  Top = 415
-  Width = 396
-  BorderStyle = bsSingle
+  Left = 446
+  Height = 391
+  Top = 363
+  Width = 675
   Caption = '异步器设置'
-  ClientHeight = 251
-  ClientWidth = 396
+  ClientHeight = 391
+  ClientWidth = 675
   DesignTimePPI = 120
   OnCreate = FormCreate
   LCLVersion = '1.8.4.0'
   object ScrollBox: TScrollBox
-    Left = 72
-    Height = 123
-    Top = 32
-    Width = 200
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 5
+    Height = 381
+    Top = 5
+    Width = 400
     HorzScrollBar.Page = 1
     VertScrollBar.Page = 1
+    Anchors = [akTop, akLeft, akBottom]
+    BorderSpacing.Left = 5
+    BorderSpacing.Top = 5
+    BorderSpacing.Right = 5
+    BorderSpacing.Bottom = 5
     TabOrder = 0
   end
 end

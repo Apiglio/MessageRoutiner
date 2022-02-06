@@ -92,10 +92,10 @@ end;
 procedure TSettingLagForm.FormCreate(Sender: TObject);
 var i:integer;
 begin
-  Self.ScrollBox.Width:=Self.Width;
-  Self.ScrollBox.Height:=Self.Height;
-  Self.ScrollBox.Top:=0;
-  Self.ScrollBox.Left:=0;
+  //Self.ScrollBox.Width:=Self.Width;
+  //Self.ScrollBox.Height:=Self.Height;
+  //Self.ScrollBox.Top:=0;
+  //Self.ScrollBox.Left:=0;
   //Self.Position:=poScreenCenter;
   for i:= 0 to SynCount do
     begin
