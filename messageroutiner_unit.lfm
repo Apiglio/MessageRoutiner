@@ -1,7 +1,7 @@
 object Form_Routiner: TForm_Routiner
-  Left = 860
+  Left = 798
   Height = 591
-  Top = 360
+  Top = 336
   Width = 1005
   Caption = 'Apiglio Message Routiner'
   ClientHeight = 566
@@ -13,12 +13,13 @@ object Form_Routiner: TForm_Routiner
   OnResize = FormResize
   Position = poScreenCenter
   LCLVersion = '1.8.4.0'
+  Visible = True
   object Button_advanced: TButton
     Left = 416
     Height = 30
     Top = 216
     Width = 192
-    Caption = '展开高级设置'
+    Caption = '更换布局模式'
     Font.CharSet = GB2312_CHARSET
     Font.Color = clBlack
     Font.Height = -15
@@ -105,13 +106,14 @@ object Form_Routiner: TForm_Routiner
     Height = 32
     Top = 280
     Width = 194
-    Caption = 'By Apiglio'
+    Caption = '异步器设置'
     Font.CharSet = GB2312_CHARSET
     Font.Height = -15
     Font.Name = '宋体'
     Font.Pitch = fpVariable
     Font.Quality = fqDraft
     OnClick = Button_excelClick
+    OnMouseUp = Button_excelMouseUp
     ParentFont = False
     TabOrder = 7
   end
@@ -123,19 +125,96 @@ object Form_Routiner: TForm_Routiner
     ScrollBars = ssAutoBoth
     TabOrder = 8
   end
+  object GroupBox_RecOption: TScrollBox
+    Left = 616
+    Height = 310
+    Top = 8
+    Width = 384
+    HorzScrollBar.Page = 260
+    VertScrollBar.Page = 104
+    ClientHeight = 306
+    ClientWidth = 380
+    TabOrder = 9
+    object RadioGroup_RecSyntaxMode: TRadioGroup
+      Left = 4
+      Height = 48
+      Top = 8
+      Width = 256
+      AutoFill = True
+      Caption = '录制模式'
+      ChildSizing.LeftRightSpacing = 6
+      ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+      ChildSizing.EnlargeVertical = crsHomogenousChildResize
+      ChildSizing.ShrinkHorizontal = crsScaleChilds
+      ChildSizing.ShrinkVertical = crsScaleChilds
+      ChildSizing.Layout = cclLeftToRightThenTopToBottom
+      ChildSizing.ControlsPerLine = 3
+      ClientHeight = 28
+      ClientWidth = 252
+      Columns = 3
+      ItemIndex = 0
+      Items.Strings = (
+        '快速模式'
+        '明文模式'
+        '单键模式'
+      )
+      OnSelectionChanged = RadioGroup_RecSyntaxModeSelectionChanged
+      TabOrder = 0
+    end
+    object RadioGroup_RecHookMode: TRadioGroup
+      Left = 4
+      Height = 48
+      Top = 56
+      Width = 256
+      AutoFill = True
+      Caption = '监听模式'
+      ChildSizing.LeftRightSpacing = 6
+      ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+      ChildSizing.EnlargeVertical = crsHomogenousChildResize
+      ChildSizing.ShrinkHorizontal = crsScaleChilds
+      ChildSizing.ShrinkVertical = crsScaleChilds
+      ChildSizing.Layout = cclLeftToRightThenTopToBottom
+      ChildSizing.ControlsPerLine = 2
+      ClientHeight = 28
+      ClientWidth = 252
+      Columns = 2
+      ItemIndex = 0
+      Items.Strings = (
+        '全局钩子'
+        '线程钩子'
+      )
+      OnSelectionChanged = RadioGroup_RecHookModeSelectionChanged
+      TabOrder = 1
+    end
+  end
   object MainMenu: TMainMenu
-    left = 779
-    top = 114
+    left = 536
+    top = 352
     object MenuItem_Function: TMenuItem
       Caption = '操作指南'
       object MenuItem_Func_Auf: TMenuItem
         Caption = 'AufScript'
+        OnClick = MenuItem_Func_AufClick
       end
       object MenuItem_Func_Key: TMenuItem
         Caption = '键盘编译器'
+        OnClick = MenuItem_Func_KeyClick
       end
       object MenuItem_Func_Syn: TMenuItem
         Caption = '键盘同步器'
+        OnClick = MenuItem_Func_SynClick
+      end
+      object MenuItem_Func_Diff: TMenuItem
+        Caption = '运动异步器'
+        OnClick = MenuItem_Func_DiffClick
+      end
+      object MenuItem_Func_Buttons: TMenuItem
+        Caption = '预定义面板'
+        OnClick = MenuItem_Func_ButtonsClick
+      end
+      object MenuItem_Func_Rec: TMenuItem
+        Caption = '键盘录制器'
+        OnClick = MenuItem_Func_RecClick
       end
     end
     object MenuItem_Layout: TMenuItem
@@ -167,7 +246,7 @@ object Form_Routiner: TForm_Routiner
       object MenuItem_Opt_setting: TMenuItem
         Caption = '设置'
         object MenuItem_Setting_Lag: TMenuItem
-          Caption = '运动延迟设置'
+          Caption = '异步器设置'
           OnClick = MenuItem_Setting_LagClick
         end
       end
