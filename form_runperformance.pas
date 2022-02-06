@@ -13,6 +13,7 @@ type
   { TFormRunPerformance }
 
   TFormRunPerformance = class(TForm)
+    Button_AufButtonExtraAct: TButton;
     Button_AufButtonAct: TButton;
     Button_AufButtonSetting: TButton;
     Button_AufButtonHalt: TButton;
@@ -22,12 +23,15 @@ type
     Button_Cancel: TButton;
     CheckGroup_HookEnabled: TCheckGroup;
     GroupBox_MouseSetting: TGroupBox;
+    Label_AufButtonExtraAct: TLabel;
     Label_AufButtonAct: TLabel;
     Label_HoldButtonSetting: TLabel;
     Label_AufButtonSetting: TLabel;
     Label_AufButtonHalt: TLabel;
     ScrollBox: TScrollBox;
     procedure Button_AufButtonActMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure Button_AufButtonExtraActMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure Button_AufButtonHaltMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -45,6 +49,8 @@ type
     Setting:record
       AufButtonAct1:TShiftState;
       AufButtonAct2:TMouseButton;
+      AufButtonExtraAct1:TShiftState;
+      AufButtonExtraAct2:TMouseButton;
       AufButtonSetting1:TShiftState;
       AufButtonSetting2:TMouseButton;
       AufButtonHalt1:TShiftState;
@@ -99,6 +105,8 @@ begin
     begin
       Form_Routiner.Setting.AufButtonAct1:=AufButtonAct1*[ssAlt,ssShift,ssCtrl];
       Form_Routiner.Setting.AufButtonAct2:=AufButtonAct2;
+      Form_Routiner.Setting.AufButtonExtraAct1:=AufButtonExtraAct1*[ssAlt,ssShift,ssCtrl];
+      Form_Routiner.Setting.AufButtonExtraAct2:=AufButtonExtraAct2;
       Form_Routiner.Setting.AufButtonSetting1:=AufButtonSetting1*[ssAlt,ssShift,ssCtrl];
       Form_Routiner.Setting.AufButtonSetting2:=AufButtonSetting2;
       Form_Routiner.Setting.AufButtonHalt1:=AufButtonHalt1*[ssAlt,ssShift,ssCtrl];
@@ -125,14 +133,16 @@ procedure TFormRunPerformance.Button_ResetClick(Sender: TObject);
 begin
   with Self.Setting do
     begin
-      Form_Routiner.Setting.AufButtonAct1:=[];//AufButtonAct1*[ssAlt,ssShift,ssCtrl];
-      Form_Routiner.Setting.AufButtonAct2:=mbLeft;//AufButtonAct2;
-      Form_Routiner.Setting.AufButtonSetting1:=[];//AufButtonSetting1*[ssAlt,ssShift,ssCtrl];
-      Form_Routiner.Setting.AufButtonSetting2:=mbRight;//AufButtonSetting2;
-      Form_Routiner.Setting.AufButtonHalt1:=[];//AufButtonHalt1*[ssAlt,ssShift,ssCtrl];
-      Form_Routiner.Setting.AufButtonHalt2:=mbMiddle;//AufButtonHalt2;
-      Form_Routiner.Setting.HoldButtonSetting1:=[];//HoldButtonSetting1*[ssAlt,ssShift,ssCtrl];
-      Form_Routiner.Setting.HoldButtonSetting2:=mbRight;//HoldButtonSetting2;
+      Form_Routiner.Setting.AufButtonAct1:=[];
+      Form_Routiner.Setting.AufButtonAct2:=mbLeft;
+      Form_Routiner.Setting.AufButtonExtraAct1:=[ssCtrl];
+      Form_Routiner.Setting.AufButtonExtraAct2:=mbLeft;
+      Form_Routiner.Setting.AufButtonSetting1:=[];
+      Form_Routiner.Setting.AufButtonSetting2:=mbRight;
+      Form_Routiner.Setting.AufButtonHalt1:=[];
+      Form_Routiner.Setting.AufButtonHalt2:=mbMiddle;
+      Form_Routiner.Setting.HoldButtonSetting1:=[];
+      Form_Routiner.Setting.HoldButtonSetting2:=mbRight;
     end;
   Self.CheckGroup_HookEnabled.Checked[0]:=true;
   Self.CheckGroup_HookEnabled.Checked[1]:=false;
@@ -147,6 +157,14 @@ begin
   (Sender as TButton).Caption:=MouseActToStr(shift,button);
   Self.Setting.AufButtonAct1:=shift;
   Self.Setting.AufButtonAct2:=button;
+end;
+
+procedure TFormRunPerformance.Button_AufButtonExtraActMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  (Sender as TButton).Caption:=MouseActToStr(shift,button);
+  Self.Setting.AufButtonExtraAct1:=shift;
+  Self.Setting.AufButtonExtraAct2:=button;
 end;
 
 procedure TFormRunPerformance.Button_AufButtonHaltMouseDown(Sender: TObject;
@@ -191,6 +209,9 @@ begin
       AufButtonAct1:=Form_Routiner.Setting.AufButtonAct1;
       AufButtonAct2:=Form_Routiner.Setting.AufButtonAct2;
       Self.Button_AufButtonAct.Caption:=MouseActToStr(AufButtonAct1,AufButtonAct2);
+      AufButtonExtraAct1:=Form_Routiner.Setting.AufButtonExtraAct1;
+      AufButtonExtraAct2:=Form_Routiner.Setting.AufButtonExtraAct2;
+      Self.Button_AufButtonExtraAct.Caption:=MouseActToStr(AufButtonExtraAct1,AufButtonExtraAct2);
       AufButtonSetting1:=Form_Routiner.Setting.AufButtonSetting1;
       AufButtonSetting2:=Form_Routiner.Setting.AufButtonSetting2;
       Self.Button_AufButtonSetting.Caption:=MouseActToStr(AufButtonSetting1,AufButtonSetting2);
@@ -200,7 +221,6 @@ begin
       HoldButtonSetting1:=Form_Routiner.Setting.HoldButtonSetting1;
       HoldButtonSetting2:=Form_Routiner.Setting.HoldButtonSetting2;
       Self.Button_HoldButtonSetting.Caption:=MouseActToStr(HoldButtonSetting1,HoldButtonSetting2);
-      //messagebox(0,PChar(),'',MB_OK);
     end;
 end;
 
