@@ -158,7 +158,7 @@ label inherit;
 begin
 
   case TheMessage.msg of
-    WM_USER+100:;
+    WM_USER+MessageOffset:;
     WM_CHAR,WM_SYSCHAR,WM_KEYDOWN,
     WM_KEYUP,WM_SYSKEYDOWN,WM_SYSKEYUP,
     WM_LButtonDown,WM_LButtonUp,WM_LButtonDblClk,
@@ -172,7 +172,7 @@ begin
   //消息处理完以后记录消息
   if not Self.Memo_Recorded then goto inherit;
   case TheMessage.msg of
-    WM_USER+100,WM_CHAR,WM_SYSCHAR,
+    WM_USER+MessageOffset,WM_CHAR,WM_SYSCHAR,
     WM_KEYDOWN,WM_KEYUP,WM_SYSKEYDOWN,WM_SYSKEYUP,
     WM_LButtonDown,WM_LButtonUp,WM_LButtonDblClk,
     WM_RButtonDown,WM_RButtonUp,WM_RButtonDblClk,
