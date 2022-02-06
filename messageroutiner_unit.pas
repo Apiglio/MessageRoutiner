@@ -13,10 +13,10 @@ uses
 
 const
 
-  version_number='0.1.0';
+  version_number='0.1.4';
 
-  RuleCount = 9;{不能大于31，否则设置保存会出问题}
-  SynCount = 4;{不能大于9，也不推荐9}
+  RuleCount    = 9;{不能大于31，否则设置保存会出问题}
+  SynCount     = 4;{不能大于9，也不推荐9}
   ButtonColumn = 9;{不能大于31，否则设置保存会出问题}
 
   gap=5;
@@ -33,6 +33,7 @@ const
 type
 
   TLayoutSet = (Lay_Command=0,Lay_Advanced=1,Lay_Synchronic=2,Lay_Buttons=3,Lay_Recorder=4,Lay_Customer=5);
+  TRecTimeMode = (rtmWaittimer=0,rtmSleep=1);
 
   { TWindow }
   TWindow = class(TObject)
@@ -127,20 +128,30 @@ type
   { TForm_Routiner }
 
   TForm_Routiner = class(TForm)
+    Button_MouseOri: TButton;
     Button_excel: TButton;
     Button_TreeViewFresh: TButton;
     Button_Wnd_Record: TButton;
     Button_advanced: TButton;
     Button_Wnd_Synthesis: TButton;
+    CheckGroup_KeyMouse: TCheckGroup;
+    Edit_TimerOffset: TEdit;
     Edit_TreeView: TEdit;
+    GroupBox_OffsetSetting: TGroupBox;
     GroupBox_RecOption: TScrollBox;
+    Label_MouseOri: TLabel;
     Label_filter: TLabel;
+    Label_TimerOffset: TLabel;
+    Label_TimerOffset_Unit: TLabel;
     MainMenu: TMainMenu;
+    Memo_TmpRec: TMemo;
+    Memo_Tmp: TMemo;
     MenuItem_Lay_SaveOption: TMenuItem;
     MenuItem_Lay_Div: TMenuItem;
     MenuItem_Lay_Customer: TMenuItem;
     MenuItem_Lay_Customer_Apply: TMenuItem;
     MenuItem_Lay_Customer_Save: TMenuItem;
+    RadioGroup_DelayMode: TRadioGroup;
     ScrollBox_Synchronic: TScrollBox;
     ScrollBox_WndView: TScrollBox;
     ScrollBox_AufButton: TScrollBox;
@@ -178,36 +189,21 @@ type
     MenuItem_Lay_advanced: TMenuItem;
     MenuItem_Opt_setting: TMenuItem;
     PageControl: TPageControl;
-    RadioGroup_RecHookMode: TRadioGroup;
     RadioGroup_RecSyntaxMode: TRadioGroup;
     TreeView_Wnd: TTreeView;
     WindowPosPadWind: TShape;
-    {
-    procedure Button_endClick(Sender: TObject);
-    procedure Button_runClick(Sender: TObject);
-    }
+
     procedure Button_advancedClick(Sender: TObject);
     procedure Button_excelClick(Sender: TObject);
     procedure Button_excelMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    {
-    procedure Button_Tmp_DMouseDown(Sender: TObject; Button: TMouseButton;
+    procedure Button_MouseOriKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure Button_MouseOriMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure Button_Tmp_DMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure Button_Tmp_LMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure Button_Tmp_LMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure Button_Tmp_RMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure Button_Tmp_RMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure Button_Tmp_UMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure Button_Tmp_UMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    }
+    procedure CheckGroup_KeyMouseItemClick(Sender: TObject; Index: integer);
+    procedure RadioGroup_DelayModeClick(Sender: TObject);
+    procedure TreeViewEditOnChange(Sender:TObject);
     procedure Button_TreeViewFreshClick(Sender: TObject);
     procedure Button_Wnd_RecordClick(Sender: TObject);
     procedure Button_Wnd_SynthesisClick(Sender: TObject);
@@ -216,11 +212,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure GroupBox_RecOptionResize(Sender: TObject);
-    procedure Memo_cmdEditingDone(Sender: TObject);
-    procedure Memo_cmdKeyPress(Sender: TObject; var Key: char);
-
-    procedure GetMessageUpdate(var Msg:TMessage);message WM_USER+100;
-    procedure Memo_tmpChange(Sender: TObject);
+    procedure Memo_TmpKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure Memo_TmpRecKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure MenuItem_ExitClick(Sender: TObject);
     procedure MenuItem_Func_AufClick(Sender: TObject);
     procedure MenuItem_Func_BasicClick(Sender: TObject);
@@ -252,13 +246,9 @@ type
     procedure ScrollBox_WndViewResize(Sender: TObject);
     procedure TreeView_WndChange(Sender: TObject; Node: TTreeNode);
     procedure WindowPosPadViceChange(Sender: TObject);
-    procedure WindowsFilter;
 
   private
-    { private declarations }
-    //Show_Advanced_Seting:boolean;//是否显示高级设置
-    //Height_Advanced_Seting:word;//高级设置高度
-    //Left_Column_Width:word;//左边栏的宽度
+    Tim:TTimer;//因为不知道怎么处理汉字输入法造成连续的OnChange事件，迫不得已采用延时50ms检测连续输入的办法。
   public
     Layout:record
       LayoutCode:TLayoutSet;//布局类型
@@ -277,21 +267,17 @@ type
       HoldButtonSetting2:TMouseButton;
     end;
   public
-    { public declarations }
     WinAuf:array[0..SynCount]of TWinAuf;//每个窗口的专用Auf
     AufButtons:array[0..SynCount,0..ButtonColumn]of TAufButton;//面板按键
     HoldButtons:array[0..31]of THoldButton;//鼠标代键
-
     Edits:array[0..SynCount]of TARVEdit;
     Buttons:array[0..SynCount]of TARVButton;
-    //Labels:array[0..SynCount]of TARVLabel;
     CheckBoxs:array[0..SynCount]of TARVCheckBox;
     AufScriptFrames:array[0..RuleCount] of TAufScriptFrame;
+
+  public //同步器、异步器
     Synthesis_mode:boolean;//为真时向所有选中的TARVButton.sel_hwnd窗体广播
-    Record_mode:boolean;//为真时向当前标签页记录键盘消息
-    LastRecTime:longint;//录制过程中表示上一个记录时间，作差用来确定sleep的参数
-    LastMessage:TMessage;
-    State:record
+    Key_State:record
       ctrl,alt,shift,win:boolean;
       NumKey:array[0..SynCount]of boolean;//数字键按下状态
       Number:array[0..SynCount]of boolean;//是否抬起，用于放置一次按下触发多次事件
@@ -305,10 +291,30 @@ type
     end;
     KeyLag:array[0..SynCount,0..1]of TTimerLag;
 
-    Tim:TTimer;//因为不知道怎么处理汉字输入法造成连续的OnChange事件，迫不得已采用延时50ms检测连续输入的办法。
-    procedure TreeViewEditOnChange(Sender:TObject);
+  public //录制器
+    Record_Mode:boolean;//为真时向当前标签页记录消息
+    RecKey,RecMouse:boolean;//是否记录键盘或鼠标消息
+    RecTimeMode:TRecTimeMode;
+    SettingOri:boolean;//是否处在设置鼠标动作原点的状态
+    MouseOri:record x,y:longint;end;//鼠标记录的坐标原点
+    LastRecTime:longint;//录制过程中表示上一个记录时间，作差用来确定sleep的参数
+    FirstRecTime:longint;//录制过程中表示第一个记录时间，作差用来确定waittimer的参数
+    LastMessage:TMessage;
+    TimeOffset:longint;//rtmWaittimer模式的初始时间
+
+  public
     procedure SaveOption;
     procedure LoadOption;
+  public
+    KeybdHookEnabled,MouseHookEnabled:boolean;
+    procedure GetMessageUpdate(var Msg:TMessage);message WM_USER+100;
+    procedure MouseHook;
+    procedure MouseUnHook;
+    procedure KeybdHook;
+    procedure KeybdUnHook;
+  public
+    procedure CurrentAufStrAdd(str:string);inline;
+    procedure WindowsFilter;
     procedure SetLayout(layoutcode:byte);
     procedure ReDrawWndPos;
   end;
@@ -328,6 +334,12 @@ uses form_settinglag, form_aufbutton, form_manual, form_runperformance, unit_hol
 function StartHookK(MsgID:Word):Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StartHook';
 function StopHookK:Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StopHook';
 procedure SetCallHandleK(sender:HWND);stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'SetCallHandle';
+
+function StartHookM(MsgID:Word):Bool;stdcall;external 'DesktopCommander_mouse_dll.dll' name 'StartHook';
+function StopHookM:Bool;stdcall;external 'DesktopCommander_mouse_dll.dll' name 'StopHook';
+procedure SetCallHandleM(sender:HWND);stdcall;external 'DesktopCommander_mouse_dll.dll' name 'SetCallHandle';
+procedure SetTrackMouseMoveM(onoff:byte);stdcall;external 'DesktopCommander_mouse_dll.dll' name 'SetTrackMouseMove';
+
 
 procedure qk(str:string);deprecated;
 begin
@@ -611,16 +623,65 @@ begin
 
 end;
 
+procedure Mouse_Event(Sender:TObject);//mouse @w,"L/M/R"+"D/U/B",x,y
+var hd,msg,wparam,lparam:longint;
+    x,y:word;
+    AAuf:TAuf;
+    AufScpt:TAufScript;
+    buttonmode:string;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
+  try
+    buttonmode:=AufScpt.TryToString(AAuf.nargs[2]);
+    if length(buttonmode)<>2 then raise Exception.Create('');
+  except
+    AufScpt.send_error('警告：mouse指令第2参数需要是长度为2的字符串，代码未执行！');
+    exit;
+  end;
+  try
+    x:=AufScpt.TryToDWord(AAuf.nargs[3]);
+  except
+    AufScpt.send_error('警告：mouse指令第3参数错误，代码未执行！');
+    exit;
+  end;
+  try
+    y:=AufScpt.TryToDWord(AAuf.nargs[4]);
+  except
+    AufScpt.send_error('警告：mouse指令第4参数错误，代码未执行！');
+    exit;
+  end;
+  case lowercase(buttonmode) of
+    'ld':msg:=WM_LButtonDown;
+    'md':msg:=WM_MButtonDown;
+    'rd':msg:=WM_RButtonDown;
+    'lu':msg:=WM_LButtonUp;
+    'mu':msg:=WM_MButtonUp;
+    'ru':msg:=WM_RButtonUp;
+    'lb':msg:=WM_LBUTTONDBLCLK;
+    'mb':msg:=WM_MBUTTONDBLCLK;
+    'rb':msg:=WM_RBUTTONDBLCLK;
+    else begin
+      AufScpt.send_error('警告：mouse指令第2参数错误，代码未执行！');
+      exit;
+    end;
+  end;
+  wparam:=0;
+  lparam:=(x shl 16) + y;
+  SendMessage(hd,msg,wparam,lparam);
+end;
 
 
 procedure CostumerFuncInitialize(AAuf:TAuf);
 begin
-  AAuf.Script.add_func('resize',@_resize,'w,h','修改当前窗口尺寸');
+  //AAuf.Script.add_func('resize',@_resize,'w,h','修改当前窗口尺寸');
   AAuf.Script.add_func('about',@print_version,'','版本信息');
   //AAuf.Script.add_func('now',@_gettime,'','当前时间');
   AAuf.Script.add_func('string',@SendString,'hwnd,str','向窗口输入字符串');
   AAuf.Script.add_func('widestring',@SendWideString,'hwnd,str','向窗口输入汉字字符串');
   AAuf.Script.add_func('keypress',@KeyPress_Event,'hwnd,key,deley','调用KeyPress_Event');
+  AAuf.Script.add_func('mouse',@Mouse_Event,'hwnd,buttonmode,x,y','调用Mouse_Event');
   AAuf.Script.add_func('post',@PostM,'hwnd,msg,w,l','调用Postmessage');
   AAuf.Script.add_func('send',@SendM,'hwnd,msg,w,l','调用Sendmessage');
 end;
@@ -875,6 +936,42 @@ end;
 
 { TForm_Routiner }
 
+procedure TForm_Routiner.MouseHook;
+begin
+  if Self.MouseHookEnabled = true then exit;
+  SetCallHandleM(Self.Handle);
+  if not StartHookM(WM_USER+100) then
+  begin
+    ShowMessage('挂钩失败！');
+  end else begin
+    SetTrackMouseMoveM(1);
+    Self.MouseHookEnabled:=true;
+  end;
+end;
+procedure TForm_Routiner.MouseUnHook;
+begin
+  if Self.MouseHookEnabled = false then exit;
+  StopHookM;
+  Self.MouseHookEnabled:=false;
+end;
+procedure TForm_Routiner.KeybdHook;
+begin
+  if Self.KeybdHookEnabled = true then exit;
+  SetCallHandleK(Self.Handle);
+  if not StartHookK(WM_USER+100) then
+  begin
+    ShowMessage('挂钩失败！');
+  end else begin
+    Self.KeybdHookEnabled:=true;
+  end;
+end;
+procedure TForm_Routiner.KeybdUnHook;
+begin
+  if Self.KeybdHookEnabled = false then exit;
+  StopHookK;
+  Self.KeybdHookEnabled:=false;
+end;
+
 procedure TForm_Routiner.SaveOption;
 var sav:TMemoryStream;
     i,j,fo:byte;
@@ -1006,6 +1103,12 @@ var sav:TMemoryStream;
     end;
 begin
   sav:=TmemoryStream.Create;
+  forms[1]:=Self;
+  forms[2]:=AufButtonForm;
+  forms[3]:=SettingLagForm;
+  forms[4]:=ManualForm;
+  forms[5]:=FormRunPerformance;
+  forms[6]:=Form_HoldButtonSetting;
   try
     sav.LoadFromFile('option.lay');
     if sav.Size<$40000 then
@@ -1019,12 +1122,6 @@ begin
             inc(taddr);
           end;
       end;
-    forms[1]:=Self;
-    forms[2]:=AufButtonForm;
-    forms[3]:=SettingLagForm;
-    forms[4]:=ManualForm;
-    forms[5]:=FormRunPerformance;
-    forms[6]:=Form_HoldButtonSetting;
     Self.Layout.LayoutCode:=TLayoutSet(get_byte(24));
     FOR fo:=1 TO 6 DO BEGIN
       ww:=get_long(32*fo+8);
@@ -1115,6 +1212,9 @@ begin
 
   except
     MessageBox(0,PChar(utf8towincp('布局文件读取失败')),'Error',MB_OK);
+    FOR fo:=1 TO 6 DO BEGIN
+      forms[fo].Position:=poScreenCenter;
+    END;
   end;
   sav.Free;
 
@@ -1123,7 +1223,7 @@ begin
       begin
         Self.AufButtons[i,j].RenewCmd;
       end;
-
+  Self.SetLayout(byte(Self.Layout.LayoutCode));
 
 end;
 
@@ -1133,6 +1233,11 @@ begin
   WndFinder(Edit_TreeView.Text);
 end;
 
+procedure TForm_Routiner.CurrentAufStrAdd(str:string);inline;
+begin
+  Self.AufScriptFrames[Self.PageControl.ActivePageIndex].Frame.Memo_cmd.Lines.Add(str);
+end;
+
 procedure TForm_Routiner.GetMessageUpdate(var Msg:TMessage);
 var x,y:integer;
     i,kx{35转0,37转1}:byte;
@@ -1140,6 +1245,7 @@ var x,y:integer;
 begin
   x := pMouseHookStruct(Msg.LParam)^.pt.X;
   y := pMouseHookStruct(Msg.LParam)^.pt.Y;
+  //Self.AufScriptFrames[Self.PageControl.ActivePageIndex].Frame.Memo_cmd.Lines.Add(IntToStr(Msg.wParam));
   case Msg.wParam of
     WM_KeyUp,WM_KeyDown,WM_Char,WM_SysKeyUp,WM_SysKeyDown,WM_IME_Char:
       begin
@@ -1147,38 +1253,38 @@ begin
           WM_KeyDown:
             begin
               case x of
-                162,163:Self.State.Ctrl:=true;
-                160,161:Self.State.Shift:=true;
-                164,165:Self.State.Alt:=true;
-                91,92:Self.State.Win:=true;
-                49..49+SynCount:Self.State.NumKey[x-49]:=true;
+                162,163:Self.Key_State.Ctrl:=true;
+                160,161:Self.Key_State.Shift:=true;
+                164,165:Self.Key_State.Alt:=true;
+                91,92:Self.Key_State.Win:=true;
+                49..49+SynCount:Self.Key_State.NumKey[x-49]:=true;
               end;
             end;
           WM_KeyUp:
             begin
               case x of
-                162,163:Self.State.Ctrl:=false;
-                160,161:Self.State.Shift:=false;
-                164,165:Self.State.Alt:=false;
-                91,92:Self.State.Win:=false;
-                49..49+SynCount:begin Self.State.Number[x-49]:=true;Self.State.NumKey[x-49]:=false;end;
-                192:Self.State.Gross:=true;
+                162,163:Self.Key_State.Ctrl:=false;
+                160,161:Self.Key_State.Shift:=false;
+                164,165:Self.Key_State.Alt:=false;
+                91,92:Self.Key_State.Win:=false;
+                49..49+SynCount:begin Self.Key_State.Number[x-49]:=true;Self.Key_State.NumKey[x-49]:=false;end;
+                192:Self.Key_State.Gross:=true;
               end;
             end;
         end;
 
-        if Self.State.ctrl and Self.State.Gross and (Msg.wParam=WM_KeyDown) and (x = 192) and (y = 41) then
+        if Self.Key_State.ctrl and Self.Key_State.Gross and (Msg.wParam=WM_KeyDown) and (x = 192) and (y = 41) then
           begin
             Self.Button_Wnd_SynthesisClick(Self.Button_Wnd_Synthesis);
-            Self.State.Gross:=false;
+            Self.Key_State.Gross:=false;
           end;
-        if Self.State.ctrl and (Msg.wParam=WM_KeyDown) and (x in [49..49+SynCount]) then
+        if Self.Key_State.ctrl and (Msg.wParam=WM_KeyDown) and (x in [49..49+SynCount]) then
           begin
-            if Self.State.Number[x-49] then Self.CheckBoxs[x-49].Checked:=not Self.CheckBoxs[x-49].Checked;
-            Self.State.Number[x-49]:=false;
+            if Self.Key_State.Number[x-49] then Self.CheckBoxs[x-49].Checked:=not Self.CheckBoxs[x-49].Checked;
+            Self.Key_State.Number[x-49]:=false;
           end;
         if (x in [33,34]) and (Msg.wParam=WM_KEYDOWN) then begin
-          for i:=0 to SynCount do if Self.State.NumKey[i] then
+          for i:=0 to SynCount do if Self.Key_State.NumKey[i] then
             begin
               NowTmp:=Self.SynSetting[i].adjusting_lag;
               case x of
@@ -1235,12 +1341,16 @@ begin
           end;
         end;
 
-        if Self.Record_mode then begin
+        if Self.Record_Mode and Self.RecKey then begin
           if (Self.LastMessage.msg=Msg.wParam) and (Self.LastMessage.wParam=x) then else begin
               NowTimeNumber:=GetTimeNumber;
               if NowTimeNumber<Self.LastRecTime then inc(NowTimeNumber,86400000);
-              Self.AufScriptFrames[Self.PageControl.ActivePageIndex].Frame.Memo_cmd.Lines.Add('sleep '+IntToStr(NowTimeNumber-Self.LastRecTime));
-              Self.AufScriptFrames[Self.PageControl.ActivePageIndex].Frame.Memo_cmd.Lines.Add('post @win,'+IntToStr(Msg.wParam)+','+IntToStr(x)+','+IntToStr((x shl 16) + 1));
+              IF Self.RecTimeMode=rtmSleep THEN BEGIN
+                Self.CurrentAufStrAdd('sleep '+IntToStr(NowTimeNumber-Self.LastRecTime));
+              END ELSE BEGIN
+                Self.CurrentAufStrAdd('waittimer '+IntToStr(Self.TimeOffset+NowTimeNumber-Self.FirstRecTime));
+              END;
+              Self.CurrentAufStrAdd('post @win,'+IntToStr(Msg.wParam)+','+IntToStr(x)+','+IntToStr((x shl 16) + 1));
               Self.LastRecTime:=NowTimeNumber;
           end;
         end;
@@ -1249,12 +1359,40 @@ begin
         Self.LastMessage.wParam:=x;
 
       end;
+    WM_LButtonDown,WM_MButtonDown,WM_RButtonDown,WM_LButtonDblClk,WM_MButtonDblClk,WM_RButtonDblClk,WM_LButtonUp,WM_MButtonUp,WM_RButtonUp:
+      begin
+        if (Self.SettingOri)and(Msg.wParam=WM_LButtonUp) then begin
+          Self.MouseOri.x:=x;
+          Self.MouseOri.y:=y;
+          Self.SettingOri:=false;
+          Self.Button_MouseOri.Enabled:=true;
+          Self.Button_MouseOri.Caption:='('+IntToStr(x)+','+IntToStr(y)+')';
+        end;
+        if Self.Record_Mode and Self.RecMouse then begin
+          NowTimeNumber:=GetTimeNumber;
+          if NowTimeNumber<Self.LastRecTime then inc(NowTimeNumber,86400000);
+          IF Self.RecTimeMode=rtmSleep THEN BEGIN
+            Self.CurrentAufStrAdd('sleep '+IntToStr(NowTimeNumber-Self.LastRecTime));
+          END ELSE BEGIN
+            Self.CurrentAufStrAdd('waittimer '+IntToStr(Self.TimeOffset+NowTimeNumber-Self.FirstRecTime));
+          END;
+          Self.CurrentAufStrAdd('post @win,'+IntToStr(Msg.wParam)+',0,'+IntToStr((word(y-Self.MouseOri.y) shl 16) + dword(x-Self.MouseOri.x)));
+          Self.LastRecTime:=NowTimeNumber;
+        end;
+      end
     else ;
   end;
 
 end;
 
-procedure TForm_Routiner.Memo_tmpChange(Sender: TObject);
+procedure TForm_Routiner.Memo_TmpKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  (Sender as TMemo).clear;
+end;
+
+procedure TForm_Routiner.Memo_TmpRecKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
 begin
   (Sender as TMemo).clear;
 end;
@@ -1520,8 +1658,7 @@ begin
 end;
 
 procedure TForm_Routiner.ScrollBox_WndViewResize(Sender: TObject);
-var i:byte;
-    ARVCW:longint;
+var ARVCW:longint;
 begin
   with Sender as TScrollBox do
     begin
@@ -1547,6 +1684,24 @@ begin
   WindowPosPad.Width:=ARVCW;
   WindowPosPad.Height:=WindowPosPad.Width*Desktop.Height div Desktop.Width;
   ReDrawWndPos;
+
+  Memo_Tmp.Top:=3*SynchronicH+5*gap+WindowPosPad.Height;
+  Memo_Tmp.Left:=gap;
+  Memo_Tmp.Width:=ARVCW;
+  Memo_Tmp.Height:=(Sender as TScrollBox).Height-Memo_Tmp.Top+SynchronicH;
+
+  with Sender as TScrollBox do
+    begin
+      if Self.Layout.LayoutCode = Lay_Synchronic then
+        VertScrollBar.Position:=VertScrollBar.Range-VertScrollBar.Page
+      else
+        VertScrollBar.Position:=0;
+      if Self.Layout.LayoutCode = Lay_Recorder then
+        VertScrollBar.Visible:=false
+      else
+        VertScrollBar.Visible:=true;
+    end;
+
 end;
 
 procedure TForm_Routiner.GroupBox_RecOptionResize(Sender: TObject);
@@ -1575,6 +1730,11 @@ begin
   //Height_Advanced_Seting:=200+72;
   //Left_Column_Width:=300+120;
   Synthesis_mode:=false;
+  Record_Mode:=false;
+  RecKey:=false;
+  RecMouse:=false;
+  RecTimeMode:=rtmSleep;
+  SettingOri:=false;
   Button_Wnd_Synthesis.ShowHint:=true;
   Button_Wnd_Synthesis.Hint:='按Ctrl+`切换状态';
 
@@ -1596,7 +1756,7 @@ begin
         begin
           AufGenerator;
           CostumerFuncInitialize(Auf);
-
+          HighLighterReNew;
         end;
     end;
 
@@ -1605,8 +1765,8 @@ begin
   Self.Height:=305;
 
   Self.Position:=poScreenCenter;
-  Self.State.Gross:=true;
-  for i:=49 to 49+SynCount do Self.State.Number[i-49]:=true;
+  Self.Key_State.Gross:=true;
+  for i:=49 to 49+SynCount do Self.Key_State.Number[i-49]:=true;
   for i:=0 to SynCount do
     begin
       SynSetting[i].mode_lag:=false;
@@ -1652,7 +1812,7 @@ begin
       Self.Edits[i].Button:=Self.Buttons[i];
       Self.Buttons[i].Edit:=Self.Edits[i];
       Self.Edits[i].Text:='@win'+IntToStr(i);
-      Self.Buttons[i].Text:='<<窗体句柄';
+      Self.Buttons[i].Text:='单击设置窗口句柄';
       Self.Buttons[i].expression:=Self.Edits[i].Text;
       delete(Self.Buttons[i].expression,1,1);
       GlobalExpressionList.TryAddExp(Self.Buttons[i].expression,narg('','0',''));
@@ -1713,236 +1873,25 @@ begin
       HoldButtonSetting2:=mbRight;
     end;
 
+  {
   SetCallHandleK(Self.Handle);
   if not StartHookK(WM_USER+100) then
   begin
     ShowMessage('挂钩失败！');
   end;
-
+  SetCallHandleM(Self.Handle);
+  if not StartHookM(WM_USER+100) then
+  begin
+    ShowMessage('挂钩失败！');
+  end;
+  SetTrackMouseMoveM(1);
+  }
+  Self.KeybdHookEnabled:=false;
+  Self.MouseHookEnabled:=false;
+  Self.KeybdHook;
+  //Self.MouseHook;//初始不开鼠标钩子
 
 end;
-
-{
-procedure TForm_Routiner.FormResize(Sender: TObject);
-var i,j:byte;
-    divi_vertical,divi_horizontal,ARVControlH,ButtonsTop,TreeViewTop,RecorderTop,AufButtonW,AufButtonH:longint;
-    TreeViewFinalTop,TreeViewFinalLeft,TreeViewFinalHeight,TreeViewFinalWidth:longint;
-    WindowPosPadH,HoldButtonH,HoldButtonW,AufButtonL:longint;
-    page:integer;
-begin
-  ARVControlH:=(SynCount+1)*(gap+SynchronicH);
-  case Self.Layout.Layout of
-    Lay_Command:
-      begin
-        divi_vertical:=Self.Width;
-        divi_horizontal:=Self.Height;
-        ButtonsTop:=Self.Height;
-        RecorderTop:=divi_horizontal + ARVControlH;
-        TreeViewTop:=0;
-        Self.PageControl.Show;
-        Self.Button_Wnd_Record.Enabled:=false;
-      end;
-    Lay_Advanced:
-      begin
-        divi_vertical:=Self.Width - WindowsListW;
-        divi_horizontal:=Self.Height - ARVControlH;
-        ButtonsTop:=Self.Height;
-        RecorderTop:=divi_horizontal + ARVControlH;
-        TreeViewTop:=0;
-        Self.PageControl.Show;
-        Self.Button_Wnd_Record.Enabled:=true;
-      end;
-    Lay_Synchronic:
-      begin
-        divi_vertical:=max(450,Self.Width-MinAufButtonW);//divi_vertical:=Self.Width;
-        divi_horizontal:=MainMenuH;
-        ButtonsTop:=0;//ButtonsTop:=Self.Height;
-        RecorderTop:=divi_horizontal + ARVControlH;
-        TreeViewTop:=0;
-        Self.PageControl.Hide;
-        Self.Button_Wnd_Record.Enabled:=false;
-      end;
-    Lay_Buttons:
-      begin
-        divi_vertical:=Self.Width;
-        divi_horizontal:=Self.Height;
-        ButtonsTop:=0;
-        RecorderTop:=divi_horizontal + ARVControlH;
-        TreeViewTop:=0;
-        Self.PageControl.Hide;
-        Self.Button_Wnd_Record.Enabled:=false;
-      end;
-    Lay_Recorder:
-      begin
-        divi_vertical:=Self.Width - WindowsListW;
-        divi_horizontal:=Self.Height;
-        ButtonsTop:=Self.Height;
-        RecorderTop:=0;
-        TreeViewTop:=ButtonsTop;
-        Self.PageControl.Show;
-        Self.Button_Wnd_Record.Enabled:=true;
-      end;
-  end;
-  if Self.Width < WindowsListW + 150 then begin
-    Self.Width:=WindowsListW + 150;
-    exit;
-  end;
-  if (Self.Layout.Layout in [Lay_Advanced,Lay_Recorder])and(Self.Width < WindowsListW + 450) then begin
-    Self.Width:=WindowsListW + 450;
-    exit;
-  end;
-  if (Self.Layout.Layout in [Lay_Buttons])and(Self.Width < ButtonColumn * 36 +10) then begin
-    Self.Width:=ButtonColumn * 36+10;
-    exit;
-  end;
-  if (Self.Layout.Layout in [Lay_Buttons])and(Self.Height < gap + (SynCount+1) * 38) then begin
-    Self.Height := gap + (SynCount+1) * 38;
-    exit;
-  end;
-  if Self.Height < ARVControlH + MainMenuH then begin
-    Self.Height:=ARVControlH + MainMenuH;
-    exit;
-  end;
-
-  PageControl.Width:=divi_vertical - 2*gap;
-  PageControl.Height:=divi_horizontal- 3 * gap - 24;
-  PageControl.Left:=gap;
-  PageControl.Top:=gap;
-
-  for page:=0 to RuleCount do begin
-    Self.AufScriptFrames[page].Frame.Width:=PageControl.Width-2*gap;
-    Self.AufScriptFrames[page].Frame.Height:=PageControl.Height-25-2*gap;
-    Self.AufScriptFrames[page].Frame.Left:=0;
-    Self.AufScriptFrames[page].Frame.Top:=0;
-  end;
-  Self.AufScriptFrames[PageControl.ActivePageIndex].Frame.FrameResize(nil);
-
-  if Self.Layout.Layout = Lay_Buttons then Button_advanced.Left:=divi_vertical + gap
-  else Button_advanced.Left:=gap;
-  Button_advanced.Top:=divi_horizontal - 24 - gap - MainMenuH;
-  Button_advanced.Width:=divi_vertical - 2 * gap - 2;
-  Button_advanced.Height:=24;
-
-  IF Self.Layout.Layout = Lay_Recorder THEN BEGIN
-    Button_Wnd_Record.Top:=gap;
-    Button_Wnd_Record.Left:=divi_vertical + gap;
-    Button_Wnd_Record.Height:=28;
-    Button_Wnd_Record.Width:=(WindowsListW - 3*gap)div 2;
-
-    Button_Wnd_Synthesis.Top:=gap;
-    Button_Wnd_Synthesis.Left:=divi_vertical + 2*gap + Button_Wnd_Record.Width;
-    Button_Wnd_Synthesis.Height:=28;
-    Button_Wnd_Synthesis.Width:=WindowsListW - 3*gap - Button_Wnd_Record.Width-2;
-  END ELSE BEGIN
-    Button_Wnd_Record.Top:=divi_horizontal - MainMenuH;
-    Button_Wnd_Record.Left:=gap;
-    Button_Wnd_Record.Height:=28;
-    Button_Wnd_Record.Width:=ARVControlW;
-
-    Button_Wnd_Synthesis.Top:=divi_horizontal + 28 + gap - MainMenuH;
-    Button_Wnd_Synthesis.Left:=gap;
-    Button_Wnd_Synthesis.Height:=28;
-    Button_Wnd_Synthesis.Width:=ARVControlW;
-  END;
-
-  Button_excel.Top:=divi_horizontal+2*28+2*gap - MainMenuH;
-  Button_excel.Left:=gap;
-  Button_excel.Height:=28;
-  Button_excel.Width:=ARVControlW;
-
-  WindowPosPadH:=Self.Height - gap - WindowPosPad.Top - MainMenuH;
-
-  WindowPosPad.Top:=divi_horizontal + 3 * 28 + 3 * gap - MainMenuH;
-  WindowPosPad.Left:=gap;
-  WindowPosPad.Width:=ARVControlW;
-  WindowPosPad.Height:={min(}WindowPosPad.Width*Desktop.Height div Desktop.Width{,WindowPosPadH)};
-
-  HoldButtonScrollBox.Top:=WindowPosPad.Top+gap+WindowPosPad.Height;
-  HoldButtonScrollBox.Left:=gap;
-  HoldButtonScrollBox.Height:=WindowPosPadH-gap-WindowPosPad.Height;
-  HoldButtonScrollBox.Width:=ARVControlW;
-
-  HoldButtonW:=(ARVControlW-5*gap) div 4;
-  HoldButtonH:=HoldButtonW{ div 2};
-  for i:=0 to 31 do
-    begin
-      Self.HoldButtons[i].Top:=gap+(i div 4)*(HoldButtonH+gap);
-      Self.HoldButtons[i].Left:=gap+(i mod 4)*(HoldBUttonW+gap);
-      Self.HoldButtons[i].Width:=HoldButtonW;
-      Self.HoldButtons[i].Height:=HoldButtonH;
-    end;
-
-  IF Self.Layout.Layout = Lay_SynChronic THEN BEGIN
-    TreeViewFinalTop:=divi_horizontal+(28+gap)*(SynCount+1)-MainMenuH;
-    TreeViewFinalLeft:=ARVControlW+gap;
-    TreeViewFinalWidth:=Self.Width-ARVControlW-gap;
-    TreeViewFinalHeight:=Self.Height-TreeViewFinalTop-gap;
-  END ELSE BEGIN
-    TreeViewFinalTop:=TreeViewTop;
-    TreeViewFinalLeft:=divi_vertical;
-    TreeViewFinalWidth:=WindowsListW;
-    TreeViewFinalHeight:=Self.Height;
-  END;
-  TreeView_Wnd.Top:=TreeViewFinalTop + gap;
-  TreeView_Wnd.Height:=TreeViewFinalHeight - 36 - 2 * gap- MainMenuH;
-  TreeView_Wnd.Left:=TreeViewFinalLeft + gap;
-  TreeView_Wnd.Width:=TreeViewFinalWidth - 2 * gap;
-  //Label_Filter.Top:=TreeViewFinalTop + TreeViewFinalHeight - 28 - MainMenuH;
-  //Edit_TreeView.Top:=TreeViewFinalTop + TreeViewFinalHeight - 34 - MainMenuH;
-  //Button_TreeViewFresh.Top:=TreeViewFinalTop + TreeViewFinalHeight - 34 - MainMenuH;
-  Label_Filter.Top:=TreeView_Wnd.Top+TreeView_Wnd.Height+gap+12;
-  Edit_TreeView.Top:=TreeView_Wnd.Top+TreeView_Wnd.Height+gap+4;
-  Button_TreeViewFresh.Top:=TreeView_Wnd.Top+TreeView_Wnd.Height+gap+4;
-  //Label_Filter.Width:=45;
-  Edit_TreeView.Width:=TreeView_Wnd.Width - Label_Filter.Width - Button_TreeViewFresh.Width - 4*gap;
-  //Button_TreeViewFresh.Width:=72;
-  Label_Filter.Left:=TreeView_Wnd.Left;
-  Edit_TreeView.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width;
-  Button_TreeViewFresh.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width + 10 + Edit_TreeView.Width;
-
-
-  GroupBox_RecOption.Top:=RecorderTop + 2*gap + 28;
-  GroupBox_RecOption.Left:=TreeView_Wnd.Left;
-  GroupBox_RecOption.Width:=TreeView_Wnd.Width - gap;
-  GroupBox_RecOption.Height:=PageControl.Height - gap - 28;
-
-  if Self.Layout.Layout=Lay_Synchronic then begin
-    AufButtonL:=max(Self.Width-(ButtonColumn+2)*gap-MinAufButtonW+60,450);
-    AufButtonW:=(MinAufButtonW-60)  div (ButtonColumn+1);
-    AufButtonH:=28;
-  end else begin
-    AufButtonL:=0;
-    AufButtonW:=(Self.Width - (ButtonColumn + 2 )*gap) div (ButtonColumn+1);
-    AufButtonH:=(Self.Height - (SynCount + 2 )*gap - MainMenuH) div (SYnCount+1);
-  end;
-
-  for i:=0 to SynCount do
-    begin
-      Self.Edits[i].Top:=divi_horizontal+(28+gap)*i-MainMenuH;
-      Self.Edits[i].Width:=60;
-      Self.Edits[i].Left:=ARVControlW+2*gap;
-      Self.Edits[i].Height:=28;
-      Self.Buttons[i].Top:=Self.Edits[i].Top;
-      Self.Buttons[i].Width:=divi_vertical-ARVControlW-2*gap-160;
-      Self.Buttons[i].Left:=Self.Edits[i].Left+Self.Edits[i].Width+gap;
-      Self.Buttons[i].Height:=28;
-      Self.CheckBoxs[i].Left:=divi_vertical-90;
-      Self.CheckBoxs[i].Top:=Self.Buttons[i].Top+3;
-      for j:=0 to ButtonColumn do
-        begin
-          Self.AufButtons[i,j].Width:=AufButtonW;
-          Self.AufButtons[i,j].Left:=j*(gap + AufButtonW)+gap+AufButtonL;
-          Self.AufButtons[i,j].Height:=AufButtonH;
-          if Self.Layout.Layout=Lay_Synchronic then
-            Self.AufButtons[i,j].Top:=ButtonsTop + gap + i*(gap+AufButtonH)-5
-          else
-            Self.AufButtons[i,j].Top:=ButtonsTop + gap + i*(gap+AufButtonH);
-        end;
-    end;
-  ReDrawWndPos;
-
-end;
-}
 
 procedure TForm_Routiner.FormResize(Sender: TObject);
   procedure MinSizeCheck(PWidth,PHeight:longint);
@@ -1971,7 +1920,6 @@ begin
         Self.Splitter_RightH.Top:=Self.Height-sp_thick-MainMenuH;
         Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH;
         Self.Button_Wnd_Record.Enabled:=false;
-        Self.ScrollBox_WndView.VertScrollBar.Visible:=true;
       end;
     Lay_Advanced:
       begin
@@ -1982,7 +1930,6 @@ begin
         Self.Splitter_RightH.Top:=0;
         Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH;
         Self.Button_Wnd_Record.Enabled:=true;
-        Self.ScrollBox_WndView.VertScrollBar.Visible:=true;
       end;
     Lay_Synchronic:
       begin
@@ -1993,7 +1940,6 @@ begin
         Self.Splitter_RightH.Top:=(SynCount+1)*(SynchronicH+gap)+gap;
         Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH;
         Self.Button_Wnd_Record.Enabled:=false;
-        Self.ScrollBox_WndView.VertScrollBar.Visible:=true;
       end;
     Lay_Buttons:
       begin
@@ -2004,7 +1950,6 @@ begin
         Self.Splitter_RightH.Top:=Self.Height-sp_thick-MainMenuH;
         Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH;
         Self.Button_Wnd_Record.Enabled:=false;
-        Self.ScrollBox_WndView.VertScrollBar.Visible:=true;
       end;
     Lay_Recorder:
       begin
@@ -2015,7 +1960,6 @@ begin
         Self.Splitter_RightH.Top:=0;
         Self.Splitter_RecH.Top:=0;
         Self.Button_Wnd_Record.Enabled:=true;
-        Self.ScrollBox_WndView.VertScrollBar.Visible:=false;
       end;
   end;
   Self.PageControlResize(Self.PageControl);
@@ -2027,16 +1971,6 @@ begin
   Self.GroupBox_RecOptionResize(Self.GroupBox_RecOption);
 end;
 
-
-procedure TForm_Routiner.Memo_cmdEditingDone(Sender: TObject);
-begin
-  //
-end;
-
-procedure TForm_Routiner.Memo_cmdKeyPress(Sender: TObject; var Key: char);
-begin
-  //
-end;
 procedure TForm_Routiner.Button_advancedClick(Sender: TObject);
 begin
   SetLayout((byte(Self.Layout.LayoutCode)+1) mod 5);
@@ -2069,79 +2003,45 @@ begin
   else exit;
 end;
 
-{
-procedure TForm_Routiner.Button_Tmp_DMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var sync:byte;
+procedure TForm_Routiner.Button_MouseOriKeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
 begin
-  for sync:=0 to SynCount do
-    if Self.CheckBoxs[sync].Checked then
-      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYDOWN,40,40 shl 32 + 1);
+
 end;
 
-procedure TForm_Routiner.Button_Tmp_DMouseUp(Sender: TObject;
+procedure TForm_Routiner.Button_MouseOriMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var sync:byte;
 begin
-  for sync:=0 to SynCount do
-    if Self.CheckBoxs[sync].Checked then
-      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYUP,40,40 shl 32 + 1);
+  Self.SettingOri:=true;
+  with Sender as TButton do
+    begin
+      Enabled:=false;
+      Caption:='单击设置录制原点';
+    end;
 end;
 
-procedure TForm_Routiner.Button_Tmp_LMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var sync:byte;
+procedure TForm_Routiner.CheckGroup_KeyMouseItemClick(Sender: TObject;
+  Index: integer);
+var msgtext:string;
 begin
-  for sync:=0 to SynCount do
-    if Self.CheckBoxs[sync].Checked then
-      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYDOWN,37,37 shl 32 + 1);
+  with Sender as TCheckGroup do
+    begin
+      Self.RecKey:=Checked[0];
+      Self.RecMouse:=Checked[1];
+    end;
+  msgtext:='';
+  if (not Self.MouseHookEnabled) and Self.RecMouse then msgtext:=msgtext + '鼠标钩子未启用，鼠标录制功能无效。'+#13+#10;
+  if (not Self.KeybdHookEnabled) and Self.RecKey then msgtext:=msgtext + '键盘钩子未启用，键盘录制功能无效。'+#13+#10;
+  if msgtext<>'' then messagebox(0,PChar(utf8towincp(msgtext)),PChar(utf8towincp('钩子未启用')),MB_OK);
 end;
 
-procedure TForm_Routiner.Button_Tmp_LMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var sync:byte;
+procedure TForm_Routiner.RadioGroup_DelayModeClick(Sender: TObject);
 begin
-  for sync:=0 to SynCount do
-    if Self.CheckBoxs[sync].Checked then
-      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYUP,37,37 shl 32 + 1);
+  with Sender as TRadioGroup do
+    begin
+      Self.RecTimeMode:=TRecTimeMode(ItemIndex);
+    end;
 end;
-
-procedure TForm_Routiner.Button_Tmp_RMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var sync:byte;
-begin
-  for sync:=0 to SynCount do
-    if Self.CheckBoxs[sync].Checked then
-      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYDOWN,39,39 shl 32 + 1);
-end;
-
-procedure TForm_Routiner.Button_Tmp_RMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var sync:byte;
-begin
-  for sync:=0 to SynCount do
-    if Self.CheckBoxs[sync].Checked then
-      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYUP,39,39 shl 32 + 1);
-end;
-
-procedure TForm_Routiner.Button_Tmp_UMouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var sync:byte;
-begin
-  for sync:=0 to SynCount do
-    if Self.CheckBoxs[sync].Checked then
-      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYDOWN,38,38 shl 32 + 1);
-end;
-
-procedure TForm_Routiner.Button_Tmp_UMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var sync:byte;
-begin
-  for sync:=0 to SynCount do
-    if Self.CheckBoxs[sync].Checked then
-      postmessage(Self.Buttons[sync].sel_hwnd,WM_KEYUP,38,38 shl 32 + 1);
-end;
-}
 
 procedure TForm_Routiner.Button_TreeViewFreshClick(Sender: TObject);
 begin
@@ -2150,17 +2050,20 @@ end;
 
 procedure TForm_Routiner.Button_Wnd_RecordClick(Sender: TObject);
 begin
-  if not Self.Record_mode then
+  if not Self.Record_Mode then
     begin
-      Self.Record_mode:=true;
+      Self.Record_Mode:=true;
       (Sender as TButton).Caption:='结束录制键盘';
       (Sender as TButton).Font.Bold:=true;
       (Sender as TButton).Font.Color:=clRed;
       Self.LastRecTime:=GetTimeNumber;
+      Self.FirstRecTime:=GetTimeNumber;
+      Self.TimeOffset:=Usf.to_i(Self.Edit_TimerOffset.Caption);
+      if (Self.RecTimeMode=rtmWaittimer) and (Self.TimeOffset=0) then CurrentAufStrAdd('settimer');
     end
   else
     begin
-      Self.Record_mode:=false;
+      Self.Record_Mode:=false;
       (Sender as TButton).Caption:='开始录制键盘';
       (Sender as TButton).Font.Bold:=false;
       (Sender as TButton).Font.Color:=clDefault;
@@ -2210,6 +2113,10 @@ begin
   Lay_Command:
     begin
       Self.Layout.LayoutCode:=Lay_Command;
+      Self.Constraints.MinHeight:=300;
+      Self.Constraints.MaxHeight:=0;
+      Self.Constraints.MinWidth:=480;
+      Self.Constraints.MaxWidth:=0;
       //Self.Width:=WindowsListW + 150;
       //Self.Height:=(SynCount+1)*(gap+SynchronicH) + MainMenuH + 150;
       Self.MainMenu.Items[1].Items[0].Enabled:=false;
@@ -2217,6 +2124,10 @@ begin
   Lay_advanced:
     begin
       Self.Layout.LayoutCode:=Lay_Advanced;
+      Self.Constraints.MinHeight:=300+(SynCount+1)*(gap+SynchronicH)+gap;
+      Self.Constraints.MaxHeight:=0;
+      Self.Constraints.MinWidth:=480+WindowsListW;
+      Self.Constraints.MaxWidth:=0;
       //Self.Width:=WindowsListW + 450;
       //Self.Height:=(SynCount+1)*(gap+SynchronicH) + MainMenuH + 300;
       Self.MainMenu.Items[1].Items[1].Enabled:=false;
@@ -2224,6 +2135,10 @@ begin
   Lay_SynChronic:
     begin
       Self.Layout.LayoutCode:=Lay_Synchronic;
+      Self.Constraints.MinHeight:=(SynCount+2)*(SynchronicH+gap)+gap;
+      Self.Constraints.MaxHeight:=0;
+      Self.Constraints.MinWidth:=ARVControlW+360;
+      Self.Constraints.MaxWidth:=0;
       //Self.Width:=WindowsListW + 150;
       Self.Height:=(SynCount+1)*(gap+SynchronicH) + MainMenuH;
       Self.MainMenu.Items[1].Items[2].Enabled:=false;
@@ -2231,6 +2146,10 @@ begin
   Lay_Buttons:
     begin
       Self.Layout.LayoutCode:=Lay_Buttons;
+      Self.Constraints.MinHeight:=(SynCount+1)*(gap+SynchronicH)+2*gap+MainMenuH;
+      Self.Constraints.MaxHeight:=(SynCount+1)*(gap+SynchronicH)+2*gap+MainMenuH;
+      Self.Constraints.MinWidth:=(ButtonColumn+1+8+1)*(gap+SynchronicW)+2*gap;
+      Self.Constraints.MaxWidth:=0;
       //Self.Width:=WindowsListW + 150;
       Self.Height:=(SynCount+1)*(gap+SynchronicH) + MainMenuH;
       Self.MainMenu.Items[1].Items[3].Enabled:=false;
@@ -2238,6 +2157,10 @@ begin
   Lay_Recorder:
     begin
       Self.Layout.LayoutCode:=Lay_Recorder;
+      Self.Constraints.MinHeight:=300+(SynCount+1)*(gap+SynchronicH)+gap;
+      Self.Constraints.MaxHeight:=0;
+      Self.Constraints.MinWidth:=480+WindowsListW;
+      Self.Constraints.MaxWidth:=0;
       //Self.Width:=WindowsListW + 150;
       //Self.Height:=(SynCount+1)*(gap+SynchronicH) + MainMenuH + 150;
       Self.MainMenu.Items[1].Items[4].Enabled:=false;
@@ -2245,6 +2168,10 @@ begin
   Lay_Customer:
     begin
       Self.Layout.LayoutCode:=Lay_Customer;
+      Self.Constraints.MinHeight:=0;
+      Self.Constraints.MaxHeight:=0;
+      Self.Constraints.MinWidth:=0;
+      Self.Constraints.MaxWidth:=0;
     end;
   end;
   Self.FormResize(nil);
@@ -2274,7 +2201,13 @@ procedure TForm_Routiner.FormClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
     SaveOption;
+    {
+    StopHookM;
     StopHookK;
+    }
+    Self.MouseUnHook;
+    Self.KeybdUnHook;
+
 end;
 
 
@@ -2403,11 +2336,11 @@ end;
 procedure TAufButton.ButtonRightUp;
 begin
   AufButtonForm.NowEditing:=Self;
-  AufButtonForm.Edit_Caption.Caption:=Self.Caption;
-  AufButtonForm.ComboBox_Window.ItemIndex:=Self.WindowIndex;
-  AufButtonForm.ComboBox_Window.Enabled:=Self.WindowChangeable;
-  AufButtonForm.ComboBox_Window.ItemIndex:=Self.WindowIndex;
-  AufButtonForm.Button_FileName.Caption:=Self.ScriptFile;
+  //AufButtonForm.Edit_Caption.Caption:=Self.Caption;
+  //AufButtonForm.ComboBox_Window.ItemIndex:=Self.WindowIndex;
+  //AufButtonForm.ComboBox_Window.Enabled:=Self.WindowChangeable;
+  //AufButtonForm.ComboBox_Window.ItemIndex:=Self.WindowIndex;
+  //AufButtonForm.Button_FileName.Caption:=Self.ScriptFile;
   AufButtonForm.Show;
   AufButtonForm.FormShow(nil);
 end;
@@ -2472,6 +2405,7 @@ begin
   if (Button=frm.Setting.HoldButtonSetting2) and (Shift=frm.Setting.HoldButtonSetting1) then begin
     Form_HoldButtonSetting.TargetButton:=Self;
     Form_HoldButtonSetting.Show;
+    Form_HoldButtonSetting.FormShow(nil);
     exit;
   end;
   for step:=2 downto 0 do if Self.keymessage[step]<>0 then BEGIN
