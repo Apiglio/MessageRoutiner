@@ -91,7 +91,7 @@ begin
   Self.ScrollBox.Height:=Self.Height;
   Self.ScrollBox.Top:=0;
   Self.ScrollBox.Left:=0;
-  Self.Position:=poScreenCenter;
+  //Self.Position:=poScreenCenter;
   for i:= 0 to SynCount do
     begin
       Self.Title1[i]:=TLabel.Create(Self);

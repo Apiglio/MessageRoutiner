@@ -13,6 +13,7 @@ type
   { TAufButtonForm }
 
   TAufButtonForm = class(TForm)
+    Button_Stop: TButton;
     Button_Apply: TButton;
     Button_ApplyCol: TButton;
     Button_ReEdit: TButton;
@@ -29,6 +30,7 @@ type
     procedure Button_ApplyColClick(Sender: TObject);
     procedure Button_FileNameClick(Sender: TObject);
     procedure Button_ReEditClick(Sender: TObject);
+    procedure Button_StopClick(Sender: TObject);
     procedure ComboBox_WindowChange(Sender: TObject);
     procedure Edit_CaptionChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -109,17 +111,20 @@ end;
 procedure TAufButtonForm.FormResize(Sender: TObject);
 var tre:longint;
 begin
-  tre:=(Self.Width-40) div 3;
+  tre:=(Self.Width-50) div 4;
   Self.Button_FileName.Width:=Self.Width-20;
   Self.ComboBox_Window.Width:=Self.Width-20;
   Self.Syn_Show.Width:=Self.Width-20;
   Self.Edit_Caption.Width:=Self.Width-20;
+
   Self.Button_Apply.Width:=tre;
   Self.Button_ApplyCol.Width:=tre;
   Self.Button_ReEdit.Width:=tre;
+  Self.Button_Stop.Width:=tre;
   Self.Button_Apply.Left:=10;
   Self.Button_ApplyCol.Left:=20+tre;
   Self.Button_ReEdit.Left:=30+2*tre;
+  Self.Button_Stop.Left:=40+3*tre;
 
 end;
 
@@ -145,6 +150,11 @@ end;
 procedure TAufButtonForm.Button_ReEditClick(Sender: TObject);
 begin
   Self.ReEdit;
+end;
+
+procedure TAufButtonForm.Button_StopClick(Sender: TObject);
+begin
+  (Self.NowEditing as TAufButton).Perform(WM_MButtonUp,0,$0808);
 end;
 
 procedure TAufButtonForm.Button_ApplyClick(Sender: TObject);

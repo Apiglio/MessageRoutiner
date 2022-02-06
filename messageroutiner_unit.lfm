@@ -1,7 +1,7 @@
 object Form_Routiner: TForm_Routiner
-  Left = 798
+  Left = 821
   Height = 591
-  Top = 336
+  Top = 337
   Width = 1005
   Caption = 'Apiglio Message Routiner'
   ClientHeight = 566
@@ -36,6 +36,7 @@ object Form_Routiner: TForm_Routiner
     Top = 328
     Width = 384
     TabOrder = 1
+    OnChange = TreeView_WndChange
   end
   object Button_Wnd_Record: TButton
     Left = 8
@@ -106,7 +107,7 @@ object Form_Routiner: TForm_Routiner
     Height = 32
     Top = 280
     Width = 194
-    Caption = '异步器设置'
+    Caption = '锁定窗口设置按钮'
     Font.CharSet = GB2312_CHARSET
     Font.Height = -15
     Font.Name = '宋体'
@@ -117,14 +118,6 @@ object Form_Routiner: TForm_Routiner
     ParentFont = False
     TabOrder = 7
   end
-  object Memo_tmp: TMemo
-    Left = 8
-    Height = 97
-    Top = 320
-    Width = 194
-    ScrollBars = ssAutoBoth
-    TabOrder = 8
-  end
   object GroupBox_RecOption: TScrollBox
     Left = 616
     Height = 310
@@ -134,7 +127,7 @@ object Form_Routiner: TForm_Routiner
     VertScrollBar.Page = 104
     ClientHeight = 306
     ClientWidth = 380
-    TabOrder = 9
+    TabOrder = 8
     object RadioGroup_RecSyntaxMode: TRadioGroup
       Left = 4
       Height = 48
@@ -187,11 +180,41 @@ object Form_Routiner: TForm_Routiner
       TabOrder = 1
     end
   end
+  object WindowPosPad: TShape
+    Left = 8
+    Height = 97
+    Hint = '所选窗体位置预览'
+    Top = 320
+    Width = 194
+    ParentShowHint = False
+    ShowHint = True
+  end
+  object WindowPosPadWind: TShape
+    Left = 80
+    Height = 41
+    Top = 344
+    Width = 66
+    Brush.Color = clBlack
+    Brush.Style = bsDiagCross
+  end
+  object HoldButtonScrollBox: TScrollBox
+    Left = 8
+    Height = 136
+    Top = 424
+    Width = 194
+    HorzScrollBar.Page = 1
+    VertScrollBar.Page = 1
+    TabOrder = 9
+  end
   object MainMenu: TMainMenu
     left = 536
     top = 352
     object MenuItem_Function: TMenuItem
       Caption = '操作指南'
+      object MenuItem_Func_Basic: TMenuItem
+        Caption = '界面入门'
+        OnClick = MenuItem_Func_BasicClick
+      end
       object MenuItem_Func_Auf: TMenuItem
         Caption = 'AufScript'
         OnClick = MenuItem_Func_AufClick
@@ -249,6 +272,10 @@ object Form_Routiner: TForm_Routiner
           Caption = '异步器设置'
           OnClick = MenuItem_Setting_LagClick
         end
+        object MenuItem_RunPerformance: TMenuItem
+          Caption = '性能设置'
+          OnClick = MenuItem_RunPerformanceClick
+        end
       end
       object MenuItem_Opt_licence: TMenuItem
         Caption = '注册'
@@ -260,6 +287,13 @@ object Form_Routiner: TForm_Routiner
       object MenuItem_Opt_About: TMenuItem
         Caption = '关于'
         OnClick = MenuItem_Opt_AboutClick
+      end
+      object MenuItem2: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_Exit: TMenuItem
+        Caption = '退出'
+        OnClick = MenuItem_ExitClick
       end
     end
   end
