@@ -24,6 +24,7 @@ begin
   Application.CreateForm(TFormRunPerformance, FormRunPerformance);
   Application.CreateForm(TForm_HoldButtonSetting, Form_HoldButtonSetting);
   Form_Routiner.LoadOption;
+  Form_Routiner.FormResize(Form_Routiner);
   Application.Run;
 end.
 
