@@ -8,11 +8,12 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Messages,
-  Windows, StdCtrls, ComCtrls, ExtCtrls, Menus, LazUTF8{$ifndef insert}, Apiglio_Useful, aufscript_frame{$endif};
+  Windows, StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, Dos,
+  LazUTF8{$ifndef insert}, Apiglio_Useful, aufscript_frame{$endif};
 
 const
 
-  version_number='0.0.6';
+  version_number='0.0.7';
 
   RuleCount = 9;
   SynCount = 4;{不能大于9，也不推荐9}
@@ -95,7 +96,7 @@ type
   TForm_Routiner = class(TForm)
     Button_excel: TButton;
     Button_TreeViewFresh: TButton;
-    Button_Wnd_Fresh: TButton;
+    Button_Wnd_Record: TButton;
     Button_advanced: TButton;
     Button_Wnd_Synthesis: TButton;
     Edit_TreeView: TEdit;
@@ -123,7 +124,7 @@ type
     procedure Button_advancedClick(Sender: TObject);
     procedure Button_excelClick(Sender: TObject);
     procedure Button_TreeViewFreshClick(Sender: TObject);
-    procedure Button_Wnd_FreshClick(Sender: TObject);
+    procedure Button_Wnd_RecordClick(Sender: TObject);
     procedure Button_Wnd_SynthesisClick(Sender: TObject);
     procedure Edit_TreeViewChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -152,6 +153,9 @@ type
     CheckBoxs:array[0..SynCount]of TARVCheckBox;
     AufScriptFrames:array[0..RuleCount] of TAufScriptFrame;
     Synthesis_mode:boolean;//为真时向所有选中的TARVButton.sel_hwnd窗体广播
+    Record_mode:boolean;//为真时向当前标签页记录键盘消息
+    LastRecTime:longint;//录制过程中表示上一个记录时间，作差用来确定sleep的参数
+    LastMessage:TMessage;
     State:record
       ctrl,alt,shift,win:boolean;
       Number:array[0..SynCount]of boolean;//是否抬起，用于放置一次按下触发多次事件
@@ -177,6 +181,27 @@ function StartHookK(MsgID:Word):Bool;stdcall;external 'DesktopCommander_keyboard
 function StopHookK:Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StopHook';
 procedure SetCallHandleK(sender:HWND);stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'SetCallHandle';
 
+function GetTimeNumber:longint;
+var h,m,s,ms:word;
+begin
+  gettime(h,m,s,ms);
+  result:=ms*10+s*1000+m*60000+h*3600000;
+end;
+function GetTimeStr:string;
+var h,m,s,ms:word;
+begin
+  gettime(h,m,s,ms);
+  result:=Usf.zeroplus(h,2)+':'+Usf.zeroplus(m,2)+':'+Usf.zeroplus(s,2)+'.'+Usf.zeroplus(ms,2);
+end;
+procedure _gettime(Sender:TObject);
+var AufScpt:TAufScript;
+    AAuf:TAuf;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  AufScpt.IO_fptr.echo(AAuf.Owner,'TimeStr='+GetTimeStr);
+  AufScpt.IO_fptr.echo(AAuf.Owner,'TimeNum='+IntToStr(GetTimeNumber));
+end;
 procedure _shutup(Sender:TObject);
 begin
   shutup:=true;
@@ -416,6 +441,7 @@ end;
 procedure TForm_Routiner.GetMessageUpdate(var Msg:TMessage);
 var x,y:integer;
     i:byte;
+    NowTimeNumber:longint;
 begin
   x := pMouseHookStruct(Msg.LParam)^.pt.X;
   y := pMouseHookStruct(Msg.LParam)^.pt.Y;
@@ -475,6 +501,19 @@ begin
             if Self.CheckBoxs[i].Checked then postmessage(Self.Buttons[i].sel_hwnd,Msg.wParam,x,y);
           end;
         end;
+
+        if Self.Record_mode then begin
+          if (Self.LastMessage.wParam=Msg.wParam) and (Self.LastMessage.lParam=Msg.lParam) then else begin
+              NowTimeNumber:=GetTimeNumber;
+              if NowTimeNumber<Self.LastRecTime then inc(NowTimeNumber,86400000);
+              Self.AufScriptFrames[Self.PageControl.ActivePageIndex].Frame.Memo_cmd.Lines.Add('sleep '+IntToStr(NowTimeNumber-Self.LastRecTime));
+              Self.AufScriptFrames[Self.PageControl.ActivePageIndex].Frame.Memo_cmd.Lines.Add('post @win,'+IntToStr(Msg.wParam)+','+IntToStr(x)+','+IntToStr((x shl 16) + 1));
+              Self.LastRecTime:=NowTimeNumber;
+          end;
+        end;
+
+        Self.LastMessage:=Msg;
+
       end;
     else ;
   end;
@@ -537,18 +576,76 @@ begin
       tmp.OnShow:=@AufScriptFrames[page].Frame.FrameResize;
       tmp.Caption:='规则'+Usf.zeroplus(page,2);
       tmp.OnResize(nil);
+      GlobalExpressionList.TryAddExp('WM_KEYDOWN',narg('','256',''));
+      GlobalExpressionList.TryAddExp('WM_KEYUP',narg('','257',''));
+      GlobalExpressionList.TryAddExp('WM_CHAR',narg('','258',''));
+      GlobalExpressionList.TryAddExp('WM_DEADCHAR',narg('','259',''));
+      GlobalExpressionList.TryAddExp('WM_SYSKEYDOWN',narg('','260',''));
+      GlobalExpressionList.TryAddExp('WM_SYSKEYUP',narg('','261',''));
+      GlobalExpressionList.TryAddExp('WM_SYSKEYCHAR',narg('','262',''));
+      GlobalExpressionList.TryAddExp('WM_SYSDEADCHAR',narg('','263',''));
+
+      GlobalExpressionList.TryAddExp('WM_COMMAND',narg('','265',''));
+      GlobalExpressionList.TryAddExp('WM_SYSCOMMAND',narg('','266',''));
+
+      GlobalExpressionList.TryAddExp('k_bksp',narg('','8',''));
+      GlobalExpressionList.TryAddExp('k_tab',narg('','9',''));
+      GlobalExpressionList.TryAddExp('k_clear',narg('','12',''));
+      GlobalExpressionList.TryAddExp('k_enter',narg('','13',''));
+      GlobalExpressionList.TryAddExp('k_shift',narg('','16',''));
+      GlobalExpressionList.TryAddExp('k_ctrl',narg('','17',''));
+      GlobalExpressionList.TryAddExp('k_alt',narg('','18',''));
+      GlobalExpressionList.TryAddExp('k_pause',narg('','19',''));
+      GlobalExpressionList.TryAddExp('k_capelk',narg('','20',''));
+      GlobalExpressionList.TryAddExp('k_esc',narg('','27',''));
+      GlobalExpressionList.TryAddExp('k_space',narg('','32',''));
+      GlobalExpressionList.TryAddExp('k_pgup',narg('','33',''));
+      GlobalExpressionList.TryAddExp('k_pgdn',narg('','34',''));
+      GlobalExpressionList.TryAddExp('k_end',narg('','35',''));
+      GlobalExpressionList.TryAddExp('k_home',narg('','36',''));
+      GlobalExpressionList.TryAddExp('k_left',narg('','37',''));
+      GlobalExpressionList.TryAddExp('k_up',narg('','38',''));
+      GlobalExpressionList.TryAddExp('k_right',narg('','39',''));
+      GlobalExpressionList.TryAddExp('k_down',narg('','40',''));
+      GlobalExpressionList.TryAddExp('k_sel',narg('','41',''));
+      GlobalExpressionList.TryAddExp('k_print',narg('','42',''));
+      GlobalExpressionList.TryAddExp('k_exec',narg('','43',''));
+      GlobalExpressionList.TryAddExp('k_snapshot',narg('','44',''));
+      GlobalExpressionList.TryAddExp('k_ins',narg('','45',''));
+      GlobalExpressionList.TryAddExp('k_del',narg('','46',''));
+      GlobalExpressionList.TryAddExp('k_help',narg('','47',''));
+      GlobalExpressionList.TryAddExp('k_lwin',narg('','91',''));
+      GlobalExpressionList.TryAddExp('k_rwin',narg('','92',''));
+      GlobalExpressionList.TryAddExp('k_numlk',narg('','144',''));
+      GlobalExpressionList.TryAddExp('k_f1',narg('','112',''));
+      GlobalExpressionList.TryAddExp('k_f2',narg('','113',''));
+      GlobalExpressionList.TryAddExp('k_f3',narg('','114',''));
+      GlobalExpressionList.TryAddExp('k_f4',narg('','115',''));
+      GlobalExpressionList.TryAddExp('k_f5',narg('','116',''));
+      GlobalExpressionList.TryAddExp('k_f6',narg('','117',''));
+      GlobalExpressionList.TryAddExp('k_f7',narg('','118',''));
+      GlobalExpressionList.TryAddExp('k_f8',narg('','119',''));
+      GlobalExpressionList.TryAddExp('k_f9',narg('','120',''));
+      GlobalExpressionList.TryAddExp('k_f10',narg('','121',''));
+      GlobalExpressionList.TryAddExp('k_f11',narg('','122',''));
+      GlobalExpressionList.TryAddExp('k_f12',narg('','123',''));
+
+
       with AufScriptFrames[page].Frame do
         begin
           AufGenerator;
-          Auf.Script.add_func('shutup',@_shutup,'关闭左下角弹窗提示');
-          Auf.Script.add_func('resize',@_resize,'w,h 修改当前窗口尺寸');
-          Auf.Script.add_func('version',@print_version,'版本信息');
-          Auf.Script.add_func('about',@print_version,'版本信息');
-          Auf.Script.add_func('post',@PostM,'调用Postmessage(hwnd,msg,wparam,lparam)');
-          Auf.Script.add_func('send',@SendM,'调用Sendmessage(hwnd,msg,wparam,lparam)');
-          Auf.Script.add_func('keypress',@KeyPress_Event,'调用KeyPress_Event(hwnd,key,deley)');
-          Auf.Script.add_func('string',@SendString,'向窗口输入字符串');
-          Auf.Script.add_func('widestring',@SendWideString,'向窗口输入汉字字符串');
+          Auf.Script.add_func('shutup',@_shutup,'','关闭左下角弹窗提示');
+          Auf.Script.add_func('resize',@_resize,'w,h','修改当前窗口尺寸');
+          Auf.Script.add_func('about',@print_version,'','版本信息');
+          //Auf.Script.add_func('now',@_gettime,'','当前时间');
+          Auf.Script.add_func('string',@SendString,'hwnd,str','向窗口输入字符串');
+          Auf.Script.add_func('widestring',@SendWideString,'hwnd,str','向窗口输入汉字字符串');
+          Auf.Script.add_func('keypress',@KeyPress_Event,'hwnd,key,deley','调用KeyPress_Event');
+          Auf.Script.add_func('post',@PostM,'hwnd,msg,w,l','调用Postmessage');
+          Auf.Script.add_func('send',@SendM,'hwnd,msg,w,l','调用Sendmessage');
+
+
+
         end;
     end;
 
@@ -596,6 +693,10 @@ begin
 
   tim:=TTimer.Create(Self);
   tim.OnTimer:=@Self.TreeViewEditOnChange;
+
+  Self.LastMessage.msg:=0;
+  Self.LastMessage.lParam:=0;
+  Self.LastMessage.wParam:=0;
 
   SetCallHandleK(Self.Handle);
   if not StartHookK(WM_USER+100) then
@@ -650,10 +751,10 @@ begin
   Button_advanced.Width:=max(divi_vertical-2*gap-2,0);
   Button_advanced.Height:=24;
 
-  Button_Wnd_Fresh.Top:=max(divi_horizontal,0)-MainMenuH;
-  Button_Wnd_Fresh.Left:=gap;
-  Button_Wnd_Fresh.Height:=28;
-  Button_Wnd_Fresh.Width:=ARVControlW;
+  Button_Wnd_Record.Top:=max(divi_horizontal,0)-MainMenuH;
+  Button_Wnd_Record.Left:=gap;
+  Button_Wnd_Record.Height:=28;
+  Button_Wnd_Record.Width:=ARVControlW;
 
   Button_Wnd_Synthesis.Top:=max(divi_horizontal+28+gap,0)-MainMenuH;
   Button_Wnd_Synthesis.Left:=gap;
@@ -724,20 +825,12 @@ begin
   ARVControlH:=(SynCount+1)*(gap+SynchronicH);
   if Show_Advanced_Seting then
     begin
-      (Sender as TButton).Caption:='展开高级设置';   {
-      Show_Advanced_Seting:=false;
-      Self.Height:=Self.Height-ARVControlH;
-      Self.Width:=Self.Width-WindowsListW;
-      FormResize(nil);                               }
+      (Sender as TButton).Caption:='展开高级设置';
       layout_to_simple;
     end
   else
     begin
-      (Sender as TButton).Caption:='收起高级设置';   {
-      Show_Advanced_Seting:=true;
-      Self.Height:=Self.Height+ARVControlH;
-      Self.Width:=Self.Width+WindowsListW;
-      FormResize(nil);                                }
+      (Sender as TButton).Caption:='收起高级设置';
       layout_to_advanced;
     end;
 end;
@@ -752,11 +845,23 @@ begin
   WindowsFilter;
 end;
 
-procedure TForm_Routiner.Button_Wnd_FreshClick(Sender: TObject);
+procedure TForm_Routiner.Button_Wnd_RecordClick(Sender: TObject);
 begin
-  //TreeView_Wnd.items.clear;
-  //WndFinder(Edit_TreeView.Text);
-  WindowsFilter;
+  if not Self.Record_mode then
+    begin
+      Self.Record_mode:=true;
+      (Sender as TButton).Caption:='结束录制键盘消息';
+      (Sender as TButton).Font.Bold:=true;
+      (Sender as TButton).Font.Color:=clRed;
+      Self.LastRecTime:=GetTimeNumber;
+    end
+  else
+    begin
+      Self.Record_mode:=false;
+      (Sender as TButton).Caption:='开始录制键盘消息';
+      (Sender as TButton).Font.Bold:=false;
+      (Sender as TButton).Font.Color:=clDefault;
+    end;
 end;
 
 procedure TForm_Routiner.Button_Wnd_SynthesisClick(Sender: TObject);

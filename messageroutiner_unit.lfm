@@ -1,7 +1,7 @@
 object Form_Routiner: TForm_Routiner
-  Left = 750
+  Left = 764
   Height = 591
-  Top = 331
+  Top = 348
   Width = 1005
   Caption = 'Apiglio Message Routiner'
   ClientHeight = 566
@@ -19,7 +19,14 @@ object Form_Routiner: TForm_Routiner
     Top = 216
     Width = 192
     Caption = '展开高级设置'
+    Font.CharSet = GB2312_CHARSET
+    Font.Color = clBlack
+    Font.Height = -15
+    Font.Name = '宋体'
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
     OnClick = Button_advancedClick
+    ParentFont = False
     TabOrder = 0
   end
   object TreeView_Wnd: TTreeView
@@ -29,13 +36,19 @@ object Form_Routiner: TForm_Routiner
     Width = 384
     TabOrder = 1
   end
-  object Button_Wnd_Fresh: TButton
+  object Button_Wnd_Record: TButton
     Left = 8
     Height = 28
     Top = 216
     Width = 194
-    Caption = '更新窗体列表'
-    OnClick = Button_Wnd_FreshClick
+    Caption = '开始录制键盘消息'
+    Font.CharSet = GB2312_CHARSET
+    Font.Height = -15
+    Font.Name = '宋体'
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
+    OnClick = Button_Wnd_RecordClick
+    ParentFont = False
     TabOrder = 2
   end
   object Button_Wnd_Synthesis: TButton
@@ -44,7 +57,13 @@ object Form_Routiner: TForm_Routiner
     Top = 248
     Width = 194
     Caption = '开始同步键盘消息'
+    Font.CharSet = GB2312_CHARSET
+    Font.Height = -15
+    Font.Name = '宋体'
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
     OnClick = Button_Wnd_SynthesisClick
+    ParentFont = False
     TabOrder = 3
   end
   object Edit_TreeView: TEdit
@@ -87,7 +106,13 @@ object Form_Routiner: TForm_Routiner
     Top = 280
     Width = 194
     Caption = 'By Apiglio'
+    Font.CharSet = GB2312_CHARSET
+    Font.Height = -15
+    Font.Name = '宋体'
+    Font.Pitch = fpVariable
+    Font.Quality = fqDraft
     OnClick = Button_excelClick
+    ParentFont = False
     TabOrder = 7
   end
   object Memo_tmp: TMemo
