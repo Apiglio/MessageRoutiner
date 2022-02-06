@@ -13,10 +13,12 @@ uses
 
 const
 
-  version_number='0.0.7';
+  version_number='0.0.10';
 
   RuleCount = 9;
   SynCount = 4;{不能大于9，也不推荐9}
+
+
   gap=5;
   WindowsListW=300;
   //ARVControlH=170;
@@ -85,6 +87,16 @@ type
   public
     procedure LabelOnClick(Sender:TObject);
   end;
+  TTimerLag = class(TTimer)
+  public
+    next_message:record
+      hwnd,msg,wparam,lparam:longint;
+    end;
+    waiting:boolean;
+    constructor Create(AOwner:TComponent);
+    procedure NextMessage(delay,hwnd,msg,wparam,lparam:dword);
+    procedure OnSend(Sender:TObject);
+  end;
 
   TAufScriptFrame = class(TComponent)
   public
@@ -103,6 +115,10 @@ type
     Label_filter: TLabel;
     MainMenu: TMainMenu;
     Memo_tmp: TMemo;
+    MenuItem_Lay_Record: TMenuItem;
+    MenuItem_Lay_Buttons: TMenuItem;
+    MenuItem_Lay_SynChronic: TMenuItem;
+    MenuItem_Setting_Lag: TMenuItem;
     MenuItem_Function: TMenuItem;
     MenuItem_Opt_licence: TMenuItem;
     MenuItem_Opt_About: TMenuItem;
@@ -135,16 +151,22 @@ type
 
     procedure GetMessageUpdate(var Msg:TMessage);message WM_USER+100;
     procedure MenuItem_Lay_advancedClick(Sender: TObject);
+    procedure MenuItem_Lay_ButtonsClick(Sender: TObject);
+    procedure MenuItem_Lay_RecordClick(Sender: TObject);
     procedure MenuItem_Lay_simpleClick(Sender: TObject);
+    procedure MenuItem_Lay_SynChronicClick(Sender: TObject);
     procedure MenuItem_Opt_AboutClick(Sender: TObject);
+    procedure MenuItem_Opt_licenceClick(Sender: TObject);
+    procedure MenuItem_Setting_LagClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
     procedure PageControlResize(Sender: TObject);
     procedure WindowsFilter;
   private
     { private declarations }
-    Show_Advanced_Seting:boolean;//是否显示高级设置
-    Height_Advanced_Seting:word;//高级设置高度
-    Left_Column_Width:word;//左边栏的宽度
+    InitialLayout:(Lay_Command=0,Lay_Advanced=1,Lay_Synchronic=2,Lay_Buttons=3,Lay_Recorder=4);//布局类型
+    //Show_Advanced_Seting:boolean;//是否显示高级设置
+    //Height_Advanced_Seting:word;//高级设置高度
+    //Left_Column_Width:word;//左边栏的宽度
   public
     { public declarations }
     Edits:array[0..SynCount]of TARVEdit;
@@ -158,11 +180,18 @@ type
     LastMessage:TMessage;
     State:record
       ctrl,alt,shift,win:boolean;
+      NumKey:array[0..SynCount]of boolean;//数字键按下状态
       Number:array[0..SynCount]of boolean;//是否抬起，用于放置一次按下触发多次事件
       Gross:boolean;//总闸是否抬起，用于放置一次按下触发多次事件
     end;
+    SynSetting:array[0..SynCount]of record
+      mode_lag:boolean;//是否延时抬起
+      adjusting_lag:integer;//按下时长与延长抬起时间的比例(%)
+      adjusting_step:integer;//一次快捷调整的幅度(%)
+      keypress_time:array[0..1]of longint;//按下时的时间(0-left 1-right)
+    end;
+    KeyLag:array[0..SynCount,0..1]of TTimerLag;
 
-    //Timer_Auf:TTimer;//Auf中的SynMoTimer
     Tim:TTimer;//因为不知道怎么处理汉字输入法造成连续的OnChange事件，迫不得已采用延时50ms检测连续输入的办法。
     procedure TreeViewEditOnChange(Sender:TObject);
 
@@ -174,12 +203,18 @@ var
   shutup:boolean;
 
 implementation
+uses form_settinglag;
 
 {$R *.lfm}
 
 function StartHookK(MsgID:Word):Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StartHook';
 function StopHookK:Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StopHook';
 procedure SetCallHandleK(sender:HWND);stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'SetCallHandle';
+
+procedure qk(str:string);
+begin
+  Form_Routiner.AufScriptFrames[Form_Routiner.PageControl.ActivePageIndex].Frame.Auf.Script.writeln(str);
+end;
 
 function GetTimeNumber:longint;
 var h,m,s,ms:word;
@@ -193,6 +228,18 @@ begin
   gettime(h,m,s,ms);
   result:=Usf.zeroplus(h,2)+':'+Usf.zeroplus(m,2)+':'+Usf.zeroplus(s,2)+'.'+Usf.zeroplus(ms,2);
 end;
+procedure process_sleep(n:longint);
+var t0,t1,t2:longint;
+begin
+  t0:=GetTimeNumber;
+  t2:=t0+n;
+  repeat
+    t1:=GetTimeNumber;
+    if t1<t0 then inc(t1,86400000);
+    Application.ProcessMessages;
+  until t1>=t2;
+end;
+
 procedure _gettime(Sender:TObject);
 var AufScpt:TAufScript;
     AAuf:TAuf;
@@ -288,7 +335,7 @@ begin
 
   GetChildWindows(WndRoot,filter);
 end;
-
+{
 procedure layout_to_simple;
 var ARVControlH:word;
 begin
@@ -312,7 +359,7 @@ begin
   Form_Routiner.MainMenu.Items[1].Items[1].Enabled:=false;
   Form_Routiner.FormResize(nil);
 end;
-
+}
 
 
 
@@ -328,9 +375,9 @@ var AAuf:TAuf;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  AufScpt.IO_fptr.echo(AAuf.Owner,'Apiglio Message Routiner');
-  AufScpt.IO_fptr.echo(AAuf.Owner,'- version '+version_number+' -');
-  AufScpt.IO_fptr.echo(AAuf.Owner,'- by Apiglio -');
+  AufScpt.writeln('Apiglio Message Routiner');
+  AufScpt.writeln('- version '+version_number+' -');
+  AufScpt.writeln('- by Apiglio -');
 end;
 
 procedure SendString(Sender:TObject);
@@ -377,9 +424,14 @@ begin
   AAuf:=AufScpt.Auf as TAuf;
   hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
   msg:=Round(AufScpt.to_double(AAuf.nargs[2].pre,AAuf.nargs[2].arg));
-  wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
-  lparam:=Round(AufScpt.to_double(AAuf.nargs[4].pre,AAuf.nargs[4].arg));
-  //Auf.Script.IO_fptr.echo(AAuf.Owner,IntToStr(hd)+', '+IntToStr(msg)+', '+IntToStr(wparam)+', '+IntToStr(lparam));
+  case AAuf.nargs[3].pre of
+    '"':wparam:=ord(AAuf.nargs[3].arg[1]);
+    else wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
+  end;
+  case AAuf.nargs[3].pre of
+    '"':lparam:=ord(AAuf.nargs[4].arg[1]);
+    else lparam:=Round(AufScpt.to_double(AAuf.nargs[4].pre,AAuf.nargs[4].arg));
+  end;
   SendMessage(hd,msg,wparam,lparam);
 end;
 
@@ -392,8 +444,14 @@ begin
   AAuf:=AufScpt.Auf as TAuf;
   hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
   msg:=Round(AufScpt.to_double(AAuf.nargs[2].pre,AAuf.nargs[2].arg));
-  wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
-  lparam:=Round(AufScpt.to_double(AAuf.nargs[4].pre,AAuf.nargs[4].arg));
+  case AAuf.nargs[3].pre of
+    '"':wparam:=ord(AAuf.nargs[3].arg[1]);
+    else wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
+  end;
+  case AAuf.nargs[3].pre of
+    '"':lparam:=ord(AAuf.nargs[4].arg[1]);
+    else lparam:=Round(AufScpt.to_double(AAuf.nargs[4].pre,AAuf.nargs[4].arg));
+  end;
   PostMessage(hd,msg,wparam,lparam);
 end;
 
@@ -405,13 +463,51 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  key:=Round(AufScpt.to_double(AAuf.nargs[2].pre,AAuf.nargs[2].arg));
+  case AAuf.nargs[2].pre of
+    '"':key:=ord(AAuf.nargs[2].arg[1]);
+    else key:=Round(AufScpt.to_double(AAuf.nargs[2].pre,AAuf.nargs[2].arg));
+  end;
+
+
   delay:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
   if delay=0 then delay:=50;
   PostMessage(hd,WM_KeyDown,key,(key shl 32)+1);
-  sleep(delay);//改成防止假死的
+  process_sleep(delay);
   PostMessage(hd,WM_KeyUp,key,(key shl 32)+1);
 
+end;
+
+{ TTimerLag }
+
+constructor TTimerLag.Create(AOwner:TComponent);
+begin
+  inherited Create(AOwner);
+  Self.OnTimer:=@Self.OnSend;
+  Self.waiting:=false;
+  Self.Enabled:=false;
+end;
+
+procedure TTimerLag.NextMessage(delay,hwnd,msg,wparam,lparam:dword);
+begin
+  Self.Enabled:=false;
+  Self.next_message.hwnd:=hwnd;
+  Self.next_message.msg:=msg;
+  Self.next_message.wparam:=wparam;
+  Self.next_message.lparam:=lparam;
+  Self.Interval:=delay;
+  Self.Enabled:=true;
+  //qk('NextMessage('+IntToStr(delay)+','+IntToStr(hwnd)+','+IntToStr(msg)+','+IntToStr(wparam)+','+IntToStr(lparam)+');');
+end;
+
+procedure TTimerLag.OnSend(Sender:TObject);
+var tmp:TForm_Routiner;
+    tim:TTimerlag;
+begin
+  tim:=Sender as TTimerLag;
+  tmp:=tim.Owner as TForm_Routiner;
+  Self.Enabled:=false;
+  with tim.next_message do PostMessage(hwnd,msg,wparam,lparam);
+  //with tim.next_message do qk('QK:post('+IntToStr(hwnd)+','+IntToStr(msg)+','+IntToStr(wparam)+','+IntToStr(lparam)+');');
 end;
 
 { TWindow }
@@ -433,15 +529,14 @@ end;
 
 procedure TForm_Routiner.WindowsFilter;
 begin
-  //Auf.Script.IO_fptr.echo(AAuf.Owner,Edit_TreeView.Text);
   TreeView_Wnd.items.clear;
   WndFinder(Edit_TreeView.Text);
 end;
 
 procedure TForm_Routiner.GetMessageUpdate(var Msg:TMessage);
 var x,y:integer;
-    i:byte;
-    NowTimeNumber:longint;
+    i,kx{35转0,37转1}:byte;
+    NowTimeNumber,NowTmp:longint;
 begin
   x := pMouseHookStruct(Msg.LParam)^.pt.X;
   y := pMouseHookStruct(Msg.LParam)^.pt.Y;
@@ -469,6 +564,7 @@ begin
                 160,161:Self.State.Shift:=true;
                 164,165:Self.State.Alt:=true;
                 91,92:Self.State.Win:=true;
+                49..49+SynCount:Self.State.NumKey[x-49]:=true;
               end;
             end;
           WM_KeyUp:
@@ -478,7 +574,7 @@ begin
                 160,161:Self.State.Shift:=false;
                 164,165:Self.State.Alt:=false;
                 91,92:Self.State.Win:=false;
-                49..49+SynCount:Self.State.Number[x-49]:=true;
+                49..49+SynCount:begin Self.State.Number[x-49]:=true;Self.State.NumKey[x-49]:=false;end;
                 192:Self.State.Gross:=true;
               end;
             end;
@@ -494,16 +590,66 @@ begin
             if Self.State.Number[x-49] then Self.CheckBoxs[x-49].Checked:=not Self.CheckBoxs[x-49].Checked;
             Self.State.Number[x-49]:=false;
           end;
-
+        if (x in [33,34]) and (Msg.wParam=WM_KEYDOWN) then begin
+          for i:=0 to SynCount do if Self.State.NumKey[i] then
+            begin
+              NowTmp:=Self.SynSetting[i].adjusting_lag;
+              case x of
+                33:inc(NowTmp,Self.SynSetting[i].adjusting_step);
+                34:dec(NowTmp,Self.SynSetting[i].adjusting_step);
+              end;
+              if NowTmp>999 then NowTmp:=999;
+              if NowTmp<0 then NowTmp:=0;
+              SettingLagForm.LagTime[i].Text:=IntToStr(NowTmp);
+              Self.SynSetting[i].adjusting_lag:=NowTmp;
+            end;
+        end;
         if Self.Synthesis_mode then begin
         for i:=0 to SynCount do
           begin
-            if Self.CheckBoxs[i].Checked then postmessage(Self.Buttons[i].sel_hwnd,Msg.wParam,x,y);
+            if Self.CheckBoxs[i].Checked then
+              begin
+                if (Self.SynSetting[i].mode_lag)
+                    and (Self.SynSetting[i].adjusting_lag<>0)
+                    and (x in [37,39])
+                then begin
+                  case x of
+                    37:kx:=0;
+                    39:kx:=1;
+                  end;
+                  case Msg.wParam of
+                    WM_KeyDown:
+                      begin
+                        postmessage(Self.Buttons[i].sel_hwnd,Msg.wParam,x,y);
+                        if not Self.KeyLag[i,kx].waiting then
+                          begin
+                            Self.SynSetting[i].keypress_time[kx]:=GetTimeNumber;
+                            Self.KeyLag[i,kx].waiting:=true;
+                          end;
+                      end;
+                    WM_KeyUp:
+                      begin
+                        NowTimeNumber:=GetTimeNumber;
+                        if NowTimeNumber<Self.SynSetting[i].keypress_time[kx] then inc(NowTimeNumber,86400000);
+                        Self.KeyLag[i,kx].waiting:=false;
+                        Self.KeyLag[i,kx].NextMessage(
+                          (NowTimeNumber-Self.SynSetting[i].keypress_time[kx])
+                            * Self.SynSetting[i].adjusting_lag div 100,
+                          Self.Buttons[i].sel_hwnd,
+                          Msg.wParam,
+                        x,y);
+                      end;
+                  end;
+                end
+                else begin
+                  postmessage(Self.Buttons[i].sel_hwnd,Msg.wParam,x,y);
+                end;
+              end;
           end;
         end;
 
         if Self.Record_mode then begin
-          if (Self.LastMessage.wParam=Msg.wParam) and (Self.LastMessage.lParam=Msg.lParam) then else begin
+          if (Self.LastMessage.msg=Msg.wParam) and (Self.LastMessage.wParam=x) then else begin
               NowTimeNumber:=GetTimeNumber;
               if NowTimeNumber<Self.LastRecTime then inc(NowTimeNumber,86400000);
               Self.AufScriptFrames[Self.PageControl.ActivePageIndex].Frame.Memo_cmd.Lines.Add('sleep '+IntToStr(NowTimeNumber-Self.LastRecTime));
@@ -512,7 +658,8 @@ begin
           end;
         end;
 
-        Self.LastMessage:=Msg;
+        Self.LastMessage.msg:=Msg.wParam;
+        Self.LastMessage.wParam:=x;
 
       end;
     else ;
@@ -520,16 +667,63 @@ begin
 
 end;
 
-procedure TForm_Routiner.MenuItem_Lay_advancedClick(Sender: TObject);
-var ARVControlH:word;
-begin
-  layout_to_advanced;
-end;
-
 procedure TForm_Routiner.MenuItem_Lay_simpleClick(Sender: TObject);
 var ARVControlH:word;
 begin
-  layout_to_simple;
+  //layout_to_simple;
+  Self.InitialLayout:=Lay_Command;
+  Self.FormResize(nil);
+  Self.MainMenu.Items[1].Items[0].Enabled:=false;
+  Self.MainMenu.Items[1].Items[1].Enabled:=true;
+  Self.MainMenu.Items[1].Items[2].Enabled:=true;
+  Self.MainMenu.Items[1].Items[3].Enabled:=true;
+  Self.MainMenu.Items[1].Items[4].Enabled:=true;
+end;
+
+procedure TForm_Routiner.MenuItem_Lay_advancedClick(Sender: TObject);
+var ARVControlH:word;
+begin
+  //layout_to_advanced;
+  Self.InitialLayout:=Lay_Advanced;
+  Self.FormResize(nil);
+  Self.MainMenu.Items[1].Items[0].Enabled:=true;
+  Self.MainMenu.Items[1].Items[1].Enabled:=false;
+  Self.MainMenu.Items[1].Items[2].Enabled:=true;
+  Self.MainMenu.Items[1].Items[3].Enabled:=true;
+  Self.MainMenu.Items[1].Items[4].Enabled:=true;
+end;
+
+procedure TForm_Routiner.MenuItem_Lay_SynChronicClick(Sender: TObject);
+begin
+  Self.InitialLayout:=Lay_Synchronic;
+  Self.FormResize(nil);
+  Self.MainMenu.Items[1].Items[0].Enabled:=true;
+  Self.MainMenu.Items[1].Items[1].Enabled:=true;
+  Self.MainMenu.Items[1].Items[2].Enabled:=false;
+  Self.MainMenu.Items[1].Items[3].Enabled:=true;
+  Self.MainMenu.Items[1].Items[4].Enabled:=true;
+end;
+
+procedure TForm_Routiner.MenuItem_Lay_ButtonsClick(Sender: TObject);
+begin
+  Self.InitialLayout:=Lay_Buttons;
+  Self.FormResize(nil);
+  Self.MainMenu.Items[1].Items[0].Enabled:=true;
+  Self.MainMenu.Items[1].Items[1].Enabled:=true;
+  Self.MainMenu.Items[1].Items[2].Enabled:=true;
+  Self.MainMenu.Items[1].Items[3].Enabled:=false;
+  Self.MainMenu.Items[1].Items[4].Enabled:=true;
+end;
+
+procedure TForm_Routiner.MenuItem_Lay_RecordClick(Sender: TObject);
+begin
+  Self.InitialLayout:=Lay_Recorder;
+  Self.FormResize(nil);
+  Self.MainMenu.Items[1].Items[0].Enabled:=true;
+  Self.MainMenu.Items[1].Items[1].Enabled:=true;
+  Self.MainMenu.Items[1].Items[2].Enabled:=true;
+  Self.MainMenu.Items[1].Items[3].Enabled:=true;
+  Self.MainMenu.Items[1].Items[4].Enabled:=false;
 end;
 
 procedure TForm_Routiner.MenuItem_Opt_AboutClick(Sender: TObject);
@@ -538,6 +732,16 @@ begin
     'Apiglio Message Routiner'+#13+#10+'- version '+version_number+#13+#10+'- by Apiglio',
     PChar(utf8towincp('版本信息')),
     MB_OK);
+end;
+
+procedure TForm_Routiner.MenuItem_Opt_licenceClick(Sender: TObject);
+begin
+  //
+end;
+
+procedure TForm_Routiner.MenuItem_Setting_LagClick(Sender: TObject);
+begin
+  SettingLagForm.Show;
 end;
 
 procedure TForm_Routiner.PageControlChange(Sender: TObject);
@@ -557,13 +761,12 @@ var i:byte;
     tmp:TTabSheet;
 begin
 
-  Show_Advanced_Seting:=false;
-  Height_Advanced_Seting:=200+72;
-  Left_Column_Width:=300+120;
+  //Show_Advanced_Seting:=false;
+  //Height_Advanced_Seting:=200+72;
+  //Left_Column_Width:=300+120;
   Synthesis_mode:=false;
   Button_Wnd_Synthesis.ShowHint:=true;
   Button_Wnd_Synthesis.Hint:='按Ctrl+`切换状态';
-
 
   for page:=0 to RuleCount do
     begin
@@ -656,6 +859,11 @@ begin
   Self.Position:=poScreenCenter;
   Self.State.Gross:=true;
   for i:=49 to 49+SynCount do Self.State.Number[i-49]:=true;
+  for i:=0 to SynCount do
+    begin
+      SynSetting[i].mode_lag:=false;
+      SynSetting[i].adjusting_lag:=0;
+    end;
 
   for i:=0 to SynCount do
     begin
@@ -686,9 +894,16 @@ begin
       Self.Labels[i].ShowHint:=true;
       Self.Labels[i].Hint:='按Ctrl+'+IntToStr(i+1)+'切换状态';
       Self.Labels[i].Color:=clForm;
+
+      Self.SynSetting[i].mode_lag:=true;
+      Self.SynSetting[i].adjusting_step:=5;
+      Self.SynSetting[i].adjusting_lag:=0;
+      Self.KeyLag[i,0]:=TTimerLag.Create(Self);
+      Self.KeyLag[i,1]:=TTimerLag.Create(Self);
+
     end;
 
-  Self.BorderStyle:=bsSingle;
+  //Self.BorderStyle:=bsSingle;
   FormResize(nil);
 
   tim:=TTimer.Create(Self);
@@ -709,37 +924,73 @@ end;
 
 procedure TForm_Routiner.FormResize(Sender: TObject);
 var i:byte;
-    divi_vertical,divi_horizontal,ARVControlH:word;
+    divi_vertical,divi_horizontal,ARVControlH,ButtonsTop,RecorderTop:longint;
     page:integer;
 begin
   ARVControlH:=(SynCount+1)*(gap+SynchronicH);
-  if Show_Advanced_Seting then
-    begin
-      divi_vertical:=Self.Width - WindowsListW;
-      divi_horizontal:=Self.Height - ARVControlH;
-      //Self.Width:=max(Self.Width,615+WindowsListW);
-      //Self.Height:=max(Self.Height,305+ARVControlH);
-      //if Self.Width<615+WindowsListW then Self.BorderStyle:=bsSingle;
-      //if Self.Height<305+ARVControlH then Self.BorderStyle:=bsSingle;
-      //我tm一定想办法找到怎么解决
-    end
-  else
-    begin
-      divi_vertical:=Self.Width;
-      divi_horizontal:=Self.Height;
-      //Self.Width:=max(Self.Width,615);
-      //Self.Height:=max(Self.Height,305);
-      //Self.BorderStyle:=bsSizeable;
-    end;
+  case Self.InitialLayout of
+    Lay_Command:
+      begin
+        divi_vertical:=Self.Width;
+        divi_horizontal:=Self.Height;
+        ButtonsTop:=divi_horizontal + ARVControlH;
+        RecorderTop:=divi_horizontal + ARVControlH;
+        Self.PageControl.Parent:=Self;
+      end;
+    Lay_Advanced:
+      begin
+        divi_vertical:=Self.Width - WindowsListW;
+        divi_horizontal:=Self.Height - ARVControlH;
+        ButtonsTop:=divi_horizontal + ARVControlH;
+        RecorderTop:=divi_horizontal + ARVControlH;
+        Self.PageControl.Parent:=Self;
+      end;
+    Lay_Synchronic:
+      begin
+        divi_vertical:=Self.Width;
+        divi_horizontal:=MainMenuH;
+        ButtonsTop:=divi_horizontal + ARVControlH;
+        RecorderTop:=divi_horizontal + ARVControlH;
+        Self.PageControl.Parent:=nil;
+      end;
+    Lay_Buttons:
+      begin
+        divi_vertical:=Self.Width;
+        divi_horizontal:=Self.Height;
+        ButtonsTop:=0;
+        RecorderTop:=divi_horizontal + ARVControlH;
+        Self.PageControl.Parent:=Self;
+      end;
+    Lay_Recorder:
+      begin
+        divi_vertical:=Self.Width - WindowsListW;
+        divi_horizontal:=Self.Height;
+        ButtonsTop:=divi_horizontal + ARVControlH;
+        RecorderTop:=0;
+        Self.PageControl.Parent:=Self;
+      end;
+  end;
+  if Self.Width < WindowsListW + 150 then begin
+    Self.Width:=WindowsListW + 150;
+    exit;
+  end;
+  if (Self.InitialLayout in [Lay_Advanced,Lay_Recorder])and(Self.Width < WindowsListW + 450) then begin
+    Self.Width:=WindowsListW + 450;
+    exit;
+  end;
+  if Self.Height < ARVControlH + MainMenuH then begin
+    Self.Height:=ARVControlH + MainMenuH;
+    exit;
+  end;
 
-  PageControl.Width:=max(divi_vertical - 2*gap,0);
-  PageControl.Height:=max(divi_horizontal- 3 * gap - 24,0);
+  PageControl.Width:=divi_vertical - 2*gap;
+  PageControl.Height:=divi_horizontal- 3 * gap - 24;
   PageControl.Left:=gap;
   PageControl.Top:=gap;
 
   for page:=0 to RuleCount do begin
-    Self.AufScriptFrames[page].Frame.Width:=max(PageControl.Width-2*gap,0);
-    Self.AufScriptFrames[page].Frame.Height:=max(PageControl.Height-25-2*gap,0);
+    Self.AufScriptFrames[page].Frame.Width:=PageControl.Width-2*gap;
+    Self.AufScriptFrames[page].Frame.Height:=PageControl.Height-25-2*gap;
     Self.AufScriptFrames[page].Frame.Left:=0;
     Self.AufScriptFrames[page].Frame.Top:=0;
   end;
@@ -747,38 +998,38 @@ begin
 
 
   Button_advanced.Left:=gap;
-  Button_advanced.Top:=max(divi_horizontal - 24 - gap,0)-MainMenuH;
-  Button_advanced.Width:=max(divi_vertical-2*gap-2,0);
+  Button_advanced.Top:=divi_horizontal - 24 - gap - MainMenuH;
+  Button_advanced.Width:=divi_vertical - 2 * gap - 2;
   Button_advanced.Height:=24;
 
-  Button_Wnd_Record.Top:=max(divi_horizontal,0)-MainMenuH;
+  Button_Wnd_Record.Top:=divi_horizontal - MainMenuH;
   Button_Wnd_Record.Left:=gap;
   Button_Wnd_Record.Height:=28;
   Button_Wnd_Record.Width:=ARVControlW;
 
-  Button_Wnd_Synthesis.Top:=max(divi_horizontal+28+gap,0)-MainMenuH;
+  Button_Wnd_Synthesis.Top:=divi_horizontal + 28 + gap - MainMenuH;
   Button_Wnd_Synthesis.Left:=gap;
   Button_Wnd_Synthesis.Height:=28;
   Button_Wnd_Synthesis.Width:=ARVControlW;
 
-  Button_excel.Top:=max(divi_horizontal+2*28+2*gap,0)-MainMenuH;
+  Button_excel.Top:=divi_horizontal+2*28+2*gap - MainMenuH;
   Button_excel.Left:=gap;
   Button_excel.Height:=28;
   Button_excel.Width:=ARVControlW;
 
-  Memo_tmp.Top:=max(divi_horizontal+3*28+3*gap,0)-MainMenuH;
+  Memo_tmp.Top:=divi_horizontal + 3 * 28 + 3 * gap - MainMenuH;
   Memo_tmp.Left:=gap;
-  Memo_tmp.Height:=Self.Height - gap - Memo_tmp.Top -MainMenuH;
+  Memo_tmp.Height:=Self.Height - gap - Memo_tmp.Top - MainMenuH;
   Memo_tmp.Width:=ARVControlW;
 
   TreeView_Wnd.Top:=gap;
-  TreeView_Wnd.Height:=Self.Height-28-2*gap-MainMenuH;
+  TreeView_Wnd.Height:=Self.Height - 36 - 2 * gap- MainMenuH;
   TreeView_Wnd.Left:=divi_vertical + gap;
-  TreeView_Wnd.Width:=WindowsListW-2*gap;
+  TreeView_Wnd.Width:=WindowsListW - 2 * gap;
 
-  Label_Filter.Top:=Self.Height-28-MainMenuH;
-  Edit_TreeView.Top:=Self.Height-34-MainMenuH;
-  Button_TreeViewFresh.Top:=Self.Height-34-MainMenuH;
+  Label_Filter.Top:=Self.Height - 28 - MainMenuH;
+  Edit_TreeView.Top:=Self.Height - 34 - MainMenuH;
+  Button_TreeViewFresh.Top:=Self.Height - 34 - MainMenuH;
 
   //Label_Filter.Width:=45;
   Edit_TreeView.Width:=TreeView_Wnd.Width - Label_Filter.Width - Button_TreeViewFresh.Width - 4*gap;
@@ -790,13 +1041,13 @@ begin
 
   for i:=0 to SynCount do
     begin
-      Self.Edits[i].Top:=max(divi_horizontal+(28+gap)*i-MainMenuH,0);
+      Self.Edits[i].Top:=divi_horizontal+(28+gap)*i-MainMenuH;
       Self.Edits[i].Width:=60;
       Self.Edits[i].Left:=ARVControlW+2*gap;
       Self.Edits[i].Height:=28;
 
       Self.Buttons[i].Top:=Self.Edits[i].Top;
-      Self.Buttons[i].Width:=max(divi_vertical-ARVControlW-2*gap-160,0);
+      Self.Buttons[i].Width:=divi_vertical-ARVControlW-2*gap-160;
       Self.Buttons[i].Left:=Self.Edits[i].Left+Self.Edits[i].Width+gap;
       Self.Buttons[i].Height:=28;
 
@@ -822,6 +1073,7 @@ end;
 procedure TForm_Routiner.Button_advancedClick(Sender: TObject);
 var ARVControlH:word;
 begin
+  {
   ARVControlH:=(SynCount+1)*(gap+SynchronicH);
   if Show_Advanced_Seting then
     begin
@@ -833,6 +1085,7 @@ begin
       (Sender as TButton).Caption:='收起高级设置';
       layout_to_advanced;
     end;
+  }
 end;
 
 procedure TForm_Routiner.Button_excelClick(Sender: TObject);

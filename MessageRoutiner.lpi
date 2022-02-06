@@ -33,7 +33,7 @@
         <PackageName Value="LCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="3">
+    <Units Count="4">
       <Unit0>
         <Filename Value="MessageRoutiner.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -51,6 +51,13 @@
         <IsPartOfProject Value="True"/>
         <HasResources Value="True"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="form_settinglag.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="SettingLagForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit3>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

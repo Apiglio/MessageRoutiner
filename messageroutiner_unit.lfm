@@ -1,7 +1,7 @@
 object Form_Routiner: TForm_Routiner
-  Left = 764
+  Left = 860
   Height = 591
-  Top = 348
+  Top = 360
   Width = 1005
   Caption = 'Apiglio Message Routiner'
   ClientHeight = 566
@@ -141,22 +141,39 @@ object Form_Routiner: TForm_Routiner
     object MenuItem_Layout: TMenuItem
       Caption = '布局'
       object MenuItem_Lay_simple: TMenuItem
-        Caption = '简单模式'
+        Caption = '命令行模式'
         Enabled = False
         OnClick = MenuItem_Lay_simpleClick
       end
       object MenuItem_Lay_advanced: TMenuItem
-        Caption = '高级模式'
+        Caption = '完整模式'
         OnClick = MenuItem_Lay_advancedClick
+      end
+      object MenuItem_Lay_SynChronic: TMenuItem
+        Caption = '同步器模式'
+        OnClick = MenuItem_Lay_SynChronicClick
+      end
+      object MenuItem_Lay_Buttons: TMenuItem
+        Caption = '面板模式'
+        OnClick = MenuItem_Lay_ButtonsClick
+      end
+      object MenuItem_Lay_Record: TMenuItem
+        Caption = '录制模式'
+        OnClick = MenuItem_Lay_RecordClick
       end
     end
     object MenuItem_Option: TMenuItem
       Caption = '选项'
       object MenuItem_Opt_setting: TMenuItem
         Caption = '设置'
+        object MenuItem_Setting_Lag: TMenuItem
+          Caption = '运动延迟设置'
+          OnClick = MenuItem_Setting_LagClick
+        end
       end
       object MenuItem_Opt_licence: TMenuItem
         Caption = '注册'
+        OnClick = MenuItem_Opt_licenceClick
       end
       object MenuItem_Opt_divide: TMenuItem
         Caption = '-'
