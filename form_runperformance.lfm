@@ -39,8 +39,8 @@ object FormRunPerformance: TFormRunPerformance
     Height = 473
     Top = 5
     Width = 420
-    HorzScrollBar.Page = 194
-    VertScrollBar.Page = 255
+    HorzScrollBar.Page = 406
+    VertScrollBar.Page = 272
     Anchors = [akTop, akLeft, akRight, akBottom]
     BorderSpacing.Left = 5
     BorderSpacing.Top = 5
@@ -56,7 +56,7 @@ object FormRunPerformance: TFormRunPerformance
       AnchorSideRight.Control = ScrollBox
       AnchorSideRight.Side = asrBottom
       Left = 5
-      Height = 184
+      Height = 201
       Top = 71
       Width = 406
       Anchors = [akTop, akLeft, akRight]
@@ -64,7 +64,7 @@ object FormRunPerformance: TFormRunPerformance
       BorderSpacing.Top = 10
       BorderSpacing.Right = 5
       Caption = '按键鼠标动作设置'
-      ClientHeight = 164
+      ClientHeight = 181
       ClientWidth = 402
       TabOrder = 0
       object Button_AufButtonAct: TButton
@@ -187,6 +187,30 @@ object FormRunPerformance: TFormRunPerformance
         ParentShowHint = False
         ShowHint = True
         TabOrder = 3
+      end
+      object Label_AufButtonExtraAct: TLabel
+        AnchorSideLeft.Control = GroupBox_MouseSetting
+        AnchorSideTop.Control = Label_HoldButtonSetting
+        AnchorSideTop.Side = asrBottom
+        Left = 10
+        Height = 15
+        Top = 155
+        Width = 143
+        BorderSpacing.Left = 10
+        BorderSpacing.Top = 20
+        Caption = '面板按键 跳转启动：'
+        ParentColor = False
+      end
+      object Button_AufButtonExtraAct: TButton
+        AnchorSideTop.Control = Label_AufButtonExtraAct
+        AnchorSideTop.Side = asrCenter
+        Left = 176
+        Height = 28
+        Top = 148
+        Width = 216
+        Caption = 'Alt + 鼠标左键'
+        OnMouseUp = Button_AufButtonExtraActMouseUp
+        TabOrder = 4
       end
     end
     object CheckGroup_HookEnabled: TCheckGroup

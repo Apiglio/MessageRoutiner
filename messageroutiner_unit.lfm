@@ -8,6 +8,7 @@ object Form_Routiner: TForm_Routiner
   ClientWidth = 1036
   DesignTimePPI = 120
   Menu = MainMenu
+  OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
   OnResize = FormResize
@@ -56,16 +57,15 @@ object Form_Routiner: TForm_Routiner
     AnchorSideTop.Control = Splitter_RecH
     AnchorSideTop.Side = asrBottom
     AnchorSideRight.Control = Splitter_RightV
-    AnchorSideBottom.Control = Owner
-    AnchorSideBottom.Side = asrBottom
+    AnchorSideBottom.Control = StatusBar
     Left = 614
-    Height = 499
+    Height = 473
     Top = 214
     Width = 396
     HorzScrollBar.Page = 264
     VertScrollBar.Page = 349
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 495
+    ClientHeight = 469
     ClientWidth = 392
     TabOrder = 2
     OnResize = GroupBox_RecOptionResize
@@ -100,6 +100,8 @@ object Form_Routiner: TForm_Routiner
         '明文模式'
         '单键模式'
       )
+      OnMouseEnter = RadioGroup_RecSyntaxModeMouseEnter
+      OnMouseLeave = RadioGroup_RecSyntaxModeMouseLeave
       OnSelectionChanged = RadioGroup_RecSyntaxModeSelectionChanged
       TabOrder = 0
     end
@@ -112,13 +114,15 @@ object Form_Routiner: TForm_Routiner
       AnchorSideBottom.Control = GroupBox_RecOption
       AnchorSideBottom.Side = asrBottom
       Left = 5
-      Height = 174
+      Height = 148
       Top = 316
       Width = 259
       Anchors = [akTop, akLeft, akRight, akBottom]
       BorderSpacing.Top = 10
       BorderSpacing.Bottom = 5
       OnKeyUp = Memo_TmpRecKeyUp
+      OnMouseEnter = Memo_TmpRecMouseEnter
+      OnMouseLeave = Memo_TmpRecMouseLeave
       TabOrder = 1
     end
     object CheckGroup_KeyMouse: TCheckGroup
@@ -148,6 +152,8 @@ object Form_Routiner: TForm_Routiner
         '鼠标消息'
       )
       OnItemClick = CheckGroup_KeyMouseItemClick
+      OnMouseEnter = CheckGroup_KeyMouseMouseEnter
+      OnMouseLeave = CheckGroup_KeyMouseMouseLeave
       TabOrder = 2
       Data = {
         020000000202
@@ -180,16 +186,16 @@ object Form_Routiner: TForm_Routiner
         AnchorSideBottom.Side = asrCenter
         Left = 88
         Height = 28
-        Hint = '单击按键后单击屏幕的一点作为录制原点'
         Top = 9
         Width = 162
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Left = 5
         BorderSpacing.Right = 5
         Caption = '(0,0)'
+        OnMouseEnter = Button_MouseOriMouseEnter
+        OnMouseLeave = Button_MouseOriMouseLeave
         OnMouseUp = Button_MouseOriMouseUp
         ParentShowHint = False
-        ShowHint = True
         TabOrder = 0
       end
       object Label_MouseOri: TLabel
@@ -219,6 +225,8 @@ object Form_Routiner: TForm_Routiner
         Width = 81
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Right = 5
+        OnMouseEnter = Edit_TimerOffsetMouseEnter
+        OnMouseLeave = Edit_TimerOffsetMouseLeave
         TabOrder = 1
         Text = '0'
       end
@@ -267,6 +275,8 @@ object Form_Routiner: TForm_Routiner
         '独立计时'
       )
       OnClick = RadioGroup_DelayModeClick
+      OnMouseEnter = RadioGroup_DelayModeMouseEnter
+      OnMouseLeave = RadioGroup_DelayModeMouseLeave
       TabOrder = 4
     end
   end
@@ -463,17 +473,16 @@ object Form_Routiner: TForm_Routiner
     AnchorSideTop.Control = Splitter_LeftH
     AnchorSideTop.Side = asrBottom
     AnchorSideRight.Control = Splitter_SyncV
-    AnchorSideBottom.Control = Owner
-    AnchorSideBottom.Side = asrBottom
+    AnchorSideBottom.Control = StatusBar
     Left = 6
-    Height = 455
+    Height = 429
     Top = 258
     Width = 234
     HorzScrollBar.Page = 1
     HorzScrollBar.Visible = False
     VertScrollBar.Page = 329
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 451
+    ClientHeight = 425
     ClientWidth = 230
     TabOrder = 13
     OnResize = ScrollBox_WndViewResize
@@ -489,6 +498,8 @@ object Form_Routiner: TForm_Routiner
       Font.Pitch = fpVariable
       Font.Quality = fqDraft
       OnClick = Button_Wnd_RecordClick
+      OnMouseEnter = Button_Wnd_RecordMouseEnter
+      OnMouseLeave = Button_Wnd_RecordMouseLeave
       ParentFont = False
       TabOrder = 0
     end
@@ -504,6 +515,8 @@ object Form_Routiner: TForm_Routiner
       Font.Pitch = fpVariable
       Font.Quality = fqDraft
       OnClick = Button_Wnd_SynthesisClick
+      OnMouseEnter = Button_Wnd_SynthesisMouseEnter
+      OnMouseLeave = Button_Wnd_SynthesisMouseLeave
       ParentFont = False
       TabOrder = 1
     end
@@ -519,6 +532,8 @@ object Form_Routiner: TForm_Routiner
       Font.Pitch = fpVariable
       Font.Quality = fqDraft
       OnClick = Button_excelClick
+      OnMouseEnter = Button_excelMouseEnter
+      OnMouseLeave = Button_excelMouseLeave
       OnMouseUp = Button_excelMouseUp
       ParentFont = False
       TabOrder = 2
@@ -526,11 +541,11 @@ object Form_Routiner: TForm_Routiner
     object WindowPosPad: TShape
       Left = 16
       Height = 97
-      Hint = '所选窗体位置预览'
       Top = 120
       Width = 194
       ParentShowHint = False
-      ShowHint = True
+      OnMouseEnter = WindowPosPadMouseEnter
+      OnMouseLeave = WindowPosPadMouseLeave
     end
     object WindowPosPadWind: TShape
       Left = 88
@@ -543,12 +558,12 @@ object Form_Routiner: TForm_Routiner
     object Memo_Tmp: TMemo
       Left = 16
       Height = 97
-      Hint = '所选窗体位置预览'
       Top = 232
       Width = 194
       OnKeyUp = Memo_TmpKeyUp
+      OnMouseEnter = Memo_TmpMouseEnter
+      OnMouseLeave = Memo_TmpMouseLeave
       ParentShowHint = False
-      ShowHint = True
       TabOrder = 3
     end
   end
@@ -571,10 +586,9 @@ object Form_Routiner: TForm_Routiner
     AnchorSideTop.Control = Splitter_LeftH
     AnchorSideTop.Side = asrBottom
     AnchorSideRight.Control = Splitter_MainV
-    AnchorSideBottom.Control = Owner
-    AnchorSideBottom.Side = asrBottom
+    AnchorSideBottom.Control = StatusBar
     Left = 246
-    Height = 455
+    Height = 429
     Top = 258
     Width = 362
     HorzScrollBar.Page = 1
@@ -583,6 +597,41 @@ object Form_Routiner: TForm_Routiner
     Anchors = [akTop, akLeft, akRight, akBottom]
     TabOrder = 15
     OnResize = ScrollBox_SynchronicResize
+  end
+  object StatusBar: TStatusBar
+    Left = 0
+    Height = 26
+    Top = 687
+    Width = 1036
+    Panels = <    
+      item
+        Width = 100
+      end    
+      item
+        Alignment = taCenter
+        Text = 'KHK'
+        Width = 40
+      end    
+      item
+        Alignment = taCenter
+        Width = 40
+      end    
+      item
+        Alignment = taCenter
+        Width = 40
+      end    
+      item
+        Alignment = taCenter
+        Width = 40
+      end    
+      item
+        Alignment = taCenter
+        Width = 40
+      end    
+      item
+        Width = 50
+      end>
+    SimplePanel = False
   end
   object MainMenu: TMainMenu
     left = 376
@@ -681,7 +730,7 @@ object Form_Routiner: TForm_Routiner
         Caption = '关于'
         OnClick = MenuItem_Opt_AboutClick
       end
-      object MenuItem2: TMenuItem
+      object MenuItem_Opt_Div: TMenuItem
         Caption = '-'
       end
       object MenuItem_Exit: TMenuItem

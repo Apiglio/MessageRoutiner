@@ -7,9 +7,10 @@ object AufButtonForm: TAufButtonForm
   Caption = '面板按键设置'
   ClientHeight = 384
   ClientWidth = 519
-  Constraints.MinHeight = 350
-  Constraints.MinWidth = 490
+  Constraints.MinHeight = 360
+  Constraints.MinWidth = 640
   DesignTimePPI = 120
+  OnActivate = FormActivate
   OnCreate = FormCreate
   OnHide = FormHide
   OnResize = FormResize
@@ -1192,6 +1193,8 @@ object AufButtonForm: TAufButtonForm
     ParentColor = False
   end
   object OpenDialog: TOpenDialog
+    Title = '选择脚本文件'
+    Options = [ofAllowMultiSelect, ofFileMustExist, ofEnableSizing, ofViewDetail]
     left = 272
     top = 200
   end

@@ -35,6 +35,7 @@ type
     procedure Button_StopClick(Sender: TObject);
     procedure ComboBox_WindowChange(Sender: TObject);
     procedure Edit_CaptionChange(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -43,6 +44,8 @@ type
 
   public
     NowEditing:TButton;//当前修改的按键
+    MultiFile:TStrings;
+    FilePath:string;
   public
     procedure Save;
     procedure SaveCol;
@@ -66,7 +69,7 @@ begin
   button:=NowEditing as TAufButton;
   button.Caption:=Self.Edit_Caption.Caption;
   if button.WindowChangeable then button.WindowIndex:=Self.ComboBox_Window.ItemIndex;
-  button.ScriptFile:=Self.Button_FileName.Caption;
+  button.ScriptFile:=Self.MultiFile;
   button.cmd.Text:=Self.Syn_Show.Text;
 end;
 procedure TAufButtonForm.SaveCol;
@@ -79,17 +82,26 @@ begin
     begin
       Caption:=Self.Edit_Caption.Caption;
       if WindowChangeable then WindowIndex:=Self.ComboBox_Window.ItemIndex;
-      ScriptFile:=Self.Button_FileName.Caption;
+      ScriptFile:=Self.MultiFile;
       cmd.Text:=Self.Syn_Show.Text;
     end;
 end;
 procedure TAufButtonForm.ReEdit;//从AufButton读取数据显示在面板中
 var button:TAufButton;
+    i:integer;
 begin
   button:=NowEditing as TAufButton;
   Self.Edit_Caption.Caption:=button.Caption;
-  if button.WindowChangeable then Self.ComboBox_Window.ItemIndex:=button.WindowIndex;
-  Self.Button_FileName.Caption:=button.ScriptFile;
+
+  for i:=0 to SynCount do
+    begin
+      Self.ComboBox_Window.Items[i]:='@'+Form_Routiner.Buttons[i].expression;
+    end;
+  if button.WindowChangeable then Self.ComboBox_Window.ItemIndex:=button.WindowIndex
+  else Self.ComboBox_Window.ItemIndex:=button.WindowIndex;
+  //上面这里定义上没有很好的区分固有行号和实际窗体行号，所以以上表述不适用于WindowChangeable=true的状况
+  Self.Button_FileName.Caption:=button.ScriptFile.CommaText;
+  Self.MultiFile:=button.ScriptFile;
   Self.Syn_Show.Text:=button.cmd.Text;
   Self.ComboBox_Window.Enabled:=button.WindowChangeable;
   ReNewSyntax;
@@ -97,14 +109,18 @@ end;
 
 procedure TAufButtonForm.FormCreate(Sender: TObject);
 var i:integer;
+    str:string;
 begin
   //Self.SynAufSyn:=TSynAufSyn.Create(Self);
   //Self.SynEdit_FileView.Highlighter:=Self.;
-
+  Self.MultiFile:=TStringList.Create;
+  Self.MultiFile.Add('scriptfile');
   //Self.Syn_Show.Highlighter:=Self.SynAufSyn;
   Self.Syn_Show.Lines.Clear;
   Self.Syn_Show.Lines.Add('define win, @win_name');
-  Self.Syn_Show.Lines.Add('load "scriptfile"');
+  Self.Syn_Show.Lines.Add('jmp +1');
+  for str in Self.MultiFile do Self.Syn_Show.Lines.Add('load "'+str+'"');
+  //Self.Syn_Show.Lines.Add('load "scriptfile"');
   Self.ComboBox_Window.Items.Clear;
   for i:=0 to SynCount do Self.ComboBox_Window.Items.Add(Form_Routiner.Edits[i].Text);
   Self.FormResize(nil);
@@ -127,16 +143,22 @@ end;
 
 procedure TAufButtonForm.FormShow(Sender: TObject);
 begin
+  {
   Self.ReEdit;
   Self.Syn_Show.Highlighter:=(Self.NowEditing as TAufButton).Auf.Script.SynAufSyn;
   Self.SynEdit_FileView.Highlighter:=(Self.NowEditing as TAufButton).Auf.Script.SynAufSyn;
+  }
 end;
 
 procedure TAufButtonForm.Button_FileNameClick(Sender: TObject);
+var i:byte;
 begin
   if Self.OpenDialog.Execute then
     begin
-      Self.Button_FileName.Caption:=Self.OpenDialog.FileName;
+      Self.Button_FileName.Caption:=Self.OpenDialog.Files.CommaText;
+      Self.MultiFile.CommaText:=Self.OpenDialog.Files.CommaText;
+      for i:=1 to Self.MultiFile.Count-1 do Self.MultiFile[i]:=ExtractFileName(Self.MultiFile[i]);
+      //Self.Button_FileName.Caption:=Self.OpenDialog.FileName;
       Self.ReNewSyntax;
     end;
 end;
@@ -163,15 +185,34 @@ begin
 end;
 
 procedure TAufButtonForm.ReNewSyntax;
+var str,stmp:string;
+    path,tmppath:string;
+    tmpStr:TStrings;
 begin
+  tmpStr:=TStringList.Create;
+  tmpStr.Clear;
   Self.Syn_Show.Clear;
   Self.Syn_Show.Lines.Add('define win, @'+Form_Routiner.Buttons[Self.ComboBox_Window.ItemIndex].expression);
-  Self.Syn_Show.Lines.Add('load "'+Self.Button_FileName.Caption+'"');
-  try
-    Self.SynEdit_FileView.Lines.LoadFromFile(Self.Button_FileName.Caption);
-  except
-    Self.SynEdit_FileView.Lines.CommaText:='';
-  end;
+  Self.Syn_Show.Lines.Add('jmp +'+IntToStr((Self.NowEditing as TAufButton).SkipLine));
+  //Self.Syn_Show.Lines.Add('load "'+Self.Button_FileName.Caption+'"');
+  for str in Self.MultiFile do
+    begin
+      tmppath:=ExtractFilePath(str);
+      if tmppath<>'' then path:=tmppath;
+      Self.Syn_Show.Lines.Add('load "'+path+ExtractFileName(str)+'"');
+      try
+        tmpStr.add('');
+        tmpStr.add('//文件 "'+ExtractFileName(str)+'":');
+        Application.ProcessMessages;
+        Self.SynEdit_FileView.Lines.LoadFromFile(path+ExtractFileName(str));
+        for stmp in Self.SynEdit_FileView.Lines do tmpStr.Add(stmp);
+      except
+        tmpStr.Add('//文件未正确打开');
+      end;
+    end;
+  Self.SynEdit_FileView.Lines.Clear;
+  for stmp in tmpStr do Self.SynEdit_FileView.Lines.Add(stmp);
+  tmpStr.Free;
 end;
 
 procedure TAufButtonForm.ComboBox_WindowChange(Sender: TObject);
@@ -182,6 +223,13 @@ end;
 procedure TAufButtonForm.Edit_CaptionChange(Sender: TObject);
 begin
   //Self.NowEditing.Caption:=(Sender as TEdit).Caption;
+end;
+
+procedure TAufButtonForm.FormActivate(Sender: TObject);
+begin
+  Self.ReEdit;
+  Self.Syn_Show.Highlighter:=(Self.NowEditing as TAufButton).Auf.Script.SynAufSyn;
+  Self.SynEdit_FileView.Highlighter:=(Self.NowEditing as TAufButton).Auf.Script.SynAufSyn;
 end;
 
 end.

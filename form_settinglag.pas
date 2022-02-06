@@ -62,7 +62,7 @@ end;
 
 procedure TSettingLagForm.LagOnChange(Sender:TObject);
 var tmp:TEditCount;
-    lag:integer;
+    lag,i:integer;
 begin
   tmp:=(Sender as TEditCount);
   lag:=Usf.to_i(tmp.Text);
@@ -70,6 +70,11 @@ begin
   lag:=min(999,lag);
   tmp.Text:=IntToStr(lag);
   Form_Routiner.SynSetting[tmp.Count].adjusting_lag:=lag;
+  //前面的工作都做完了，后面来点花活
+  lag:=0;
+  for i:=0 to SynCount do lag:=lag+Form_Routiner.SynSetting[i].adjusting_lag;
+  if lag=0 then Form_Routiner.StatusBar.Panels.Items[4].Text:=''
+  else Form_Routiner.StatusBar.Panels.Items[4].Text:='异步';
 end;
 
 procedure TSettingLagForm.StepOnChange(Sender:TObject);
