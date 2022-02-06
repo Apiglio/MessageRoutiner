@@ -318,6 +318,7 @@ end;
 procedure TAdapterForm.CommandAppend(key:char);
 begin
   Self.Status.Shortcut.Exec_Command:=Self.Status.Shortcut.Exec_Command+key;
+  //Form_Routiner.StatusBar.Panels.Items[0].Text:=Self.Status.Shortcut.Exec_Command;
 end;
 procedure TAdapterForm.CommandExecute;
 var str:string;
@@ -326,31 +327,29 @@ var str:string;
 begin
   if Self.Status.Shortcut.Exec_Command='' then exit;
   str:=lowercase(Self.Status.Shortcut.Exec_Command);
-  try
-    num:=StrToInt(str);
-    if num in [0..SynCount] then
-      begin
-        Form_Routiner.CheckBoxs[num].Checked:=not Form_Routiner.CheckBoxs[num].Checked;
-        exit;
-      end;
-    //异步器暂时停用，快捷键无效
-  except
-    //
-  end;
+
+
+
   case str of
     #$C0:Form_Routiner.Button_Wnd_SynthesisClick(Form_Routiner.Button_Wnd_Synthesis);
-    'about':RecordAufScript('about');
+    '1','2','3','4','5','6','7','8','9','0':
+      begin
+        pi:=(ord(str[1])-ord('0')+9) mod 10;
+        RecordAufScript('|'+IntToStr(pi)+'|');
+        if pi<=SynCount then Form_Routiner.CheckBoxs[pi].Checked:=not Form_Routiner.CheckBoxs[pi].Checked;
+      end;
+    //异步器暂时停用，快捷键无效
+    '=1','=2','=3','=4','=5','=6','=7','=8','=9','=0':;
+    '-1','-2','-3','-4','-5','-6','-7','-8','-9','-0':;
     else
       begin
         //RecordAufScript('|'+StrToHex(Self.Status.Shortcut.Exec_Command)+'|');
         pi:=0;
         for pi:=0 to ShortcutCount do
           begin
-            if (str=Self.Option.Shortcut.ScriptFiles[pi].command)
-            and (Form_Routiner.SCAufs[pi].Script.PSW.haltoff) then
+            if (str=Self.Option.Shortcut.ScriptFiles[pi].command) then
               begin
                 Form_Routiner.SCAufs[pi].Script.command('load "'+Self.Option.Shortcut.ScriptFiles[pi].filename+'"');
-                //ShowMessage('load "'+Self.Option.Shortcut.ScriptFiles[pi].filename+'"')
               end;
           end;
       end;
@@ -472,6 +471,7 @@ begin
           begin
             if key=Self.Option.Shortcut.DownUpKey then
               begin
+                Form_Routiner.KeybdBlockOn;
                 Self.CommandInitialize;
                 Self.Status.Shortcut.ListenKey:=true;
               end;
@@ -495,6 +495,7 @@ begin
                 begin
                   Self.Status.Shortcut.ListenKey:=false;
                   Self.CommandExecute;
+                  Form_Routiner.KeybdBlockOff;
                 end;
               if Self.Status.Shortcut.ListenKey then Self.CommandAppend(char(key));
             end;

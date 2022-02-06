@@ -2,10 +2,10 @@ object FormRunPerformance: TFormRunPerformance
   Left = 1091
   Height = 557
   Top = 284
-  Width = 430
+  Width = 438
   Caption = '全局设置'
   ClientHeight = 557
-  ClientWidth = 430
+  ClientWidth = 438
   Constraints.MinHeight = 240
   Constraints.MinWidth = 430
   DesignTimePPI = 120
@@ -19,7 +19,7 @@ object FormRunPerformance: TFormRunPerformance
     AnchorSideRight.Control = Button_Reset
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
-    Left = 69
+    Left = 73
     Height = 26
     Top = 526
     Width = 94
@@ -30,429 +30,12 @@ object FormRunPerformance: TFormRunPerformance
     OnClick = Button_OkayClick
     TabOrder = 0
   end
-  object ScrollBox: TScrollBox
-    AnchorSideLeft.Control = Owner
-    AnchorSideTop.Control = Owner
-    AnchorSideRight.Control = Owner
-    AnchorSideRight.Side = asrBottom
-    AnchorSideBottom.Control = Button_Okay
-    Left = 5
-    Height = 516
-    Top = 5
-    Width = 420
-    HorzScrollBar.Page = 1
-    HorzScrollBar.Visible = False
-    VertScrollBar.Page = 448
-    Anchors = [akTop, akLeft, akRight, akBottom]
-    BorderSpacing.Left = 5
-    BorderSpacing.Top = 5
-    BorderSpacing.Right = 5
-    BorderSpacing.Bottom = 5
-    ClientHeight = 512
-    ClientWidth = 416
-    TabOrder = 1
-    object GroupBox_MouseSetting: TGroupBox
-      AnchorSideLeft.Control = ScrollBox
-      AnchorSideTop.Control = CheckGroup_HookEnabled
-      AnchorSideTop.Side = asrBottom
-      AnchorSideRight.Control = ScrollBox
-      AnchorSideRight.Side = asrBottom
-      Left = 5
-      Height = 78
-      Top = 74
-      Width = 406
-      Anchors = [akTop, akLeft, akRight]
-      BorderSpacing.Left = 5
-      BorderSpacing.Top = 10
-      BorderSpacing.Right = 5
-      Caption = '按键鼠标动作设置'
-      ClientHeight = 58
-      ClientWidth = 402
-      TabOrder = 0
-      object Button_AufButtonAct: TButton
-        AnchorSideTop.Control = Label_AufButtonAct
-        AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = GroupBox_MouseSetting
-        AnchorSideRight.Side = asrBottom
-        Left = 176
-        Height = 28
-        Top = 8
-        Width = 216
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Right = 10
-        Caption = '鼠标左键'
-        OnMouseDown = Button_AufButtonActMouseDown
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 0
-      end
-      object Label_AufButtonAct: TLabel
-        AnchorSideLeft.Control = GroupBox_MouseSetting
-        AnchorSideTop.Control = GroupBox_MouseSetting
-        AnchorSideRight.Control = GroupBox_MouseSetting
-        AnchorSideRight.Side = asrCenter
-        Left = 10
-        Height = 15
-        Top = 15
-        Width = 151
-        BorderSpacing.Left = 10
-        BorderSpacing.Top = 15
-        Caption = '面板按键 启动/暂停：'
-        ParentColor = False
-      end
-      object Label_AufButtonSetting: TLabel
-        AnchorSideLeft.Control = GroupBox_MouseSetting
-        AnchorSideTop.Control = Label_AufButtonAct
-        AnchorSideTop.Side = asrBottom
-        Left = 10
-        Height = 15
-        Top = 50
-        Width = 143
-        BorderSpacing.Left = 10
-        BorderSpacing.Top = 20
-        Caption = '面板按键 设置窗口：'
-        ParentColor = False
-      end
-      object Label_AufButtonHalt: TLabel
-        AnchorSideLeft.Control = GroupBox_MouseSetting
-        AnchorSideTop.Control = Label_AufButtonSetting
-        AnchorSideTop.Side = asrBottom
-        Left = 10
-        Height = 15
-        Top = 85
-        Width = 143
-        BorderSpacing.Left = 10
-        BorderSpacing.Top = 20
-        Caption = '面板按键 中止运行：'
-        ParentColor = False
-      end
-      object Label_HoldButtonSetting: TLabel
-        AnchorSideLeft.Control = GroupBox_MouseSetting
-        AnchorSideTop.Control = Label_AufButtonHalt
-        AnchorSideTop.Side = asrBottom
-        Left = 10
-        Height = 15
-        Top = 120
-        Width = 143
-        BorderSpacing.Left = 10
-        BorderSpacing.Top = 20
-        Caption = '鼠标代键 设置窗口：'
-        ParentColor = False
-      end
-      object Button_AufButtonSetting: TButton
-        AnchorSideTop.Control = Label_AufButtonSetting
-        AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = GroupBox_MouseSetting
-        AnchorSideRight.Side = asrBottom
-        Left = 176
-        Height = 28
-        Top = 43
-        Width = 216
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Right = 10
-        Caption = '鼠标右键'
-        OnMouseDown = Button_AufButtonSettingMouseDown
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-      end
-      object Button_AufButtonHalt: TButton
-        AnchorSideTop.Control = Label_AufButtonHalt
-        AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = GroupBox_MouseSetting
-        AnchorSideRight.Side = asrBottom
-        Left = 176
-        Height = 28
-        Top = 78
-        Width = 216
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Right = 10
-        Caption = '鼠标中键'
-        OnMouseDown = Button_AufButtonHaltMouseDown
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 2
-      end
-      object Button_HoldButtonSetting: TButton
-        AnchorSideTop.Control = Label_HoldButtonSetting
-        AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = GroupBox_MouseSetting
-        AnchorSideRight.Side = asrBottom
-        Left = 176
-        Height = 28
-        Top = 113
-        Width = 216
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Right = 10
-        Caption = '鼠标右键'
-        OnMouseDown = Button_HoldButtonSettingMouseDown
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 3
-      end
-      object Label_AufButtonExtraAct: TLabel
-        AnchorSideLeft.Control = GroupBox_MouseSetting
-        AnchorSideTop.Control = Label_HoldButtonSetting
-        AnchorSideTop.Side = asrBottom
-        Left = 10
-        Height = 15
-        Top = 155
-        Width = 143
-        BorderSpacing.Left = 10
-        BorderSpacing.Top = 20
-        Caption = '面板按键 跳转启动：'
-        ParentColor = False
-      end
-      object Button_AufButtonExtraAct: TButton
-        AnchorSideTop.Control = Label_AufButtonExtraAct
-        AnchorSideTop.Side = asrCenter
-        AnchorSideRight.Control = GroupBox_MouseSetting
-        AnchorSideRight.Side = asrBottom
-        Left = 176
-        Height = 28
-        Top = 148
-        Width = 216
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Right = 10
-        Caption = 'Alt + 鼠标左键'
-        OnMouseUp = Button_AufButtonExtraActMouseUp
-        TabOrder = 4
-      end
-    end
-    object CheckGroup_HookEnabled: TCheckGroup
-      AnchorSideLeft.Control = ScrollBox
-      AnchorSideTop.Control = ScrollBox
-      AnchorSideRight.Control = ScrollBox
-      AnchorSideRight.Side = asrBottom
-      Left = 5
-      Height = 54
-      Top = 10
-      Width = 406
-      Anchors = [akTop, akLeft, akRight]
-      AutoFill = True
-      BorderSpacing.Left = 5
-      BorderSpacing.Top = 10
-      BorderSpacing.Right = 5
-      Caption = '全局钩子选项'
-      ChildSizing.LeftRightSpacing = 6
-      ChildSizing.TopBottomSpacing = 6
-      ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
-      ChildSizing.EnlargeVertical = crsHomogenousChildResize
-      ChildSizing.ShrinkHorizontal = crsScaleChilds
-      ChildSizing.ShrinkVertical = crsScaleChilds
-      ChildSizing.Layout = cclLeftToRightThenTopToBottom
-      ChildSizing.ControlsPerLine = 2
-      ClientHeight = 34
-      ClientWidth = 402
-      Columns = 2
-      Items.Strings = (
-        '键盘消息'
-        '鼠标消息'
-      )
-      TabOrder = 1
-      Data = {
-        020000000202
-      }
-    end
-    object GroupBox_ShortcutSetting: TGroupBox
-      AnchorSideLeft.Control = ScrollBox
-      AnchorSideTop.Control = GroupBox_MouseSetting
-      AnchorSideTop.Side = asrBottom
-      AnchorSideRight.Control = ScrollBox
-      AnchorSideRight.Side = asrBottom
-      Left = 5
-      Height = 286
-      Top = 162
-      Width = 406
-      Anchors = [akTop, akLeft, akRight]
-      BorderSpacing.Left = 5
-      BorderSpacing.Top = 10
-      BorderSpacing.Right = 5
-      Caption = '快捷键设置'
-      ClientHeight = 266
-      ClientWidth = 402
-      TabOrder = 2
-      object RadioGroup_SCM: TRadioGroup
-        AnchorSideLeft.Control = GroupBox_ShortcutSetting
-        AnchorSideTop.Control = GroupBox_ShortcutSetting
-        AnchorSideRight.Control = GroupBox_ShortcutSetting
-        AnchorSideRight.Side = asrBottom
-        Left = 5
-        Height = 72
-        Top = 10
-        Width = 397
-        Anchors = [akTop, akLeft, akRight]
-        AutoFill = True
-        BorderSpacing.Left = 5
-        BorderSpacing.Top = 10
-        Caption = '唤醒模式'
-        ChildSizing.LeftRightSpacing = 6
-        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
-        ChildSizing.EnlargeVertical = crsHomogenousChildResize
-        ChildSizing.ShrinkHorizontal = crsScaleChilds
-        ChildSizing.ShrinkVertical = crsScaleChilds
-        ChildSizing.Layout = cclLeftToRightThenTopToBottom
-        ChildSizing.ControlsPerLine = 4
-        ClientHeight = 52
-        ClientWidth = 393
-        Columns = 4
-        ItemIndex = 1
-        Items.Strings = (
-          '双击+确认'
-          '按下+抬起'
-          '循环响应'
-          '多键响应'
-        )
-        TabOrder = 0
-      end
-      object GroupBox_SCM_Key: TGroupBox
-        AnchorSideLeft.Control = GroupBox_ShortcutSetting
-        AnchorSideTop.Control = RadioGroup_SCM
-        AnchorSideTop.Side = asrBottom
-        AnchorSideRight.Control = GroupBox_ShortcutSetting
-        AnchorSideRight.Side = asrBottom
-        Left = 5
-        Height = 92
-        Top = 92
-        Width = 392
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Left = 5
-        BorderSpacing.Top = 10
-        BorderSpacing.Right = 5
-        Caption = '唤醒键设置'
-        ClientHeight = 72
-        ClientWidth = 388
-        TabOrder = 1
-        object Label_SCM_KEY_Start: TLabel
-          AnchorSideLeft.Control = GroupBox_SCM_Key
-          AnchorSideTop.Control = GroupBox_SCM_Key
-          Left = 10
-          Height = 15
-          Top = 15
-          Width = 90
-          BorderSpacing.Left = 10
-          BorderSpacing.Top = 15
-          Caption = '双击响应键：'
-          ParentColor = False
-        end
-        object Label_SCM_KEY_End: TLabel
-          AnchorSideLeft.Control = GroupBox_SCM_Key
-          AnchorSideTop.Control = Label_SCM_KEY_Start
-          AnchorSideTop.Side = asrBottom
-          Left = 10
-          Height = 15
-          Top = 45
-          Width = 90
-          BorderSpacing.Left = 10
-          BorderSpacing.Top = 15
-          Caption = '确认命令键：'
-          ParentColor = False
-        end
-        object Label_SCM_KEY_DownUp: TLabel
-          AnchorSideLeft.Control = Edit_SCM_KEY_Start
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = Label_SCM_KEY_Start
-          Left = 178
-          Height = 15
-          Top = 15
-          Width = 90
-          BorderSpacing.Left = 20
-          Caption = '按下抬起键：'
-          ParentColor = False
-        end
-        object Edit_SCM_KEY_Start: TEdit
-          AnchorSideLeft.Control = Label_SCM_KEY_Start
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = Label_SCM_KEY_Start
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = GroupBox_SCM_Key
-          AnchorSideRight.Side = asrBottom
-          Left = 110
-          Height = 28
-          Top = 8
-          Width = 48
-          BorderSpacing.Left = 10
-          BorderSpacing.Right = 5
-          OnKeyUp = Edit_SCM_KEY_KeyUp
-          TabOrder = 0
-          Text = '32'
-        end
-        object Edit_SCM_KEY_End: TEdit
-          AnchorSideLeft.Control = Label_SCM_KEY_Start
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = Label_SCM_KEY_End
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = GroupBox_SCM_Key
-          AnchorSideRight.Side = asrBottom
-          Left = 110
-          Height = 28
-          Top = 38
-          Width = 48
-          BorderSpacing.Left = 10
-          BorderSpacing.Right = 5
-          OnKeyUp = Edit_SCM_KEY_KeyUp
-          TabOrder = 1
-          Text = '13'
-        end
-        object Edit_SCM_KEY_DownUp: TEdit
-          AnchorSideLeft.Control = Label_SCM_KEY_DownUp
-          AnchorSideLeft.Side = asrBottom
-          AnchorSideTop.Control = Label_SCM_KEY_DownUp
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = GroupBox_SCM_Key
-          AnchorSideRight.Side = asrBottom
-          Left = 278
-          Height = 28
-          Top = 8
-          Width = 48
-          BorderSpacing.Left = 10
-          BorderSpacing.Right = 5
-          OnKeyUp = Edit_SCM_KEY_KeyUp
-          TabOrder = 2
-          Text = '45'
-        end
-        object ToggleBox_SCM_KEY_manual: TToggleBox
-          AnchorSideLeft.Control = Label_SCM_KEY_DownUp
-          AnchorSideTop.Control = Edit_SCM_KEY_End
-          AnchorSideRight.Control = Edit_SCM_KEY_DownUp
-          AnchorSideRight.Side = asrBottom
-          AnchorSideBottom.Control = Edit_SCM_KEY_End
-          AnchorSideBottom.Side = asrBottom
-          Left = 178
-          Height = 28
-          Top = 38
-          Width = 148
-          Anchors = [akTop, akLeft, akRight, akBottom]
-          Caption = '手工输入'
-          TabOrder = 3
-        end
-      end
-      object GroupBox_SCM_Filename: TGroupBox
-        AnchorSideLeft.Control = GroupBox_ShortcutSetting
-        AnchorSideTop.Control = GroupBox_SCM_Key
-        AnchorSideTop.Side = asrBottom
-        AnchorSideRight.Control = GroupBox_ShortcutSetting
-        AnchorSideRight.Side = asrBottom
-        Left = 5
-        Height = 49
-        Top = 199
-        Width = 392
-        Anchors = [akTop, akLeft, akRight]
-        BorderSpacing.Left = 5
-        BorderSpacing.Top = 15
-        BorderSpacing.Right = 5
-        Caption = '脚本快捷键设置'
-        TabOrder = 2
-        OnResize = GroupBox_SCM_FilenameResize
-      end
-    end
-  end
   object Button_Reset: TButton
     AnchorSideLeft.Control = Owner
     AnchorSideLeft.Side = asrCenter
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
-    Left = 168
+    Left = 172
     Height = 26
     Top = 526
     Width = 94
@@ -460,14 +43,14 @@ object FormRunPerformance: TFormRunPerformance
     BorderSpacing.Bottom = 5
     Caption = '默认设置'
     OnClick = Button_ResetClick
-    TabOrder = 2
+    TabOrder = 1
   end
   object Button_Cancel: TButton
     AnchorSideLeft.Control = Button_Reset
     AnchorSideLeft.Side = asrBottom
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
-    Left = 267
+    Left = 271
     Height = 26
     Top = 526
     Width = 94
@@ -476,7 +59,440 @@ object FormRunPerformance: TFormRunPerformance
     BorderSpacing.Bottom = 5
     Caption = '取消设置'
     OnClick = Button_CancelClick
+    TabOrder = 2
+  end
+  object PageControl_RunPorferance: TPageControl
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 5
+    Height = 517
+    Top = 5
+    Width = 428
+    ActivePage = TabSheet_KeyShortOpt
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BorderSpacing.Left = 5
+    BorderSpacing.Top = 5
+    BorderSpacing.Right = 5
+    BorderSpacing.Bottom = 35
+    TabIndex = 2
     TabOrder = 3
+    object TabSheet_HookOpt: TTabSheet
+      Caption = '消息钩子'
+      ClientHeight = 484
+      ClientWidth = 420
+      object CheckGroup_HookEnabled: TCheckGroup
+        AnchorSideLeft.Control = TabSheet_HookOpt
+        AnchorSideTop.Control = TabSheet_HookOpt
+        AnchorSideRight.Control = TabSheet_HookOpt
+        AnchorSideRight.Side = asrBottom
+        Left = 5
+        Height = 54
+        Top = 10
+        Width = 410
+        Anchors = [akTop, akLeft, akRight]
+        AutoFill = True
+        BorderSpacing.Left = 5
+        BorderSpacing.Top = 10
+        BorderSpacing.Right = 5
+        Caption = '全局钩子选项'
+        ChildSizing.LeftRightSpacing = 6
+        ChildSizing.TopBottomSpacing = 6
+        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+        ChildSizing.EnlargeVertical = crsHomogenousChildResize
+        ChildSizing.ShrinkHorizontal = crsScaleChilds
+        ChildSizing.ShrinkVertical = crsScaleChilds
+        ChildSizing.Layout = cclLeftToRightThenTopToBottom
+        ChildSizing.ControlsPerLine = 2
+        ClientHeight = 34
+        ClientWidth = 406
+        Columns = 2
+        Items.Strings = (
+          '键盘消息'
+          '鼠标消息'
+        )
+        TabOrder = 0
+        Data = {
+          020000000202
+        }
+      end
+    end
+    object TabSheet_ButtonOpt: TTabSheet
+      Caption = '按键设置'
+      ClientHeight = 484
+      ClientWidth = 420
+      object GroupBox_MouseSetting: TGroupBox
+        AnchorSideLeft.Control = TabSheet_ButtonOpt
+        AnchorSideTop.Control = TabSheet_ButtonOpt
+        AnchorSideRight.Control = TabSheet_ButtonOpt
+        AnchorSideRight.Side = asrBottom
+        Left = 5
+        Height = 206
+        Top = 10
+        Width = 410
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 5
+        BorderSpacing.Top = 10
+        BorderSpacing.Right = 5
+        Caption = '按键鼠标动作设置'
+        ClientHeight = 186
+        ClientWidth = 406
+        TabOrder = 0
+        object Button_AufButtonAct: TButton
+          AnchorSideTop.Control = Label_AufButtonAct
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = GroupBox_MouseSetting
+          AnchorSideRight.Side = asrBottom
+          Left = 176
+          Height = 28
+          Top = 8
+          Width = 220
+          Anchors = [akTop, akLeft, akRight]
+          BorderSpacing.Right = 10
+          Caption = '鼠标左键'
+          OnMouseDown = Button_AufButtonActMouseDown
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 0
+        end
+        object Label_AufButtonAct: TLabel
+          AnchorSideLeft.Control = GroupBox_MouseSetting
+          AnchorSideTop.Control = GroupBox_MouseSetting
+          AnchorSideRight.Control = GroupBox_MouseSetting
+          AnchorSideRight.Side = asrCenter
+          Left = 10
+          Height = 15
+          Top = 15
+          Width = 151
+          BorderSpacing.Left = 10
+          BorderSpacing.Top = 15
+          Caption = '面板按键 启动/暂停：'
+          ParentColor = False
+        end
+        object Label_AufButtonSetting: TLabel
+          AnchorSideLeft.Control = GroupBox_MouseSetting
+          AnchorSideTop.Control = Label_AufButtonAct
+          AnchorSideTop.Side = asrBottom
+          Left = 10
+          Height = 15
+          Top = 50
+          Width = 143
+          BorderSpacing.Left = 10
+          BorderSpacing.Top = 20
+          Caption = '面板按键 设置窗口：'
+          ParentColor = False
+        end
+        object Label_AufButtonHalt: TLabel
+          AnchorSideLeft.Control = GroupBox_MouseSetting
+          AnchorSideTop.Control = Label_AufButtonSetting
+          AnchorSideTop.Side = asrBottom
+          Left = 10
+          Height = 15
+          Top = 85
+          Width = 143
+          BorderSpacing.Left = 10
+          BorderSpacing.Top = 20
+          Caption = '面板按键 中止运行：'
+          ParentColor = False
+        end
+        object Label_HoldButtonSetting: TLabel
+          AnchorSideLeft.Control = GroupBox_MouseSetting
+          AnchorSideTop.Control = Label_AufButtonHalt
+          AnchorSideTop.Side = asrBottom
+          Left = 10
+          Height = 15
+          Top = 120
+          Width = 143
+          BorderSpacing.Left = 10
+          BorderSpacing.Top = 20
+          Caption = '鼠标代键 设置窗口：'
+          ParentColor = False
+        end
+        object Button_AufButtonSetting: TButton
+          AnchorSideTop.Control = Label_AufButtonSetting
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = GroupBox_MouseSetting
+          AnchorSideRight.Side = asrBottom
+          Left = 176
+          Height = 28
+          Top = 43
+          Width = 220
+          Anchors = [akTop, akLeft, akRight]
+          BorderSpacing.Right = 10
+          Caption = '鼠标右键'
+          OnMouseDown = Button_AufButtonSettingMouseDown
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 1
+        end
+        object Button_AufButtonHalt: TButton
+          AnchorSideTop.Control = Label_AufButtonHalt
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = GroupBox_MouseSetting
+          AnchorSideRight.Side = asrBottom
+          Left = 176
+          Height = 28
+          Top = 78
+          Width = 220
+          Anchors = [akTop, akLeft, akRight]
+          BorderSpacing.Right = 10
+          Caption = '鼠标中键'
+          OnMouseDown = Button_AufButtonHaltMouseDown
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 2
+        end
+        object Button_HoldButtonSetting: TButton
+          AnchorSideTop.Control = Label_HoldButtonSetting
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = GroupBox_MouseSetting
+          AnchorSideRight.Side = asrBottom
+          Left = 176
+          Height = 28
+          Top = 113
+          Width = 220
+          Anchors = [akTop, akLeft, akRight]
+          BorderSpacing.Right = 10
+          Caption = '鼠标右键'
+          OnMouseDown = Button_HoldButtonSettingMouseDown
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 3
+        end
+        object Label_AufButtonExtraAct: TLabel
+          AnchorSideLeft.Control = GroupBox_MouseSetting
+          AnchorSideTop.Control = Label_HoldButtonSetting
+          AnchorSideTop.Side = asrBottom
+          Left = 10
+          Height = 15
+          Top = 155
+          Width = 143
+          BorderSpacing.Left = 10
+          BorderSpacing.Top = 20
+          Caption = '面板按键 跳转启动：'
+          ParentColor = False
+        end
+        object Button_AufButtonExtraAct: TButton
+          AnchorSideTop.Control = Label_AufButtonExtraAct
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = GroupBox_MouseSetting
+          AnchorSideRight.Side = asrBottom
+          Left = 176
+          Height = 28
+          Top = 148
+          Width = 220
+          Anchors = [akTop, akLeft, akRight]
+          BorderSpacing.Right = 10
+          Caption = 'Alt + 鼠标左键'
+          OnMouseUp = Button_AufButtonExtraActMouseUp
+          TabOrder = 4
+        end
+      end
+    end
+    object TabSheet_KeyShortOpt: TTabSheet
+      Caption = '键盘快捷键'
+      ClientHeight = 484
+      ClientWidth = 420
+      object ScrollBox_KeyShort: TScrollBox
+        AnchorSideLeft.Control = TabSheet_KeyShortOpt
+        AnchorSideTop.Control = TabSheet_KeyShortOpt
+        AnchorSideRight.Control = TabSheet_KeyShortOpt
+        AnchorSideRight.Side = asrBottom
+        AnchorSideBottom.Control = TabSheet_KeyShortOpt
+        AnchorSideBottom.Side = asrBottom
+        Left = 5
+        Height = 474
+        Top = 5
+        Width = 410
+        HorzScrollBar.Page = 1
+        HorzScrollBar.Visible = False
+        VertScrollBar.Page = 320
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        BorderSpacing.Left = 5
+        BorderSpacing.Top = 5
+        BorderSpacing.Right = 5
+        BorderSpacing.Bottom = 5
+        ClientHeight = 470
+        ClientWidth = 406
+        TabOrder = 0
+        object RadioGroup_SCM: TRadioGroup
+          AnchorSideLeft.Control = ScrollBox_KeyShort
+          AnchorSideTop.Control = ScrollBox_KeyShort
+          AnchorSideRight.Control = ScrollBox_KeyShort
+          AnchorSideRight.Side = asrBottom
+          Left = 5
+          Height = 72
+          Top = 10
+          Width = 401
+          Anchors = [akTop, akLeft, akRight]
+          AutoFill = True
+          BorderSpacing.Left = 5
+          BorderSpacing.Top = 10
+          Caption = '唤醒模式'
+          ChildSizing.LeftRightSpacing = 6
+          ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+          ChildSizing.EnlargeVertical = crsHomogenousChildResize
+          ChildSizing.ShrinkHorizontal = crsScaleChilds
+          ChildSizing.ShrinkVertical = crsScaleChilds
+          ChildSizing.Layout = cclLeftToRightThenTopToBottom
+          ChildSizing.ControlsPerLine = 4
+          ClientHeight = 52
+          ClientWidth = 397
+          Columns = 4
+          ItemIndex = 1
+          Items.Strings = (
+            '双击+确认'
+            '按下+抬起'
+            '循环响应'
+            '多键响应'
+          )
+          TabOrder = 0
+        end
+        object GroupBox_SCM_Key: TGroupBox
+          AnchorSideLeft.Control = ScrollBox_KeyShort
+          AnchorSideTop.Control = RadioGroup_SCM
+          AnchorSideTop.Side = asrBottom
+          AnchorSideRight.Control = ScrollBox_KeyShort
+          AnchorSideRight.Side = asrBottom
+          Left = 5
+          Height = 92
+          Top = 92
+          Width = 396
+          Anchors = [akTop, akLeft, akRight]
+          BorderSpacing.Left = 5
+          BorderSpacing.Top = 10
+          BorderSpacing.Right = 5
+          Caption = '唤醒键设置'
+          ClientHeight = 72
+          ClientWidth = 392
+          TabOrder = 1
+          object Label_SCM_KEY_Start: TLabel
+            AnchorSideLeft.Control = GroupBox_SCM_Key
+            AnchorSideTop.Control = GroupBox_SCM_Key
+            Left = 10
+            Height = 15
+            Top = 15
+            Width = 90
+            BorderSpacing.Left = 10
+            BorderSpacing.Top = 15
+            Caption = '双击响应键：'
+            ParentColor = False
+          end
+          object Label_SCM_KEY_End: TLabel
+            AnchorSideLeft.Control = GroupBox_SCM_Key
+            AnchorSideTop.Control = Label_SCM_KEY_Start
+            AnchorSideTop.Side = asrBottom
+            Left = 10
+            Height = 15
+            Top = 45
+            Width = 90
+            BorderSpacing.Left = 10
+            BorderSpacing.Top = 15
+            Caption = '确认命令键：'
+            ParentColor = False
+          end
+          object Label_SCM_KEY_DownUp: TLabel
+            AnchorSideLeft.Control = Edit_SCM_KEY_Start
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = Label_SCM_KEY_Start
+            Left = 178
+            Height = 15
+            Top = 15
+            Width = 90
+            BorderSpacing.Left = 20
+            Caption = '按下抬起键：'
+            ParentColor = False
+          end
+          object Edit_SCM_KEY_Start: TEdit
+            AnchorSideLeft.Control = Label_SCM_KEY_Start
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = Label_SCM_KEY_Start
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = GroupBox_SCM_Key
+            AnchorSideRight.Side = asrBottom
+            Left = 110
+            Height = 23
+            Top = 11
+            Width = 48
+            BorderSpacing.Left = 10
+            BorderSpacing.Right = 5
+            OnKeyUp = Edit_SCM_KEY_KeyUp
+            TabOrder = 0
+            Text = '32'
+          end
+          object Edit_SCM_KEY_End: TEdit
+            AnchorSideLeft.Control = Label_SCM_KEY_Start
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = Label_SCM_KEY_End
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = GroupBox_SCM_Key
+            AnchorSideRight.Side = asrBottom
+            Left = 110
+            Height = 23
+            Top = 41
+            Width = 48
+            BorderSpacing.Left = 10
+            BorderSpacing.Right = 5
+            OnKeyUp = Edit_SCM_KEY_KeyUp
+            TabOrder = 1
+            Text = '13'
+          end
+          object Edit_SCM_KEY_DownUp: TEdit
+            AnchorSideLeft.Control = Label_SCM_KEY_DownUp
+            AnchorSideLeft.Side = asrBottom
+            AnchorSideTop.Control = Label_SCM_KEY_DownUp
+            AnchorSideTop.Side = asrCenter
+            AnchorSideRight.Control = GroupBox_SCM_Key
+            AnchorSideRight.Side = asrBottom
+            Left = 278
+            Height = 23
+            Top = 11
+            Width = 48
+            BorderSpacing.Left = 10
+            BorderSpacing.Right = 5
+            OnKeyUp = Edit_SCM_KEY_KeyUp
+            TabOrder = 2
+            Text = '45'
+          end
+          object ToggleBox_SCM_KEY_manual: TToggleBox
+            AnchorSideLeft.Control = Label_SCM_KEY_DownUp
+            AnchorSideTop.Control = Edit_SCM_KEY_End
+            AnchorSideRight.Control = Edit_SCM_KEY_DownUp
+            AnchorSideRight.Side = asrBottom
+            AnchorSideBottom.Control = Edit_SCM_KEY_End
+            AnchorSideBottom.Side = asrBottom
+            Left = 178
+            Height = 23
+            Top = 41
+            Width = 148
+            Anchors = [akTop, akLeft, akRight, akBottom]
+            Caption = '手工输入'
+            TabOrder = 3
+          end
+        end
+        object GroupBox_SCM_Filename: TGroupBox
+          AnchorSideLeft.Control = ScrollBox_KeyShort
+          AnchorSideTop.Control = GroupBox_SCM_Key
+          AnchorSideTop.Side = asrBottom
+          AnchorSideRight.Control = ScrollBox_KeyShort
+          AnchorSideRight.Side = asrBottom
+          Left = 5
+          Height = 121
+          Top = 199
+          Width = 396
+          Anchors = [akTop, akLeft, akRight]
+          BorderSpacing.Left = 5
+          BorderSpacing.Top = 15
+          BorderSpacing.Right = 5
+          Caption = '脚本快捷键设置'
+          TabOrder = 2
+          OnResize = GroupBox_SCM_FilenameResize
+        end
+      end
+    end
   end
   object OpenDialog: TOpenDialog
     left = 376
