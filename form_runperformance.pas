@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, ExtCtrls,
-  StdCtrls, EditBtn, ComCtrls, Windows, form_adapter;
+  StdCtrls, EditBtn, ComCtrls, Grids, Windows, form_adapter;
 
 type
 
@@ -17,6 +17,7 @@ type
   { TFormRunPerformance }
 
   TFormRunPerformance = class(TForm)
+    Button_SCAufClear: TButton;
     Button_AufButtonExtraAct: TButton;
     Button_AufButtonAct: TButton;
     Button_AufButtonSetting: TButton;
@@ -29,7 +30,8 @@ type
     Edit_SCM_KEY_DownUp: TEdit;
     Edit_SCM_KEY_Start: TEdit;
     Edit_SCM_KEY_End: TEdit;
-    GroupBox_SCM_Filename: TGroupBox;
+    GroupBox_SCM_Threads: TGroupBox;
+    GroupBox_SCM_Command: TGroupBox;
     GroupBox_SCM_Key: TGroupBox;
     GroupBox_MouseSetting: TGroupBox;
     Label_SCM_KEY_Start: TLabel;
@@ -42,8 +44,10 @@ type
     Label_SCM_KEY_DownUp: TLabel;
     OpenDialog: TOpenDialog;
     PageControl_RunPorferance: TPageControl;
+    ProgressBar_SCAufsThread: TProgressBar;
     RadioGroup_SCM: TRadioGroup;
     ScrollBox_KeyShort: TScrollBox;
+    StringGrid_CommandList: TStringGrid;
     TabSheet_HookOpt: TTabSheet;
     TabSheet_ButtonOpt: TTabSheet;
     TabSheet_KeyShortOpt: TTabSheet;
@@ -61,20 +65,16 @@ type
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure Button_OkayClick(Sender: TObject);
     procedure Button_ResetClick(Sender: TObject);
+    procedure Button_SCAufClearClick(Sender: TObject);
     procedure CheckGroup_PerformanceItemClick(Sender: TObject; Index: integer);
     procedure Edit_SCM_KEY_KeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure GroupBox_SCM_FilenameResize(Sender: TObject);
-  private
-    procedure CtrlsClick(Sender: TObject);
-    procedure ButtonsClick(Sender: TObject);
-  public
-    FileButtons:array[0..ShortcutCount] of TButton;
-    FileCtrls:array[0..ShortcutCount] of TSCButton;
-    FileEdits:array[0..SHortcutCount] of TEdit;
+    procedure StringGrid_CommandListEditingDone(Sender: TObject);
+    //procedure GroupBox_SCM_FilenameResize(Sender: TObject);
+    procedure StringGrid_CommandListResize(Sender: TObject);
   private
     Setting:record
       AufButtonAct1:TShiftState;
@@ -129,54 +129,20 @@ begin
   Self.CheckGroup_HookEnabled.Checked[0]:=Form_Routiner.KeybdHookEnabled;
   Self.CheckGroup_HookEnabled.Checked[1]:=Form_Routiner.MouseHookEnabled;
 
-  for i:=0 to ShortcutCount do
-    begin
-      FileEdits[i]:=TEdit.Create(Self);
-      with FileEdits[i] do
-        begin
-          Parent:=Self.GroupBox_SCM_Filename;
-          Height:=28;
-          Width:=100;
-          Left:=5;
-          Top:=15+i*(28+15);
-          Text:='';
-        end;
-      FileButtons[i]:=TButton.Create(Self);
-      with FileButtons[i] do
-        begin
-          Parent:=Self.GroupBox_SCM_Filename;
-          Height:=28;
-          Top:=15+i*(28+15);
-          Left:=110;
-          Caption:='scriptfile';
-          onClick:=@ButtonsClick;
-          ShowHint:=true;
-        end;
-      FileCtrls[i]:=TSCButton.Create(Self);
-        with FileCtrls[i] do
-          begin
-            ShortcutIndex:=i;
-            Parent:=Self.GroupBox_SCM_Filename;
-            Left:=115+FileButtons[i].Width+10;
-            Height:=28;
-            Width:=45;
-            Top:=15+i*(28+15);
-            Caption:='中止';
-            onClick:=@CtrlsClick;
-            Enabled:=false;
-          end;
-
-    end;
-
   Self.CheckGroup_HookEnabled.Height:=56;
   Self.GroupBox_MouseSetting.Height:=200;
-  Self.GroupBox_SCM_Filename.Height:=(15+28)*(ShortcutCount+1)+30;
-  //Self.GroupBox_ShortcutSetting.Height:=240+Self.GroupBox_SCM_Filename.Height;
 
   Self.OpenDialog.Title:='选择脚本文件';
   Self.OpenDialog.InitialDir:=ExtractFilePath(Application.ExeName);
   Self.OpenDialog.Filter:='AufScript File(*.auf)|*.auf|TableCalc Script File(*.scpt)|*.scpt|布局脚本文件(*.auf.lay)|*.auf.lay|文本文档(*.txt)|*.txt|全部文件(*.*)|*.*';
   Self.OpenDialog.DefaultExt:='*.auf';
+
+  Self.StringGrid_CommandList.ColCount:=4;
+  Self.StringGrid_CommandList.RowCount:=34;
+  Self.StringGrid_CommandList.Cells[1,0]:='快捷键';
+  Self.StringGrid_CommandList.Cells[2,0]:='执行动作';
+  Self.StringGrid_CommandList.Cells[3,0]:='设置';
+  Self.StringGrid_CommandListResize(Self.StringGrid_CommandList);
 
 end;
 
@@ -185,38 +151,31 @@ begin
   //
 end;
 
-procedure TFormRunPerformance.GroupBox_SCM_FilenameResize(Sender: TObject);
-var i:integer;
+procedure TFormRunPerformance.StringGrid_CommandListEditingDone(Sender: TObject
+  );
+var tmpSG:TStringGrid;
 begin
-  for i:=0 to ShortcutCount do
-    begin
-      with FileButtons[i] do
-        begin
-          Width:=max(0,Self.GroupBox_SCM_Filename.Width-120-45);
-        end;
-      with FileCtrls[i] do
-        begin
-          Left:=115+FileButtons[i].Width;
-        end;
-    end;
+  tmpSG:=Sender as TStringGrid;
+  if tmpSG.Cells[1,tmpSG.RowCount-1]<>'' then tmpSG.RowCount:=tmpSG.RowCount+1;
 end;
 
-procedure TFormRunPerformance.CtrlsClick(Sender: TObject);
+procedure TFormRunPerformance.StringGrid_CommandListResize(Sender: TObject);
 begin
-  Form_Routiner.SCAufs[(Sender as TSCButton).ShortcutIndex].Script.Stop;
-end;
-procedure TFormRunPerformance.ButtonsClick(Sender: TObject);
-begin
-  if Self.OpenDialog.Execute then
+  with Sender as TStringGrid do
     begin
-      (Sender as TButton).Caption:=Self.OpenDialog.FileName;
-      (Sender as TButton).Hint:=Self.OpenDialog.FileName;
+      ColWidths[0]:=30;
+      ColWidths[3]:=50;
+      ColWidths[1]:=100;
+      ColWidths[2]:=Width-220;
     end;
 end;
 
 procedure TFormRunPerformance.Button_OkayClick(Sender: TObject);
 var pi:integer;
+    stmp:TStringList;
+    s1,s2:string;
 begin
+  //按键设置
   with Self.Setting do
     begin
       Form_Routiner.Setting.AufButton.Act1:=AufButtonAct1*[ssAlt,ssShift,ssCtrl];
@@ -231,24 +190,51 @@ begin
       Form_Routiner.Setting.HoldButton.Setting2:=HoldButtonSetting2;
     end;
 
-    if Self.CheckGroup_HookEnabled.Checked[0] then begin
-      Form_Routiner.KeybdHook;
-    end else begin
-      Form_Routiner.KeybdUnHook;
-    end;
-    if Self.CheckGroup_HookEnabled.Checked[1] then begin
-      Form_Routiner.MouseHook;
-    end else begin
-      Form_Routiner.MouseUnHook;
-    end;
+  //消息钩子
+  if Self.CheckGroup_HookEnabled.Checked[0] then begin
+    Form_Routiner.KeybdHook;
+  end else begin
+    Form_Routiner.KeybdUnHook;
+  end;
+  if Self.CheckGroup_HookEnabled.Checked[1] then begin
+    Form_Routiner.MouseHook;
+  end else begin
+    Form_Routiner.MouseUnHook;
+  end;
 
-  for pi:=0 to ShortcutCount do
+  //键盘快捷键
+  case RadioGroup_SCM.ItemIndex of
+    0:AdapterForm.Option.Shortcut.Mode:=scmDblCheck;
+    1:AdapterForm.Option.Shortcut.Mode:=scmDownUp;
+    2:AdapterForm.Option.Shortcut.Mode:=scmLoop;
+    3:AdapterForm.Option.Shortcut.Mode:=scmPoly;
+  end;
+
+  with AdapterForm.Option.Shortcut.CommandList do
     begin
-      AdapterForm.Option.Shortcut.ScriptFiles[pi].filename:=Self.FileButtons[pi].Caption;
-      AdapterForm.Option.Shortcut.ScriptFiles[pi].command:=lowercase(Self.FileEdits[pi].Text);
+      while Count>0 do
+        begin
+          TStringList(Objects[0]).Free;
+          Delete(0);
+        end;
+    end;
+  with Self.StringGrid_CommandList do
+    begin
+      for pi:=1 to RowCount-1 do
+        begin
+          s1:=Cells[1,pi];
+          s2:=Cells[2,pi];
+          if (s1<>'') and (s2<>'') then begin
+            stmp:=TStringList.Create;
+            stmp.Add(s2);
+            AdapterForm.Option.Shortcut.CommandList.AddObject(lowercase(s1),TObject(stmp));
+          end;
+        end;
+
     end;
 
-  Self.Hide;
+  //Self.Hide;
+  ModalResult:=mrOK;
 end;
 
 procedure TFormRunPerformance.Button_ResetClick(Sender: TObject);
@@ -269,6 +255,11 @@ begin
   Self.CheckGroup_HookEnabled.Checked[0]:=true;
   Self.CheckGroup_HookEnabled.Checked[1]:=false;
   Self.FormActivate(Self);
+end;
+
+procedure TFormRunPerformance.Button_SCAufClearClick(Sender: TObject);
+begin
+  Form_Routiner.ShortcutAufClear;
 end;
 
 
@@ -307,7 +298,8 @@ end;
 
 procedure TFormRunPerformance.Button_CancelClick(Sender: TObject);
 begin
-  Self.Hide;
+  //Self.Hide;
+  ModalResult:=mrCancel;
 end;
 
 procedure TFormRunPerformance.Button_HoldButtonSettingMouseDown(
@@ -356,12 +348,22 @@ begin
   Self.Edit_SCM_KEY_Start.Text:=IntToStr(AdapterForm.Option.Shortcut.StartKey);
   Self.Edit_SCM_KEY_End.Text:=IntToStr(AdapterForm.Option.Shortcut.EndKey);
   Self.Edit_SCM_KEY_DownUp.Text:=IntToStr(AdapterForm.Option.Shortcut.DownUpKey);
-
-  for pi:=0 to ShortcutCount do
+  with AdapterForm.Option.Shortcut do
     begin
-      Self.FileEdits[pi].Text:=AdapterForm.Option.Shortcut.ScriptFiles[pi].command;
-      Self.FileButtons[pi].Caption:=AdapterForm.Option.Shortcut.ScriptFiles[pi].filename;
+      StringGrid_CommandList.RowCount:=CommandList.Count+2;
+      if CommandList.Count>0 then
+      for pi:=0 to CommandList.Count-1 do
+        begin
+          StringGrid_CommandList.Cells[1,pi+1]:=CommandList[pi];
+          StringGrid_CommandList.Cells[2,pi+1]:=TStringList(CommandList.Objects[pi])[0];
+          //StringGrid_CommandList.Cells[3,pi+1]:='...';
+        end;
+      inc(pi);
+      StringGrid_CommandList.Cells[1,pi+1]:='';
+      StringGrid_CommandList.Cells[2,pi+1]:='';
+      //StringGrid_CommandList.Cells[3,pi+1]:='...';
     end;
+
 end;
 
 end.

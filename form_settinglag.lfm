@@ -8,6 +8,7 @@ object SettingLagForm: TSettingLagForm
   ClientWidth = 584
   DesignTimePPI = 120
   OnCreate = FormCreate
+  Position = poScreenCenter
   LCLVersion = '1.8.4.0'
   object ScrollBox: TScrollBox
     AnchorSideLeft.Control = Owner

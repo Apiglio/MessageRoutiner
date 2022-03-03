@@ -8,7 +8,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LMessages,
-  StdCtrls, ExtCtrls, Windows, Dos;
+  StdCtrls, ExtCtrls, Windows, Dos, LazUTF8;
 
 const
   MessageOffset = 100;
@@ -29,10 +29,15 @@ type
   { TAdapterForm }
 
   TAdapterForm = class(TForm)
-    Image1: TImage;
+    Button_Debug: TToggleBox;
+    Image_QE: TImage;
     Label_auther: TLabel;
     Label_AD: TLabel;
+    Memo_Debug: TMemo;
+    procedure Button_DebugChange(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure FormShow(Sender: TObject);
 
@@ -81,17 +86,20 @@ type
         StartKey,EndKey:byte; //双击按键与确认按键，scmDblCheck时有效
         DoubleGap:word;       //双击最大毫秒限制，scmDblCheck时有效
         DownUpKey:byte;       //按下抬起检测按键，scmDownUp时有效
+        CommandList:TStringList;
 
-        ScriptFiles:array[0..ShortcutCount]of record
-          command:string;//存入的时候需要转为小写！！！
-          filename:string;
-        end;
       end;//键盘快捷键设置
     end;
     property RecordMode:boolean read FRecordMode write FRecordMode;
     property SynchronicMode:boolean read FSynchronicMode write FSynchronicMode;
     property ShortcutMode:boolean read FShortcutMode write FShortcutMode;
     property SetMouseOriMode:boolean read Status.Rec.SettingOri write Status.Rec.SettingOri;
+
+  private
+    Debuging:boolean;
+    procedure BeginDebug;
+    procedure EndDebug;
+
 
   public
     procedure StartRecord;                  //录制器：开始录制
@@ -115,6 +123,14 @@ type
 
 
   end;
+
+  //function StrToHex(inp:string):string;
+  function KeyMsgToChar(km:longint):string;
+  function MouseMsgToChar(km:longint):string;
+  function KeyToSyn(km:byte):string;
+  function KeyToChar(km:byte):string;
+  function CharToKey(km:string):byte;
+  function SynToKey(km:string):byte;
 
 var
   AdapterForm: TAdapterForm;
@@ -157,48 +173,161 @@ begin
     else result:='""';
   end;
 end;
-function KeyToChar(km:byte):string;
+function KeyToSyn(km:byte):string;
 begin
   case km of
-    65..90,48..57:result:='"'+chr(km)+'"';
-    112..123:result:='@k_f'+IntToStr(km-111);
-    8:result:='@k_bksp';
-    9:result:='@k_tab';
-    12:result:='@k_clear';
-    13:result:='@k_enter';
-    16:result:='@k_shift';
-    17:result:='@k_ctrl';
-    18:result:='@k_alt';
-    19:result:='@k_pause';
-    20:result:='@k_capelk';
-    27:result:='@k_esc';
-    32:result:='@k_space';
-    33:result:='@k_pgup';
-    34:result:='@k_pgdn';
-    35:result:='@k_end';
-    36:result:='@k_home';
-    37:result:='@k_left';
-    38:result:='@k_up';
-    39:result:='@k_right';
-    40:result:='@k_down';
-    41:result:='@k_sel';
-    42:result:='@k_print';
-    43:result:='@k_exec';
-    44:result:='@k_snapshot';
-    45:result:='@k_ins';
-    46:result:='@k_del';
-    47:result:='@k_help';
-    91:result:='@k_lwin';
-    92:result:='@k_rwin';
-    144:result:='@k_numlk';
-    160:result:='@k_lshift';
-    161:result:='@k_rshift';
-    162:result:='@k_lctrl';
-    163:result:='@k_rctrl';
-    164:result:='@k_lalt';
-    165:result:='@k_ralt';
-    else result:=IntToStr(km);
+    65..90,48..57:result:=chr(km);
+    112..123:result:='@k_f'+IntToStr(km-111)+'!';
+    8:result:='@k_bksp!';
+    9:result:='@k_tab!';
+    12:result:='@k_clear!';
+    13:result:='@k_enter!';
+    16:result:='@k_shift!';
+    17:result:='@k_ctrl!';
+    18:result:='@k_alt!';
+    19:result:='@k_pause!';
+    20:result:='@k_capelk!';
+    27:result:='@k_esc!';
+    32:result:='@k_space!';
+    33:result:='@k_pgup!';
+    34:result:='@k_pgdn!';
+    35:result:='@k_end!';
+    36:result:='@k_home!';
+    37:result:='@k_left!';
+    38:result:='@k_up!';
+    39:result:='@k_right!';
+    40:result:='@k_down!';
+    41:result:='@k_sel!';
+    42:result:='@k_print!';
+    43:result:='@k_exec!';
+    44:result:='@k_snapshot!';
+    45:result:='@k_ins!';
+    46:result:='@k_del!';
+    47:result:='@k_help!';
+    91:result:='@k_lwin!';
+    92:result:='@k_rwin!';
+    144:result:='@k_numlk!';
+    160:result:='@k_lshift!';
+    161:result:='@k_rshift!';
+    162:result:='@k_lctrl!';
+    163:result:='@k_rctrl!';
+    164:result:='@k_lalt!';
+    165:result:='@k_ralt!';
+    186:result:=';';
+    187:result:='=';
+    188:result:=',';
+    189:result:='-';
+    190:result:='.';
+    191:result:='/';
+    192:result:='`';
+    219:result:='[';
+    220:result:='\';
+    221:result:=']';
+    222:result:='''';
+    else
+      begin
+        result:=IntToStr(km);
+        while length(result)<3 do result:='0'+result;
+        result:='#'+result;
+      end;
   end;
+end;
+function KeyToChar(km:byte):string;
+begin
+  result:=KeyToSyn(km);
+  if result='' then exit;
+  if length(result)=1 then result:='"'+result+'"'
+  else if result[1]='#' then delete(result,1,1)
+  else if result[1]='@' then delete(result,length(result),1) ;
+end;
+function SynToKey(km:string):byte;
+begin
+  result:=0;
+  if km='' then exit;
+  if length(km)=1 then
+    case km[1] of
+      ';':result:=186;
+      '=':result:=187;
+      ',':result:=188;
+      '-':result:=189;
+      '.':result:=190;
+      '/':result:=191;
+      '`':result:=192;
+      '[':result:=219;
+      '\':result:=220;
+      ']':result:=221;
+      '''':result:=222;
+      else result:=ord(km[1])
+    end
+  else if km[1]='@' then
+    case km of
+      '@k_f1':result:=112;
+      '@k_f2':result:=113;
+      '@k_f3':result:=114;
+      '@k_f4':result:=115;
+      '@k_f5':result:=116;
+      '@k_f6':result:=117;
+      '@k_f7':result:=118;
+      '@k_f8':result:=119;
+      '@k_f9':result:=120;
+      '@k_f10':result:=121;
+      '@k_f11':result:=122;
+      '@k_f12':result:=123;
+      '@k_bksp':result:=8;
+      '@k_tab':result:=9;
+      '@k_clear':result:=12;
+      '@k_enter':result:=13;
+      '@k_shift':result:=16;
+      '@k_ctrl':result:=17;
+      '@k_alt':result:=18;
+      '@k_pause':result:=19;
+      '@k_capelk':result:=20;
+      '@k_esc':result:=27;
+      '@k_space':result:=32;
+      '@k_pgup':result:=33;
+      '@k_pgdn':result:=34;
+      '@k_end':result:=35;
+      '@k_home':result:=36;
+      '@k_left':result:=37;
+      '@k_up':result:=38;
+      '@k_right':result:=39;
+      '@k_down':result:=40;
+      '@k_sel':result:=41;
+      '@k_print':result:=42;
+      '@k_exec':result:=43;
+      '@k_snapshot':result:=44;
+      '@k_ins':result:=45;
+      '@k_del':result:=46;
+      '@k_help':result:=47;
+      '@k_lwin':result:=91;
+      '@k_rwin':result:=92;
+      '@k_numlk':result:=144;
+      '@k_lshift':result:=160;
+      '@k_rshift':result:=161;
+      '@k_lctrl':result:=162;
+      '@k_rctrl':result:=163;
+      '@k_lalt':result:=164;
+      '@k_ralt':result:=165;
+    end
+  else result:=StrToInt(km);
+
+end;
+function CharToKey(km:string):byte;
+begin
+  result:=0;
+  if km='' then exit;
+  if km[1]='#' then
+    begin
+      delete(km,1,1);
+      result:=SynToKey(km);
+    end
+  else if km[1]='"' then
+    begin
+      delete(km,length(km),1);
+      delete(km,1,1);
+      result:=SynToKey(km);
+    end
+  else result:=SynToKey(km);
 end;
 
 function GetTimeNumber:longint;
@@ -209,7 +338,9 @@ begin
 end;
 
 procedure TAdapterForm.FormCreate(Sender: TObject);
+var pi:integer;
 begin
+  Debuging:=false;
   Self.FRecordMode:=true;
   GlobalExpressionList.TryAddExp('sel',narg('',IntToStr(Self.Handle),''));
   Self.FRecordMode:=false;
@@ -239,8 +370,39 @@ begin
       DoubleGap:=300;
       DownUpKey:=45;//Insert
 
+      CommandList:=TStringList.Create;
+      CommandList.Sorted:=true;
+      //for pi:=0 to 31 do CommandList.AddObject('',nil);
     end;
 
+end;
+
+procedure TAdapterForm.FormDestroy(Sender: TObject);
+begin
+  with Self.Option.Shortcut.CommandList do
+    begin
+      while Count>0 do
+        begin
+          TStringList(Objects[0]).Free;
+          Delete(0);
+        end;
+      Free;
+    end;
+end;
+
+procedure TAdapterForm.FormClose(Sender: TObject; var CloseAction: TCloseAction
+  );
+begin
+  //fine
+end;
+
+procedure TAdapterForm.Button_DebugChange(Sender: TObject);
+begin
+  if (Sender as TToggleBox).Checked then Self.Height:=Image_QE.Height+400
+  else begin
+    Memo_Debug.Clear;
+    Self.Height:=Image_QE.Height;
+  end;
 end;
 
 procedure TAdapterForm.FormHide(Sender: TObject);
@@ -270,6 +432,16 @@ begin
     end
   else begin
     DuplicateProc(TheMessage);//转发器
+    if not debuging then
+      begin
+        BeginDebug;
+        if assigned(Button_Debug) then
+          if Button_Debug.Checked then
+            Memo_Debug.Lines.Add('msg='+IntToStr(TheMessage.msg)
+                                +' w='+IntToStr(TheMessage.wParam)
+                                +' l='+IntToStr(TheMessage.lParam));
+        EndDebug;
+      end;
     goto inherit;
   end;
 
@@ -311,31 +483,31 @@ begin
 
 end;
 
+
+
 procedure TAdapterForm.CommandInitialize;
 begin
   Self.Status.Shortcut.Exec_Command:='';
 end;
 procedure TAdapterForm.CommandAppend(key:char);
 begin
-  Self.Status.Shortcut.Exec_Command:=Self.Status.Shortcut.Exec_Command+key;
-  //Form_Routiner.StatusBar.Panels.Items[0].Text:=Self.Status.Shortcut.Exec_Command;
+  Self.Status.Shortcut.Exec_Command:=Self.Status.Shortcut.Exec_Command+KeyToSyn(ord(key)){'#'+IntToStr(ord(key))};
+  //Form_Routiner.StatusBar.Panels.Items[0].Text:=(Self.Status.Shortcut.Exec_Command);
 end;
 procedure TAdapterForm.CommandExecute;
 var str:string;
-    num:word;
+    num:integer;
     pi:integer;
 begin
   if Self.Status.Shortcut.Exec_Command='' then exit;
   str:=lowercase(Self.Status.Shortcut.Exec_Command);
-
-
 
   case str of
     #$C0:Form_Routiner.Button_Wnd_SynthesisClick(Form_Routiner.Button_Wnd_Synthesis);
     '1','2','3','4','5','6','7','8','9','0':
       begin
         pi:=(ord(str[1])-ord('0')+9) mod 10;
-        RecordAufScript('|'+IntToStr(pi)+'|');
+        //RecordAufScript('|'+IntToStr(pi)+'|');
         if pi<=SynCount then Form_Routiner.CheckBoxs[pi].Checked:=not Form_Routiner.CheckBoxs[pi].Checked;
       end;
     //异步器暂时停用，快捷键无效
@@ -343,15 +515,9 @@ begin
     '-1','-2','-3','-4','-5','-6','-7','-8','-9','-0':;
     else
       begin
-        //RecordAufScript('|'+StrToHex(Self.Status.Shortcut.Exec_Command)+'|');
-        pi:=0;
-        for pi:=0 to ShortcutCount do
-          begin
-            if (str=Self.Option.Shortcut.ScriptFiles[pi].command) then
-              begin
-                Form_Routiner.SCAufs[pi].Script.command('load "'+Self.Option.Shortcut.ScriptFiles[pi].filename+'"');
-              end;
-          end;
+        //RecordAufScript('|'+str+'|');
+        if Self.Option.Shortcut.CommandList.Find(str,num) then
+          Form_Routiner.ShortcutAufCommand(TStringList(Self.Option.Shortcut.CommandList.Objects[num]));
       end;
   end;
   //RecordAufScript(Self.Status.Shortcut.Exec_Command);
@@ -372,6 +538,15 @@ end;
 procedure TAdapterForm.EndRecord;
 begin
   Self.FRecordMode:=false;
+end;
+
+procedure TAdapterForm.BeginDebug;
+begin
+  Debuging:=true;
+end;
+procedure TAdapterForm.EndDebug;
+begin
+  Debuging:=false;
 end;
 
 procedure TAdapterForm.SynchronicProc(Msg:TMessage);//同步器过程（包括异步器）
@@ -458,14 +633,17 @@ begin
               if Self.Status.Shortcut.ListenKey and (Self.Option.Shortcut.EndKey=key) then
                 begin
                   Self.Status.Shortcut.ListenKey:=false;
+                  Form_Routiner.KeybdBlockOff;
                   Self.CommandExecute;
-                end;
-              if (key=Self.Status.Shortcut.LastKey) and (key=Self.Option.Shortcut.StartKey) and
-              (Self.Option.Shortcut.DoubleGap>dword(time-Self.Status.Shortcut.LastTime[key])) then
+                end
+              else if (key=Self.Status.Shortcut.LastKey) and (key=Self.Option.Shortcut.StartKey) and
+              (Self.Option.Shortcut.DoubleGap > (time-Self.Status.Shortcut.LastTime[key]+86400000) mod 86400000) then
                 begin
+                  Form_Routiner.KeybdBlockOn;
                   Self.CommandInitialize;
                   Self.Status.Shortcut.ListenKey:=true;
-                end;
+                end
+              else if Self.Status.Shortcut.ListenKey then Self.CommandAppend(char(key));
             end;
           scmDownUp:
           begin
@@ -487,7 +665,7 @@ begin
         case Self.Option.Shortcut.Mode of
           scmDblCheck:
             begin
-              if Self.Status.Shortcut.ListenKey then Self.CommandAppend(char(key));
+              //if Self.Status.Shortcut.ListenKey then Self.CommandAppend(char(key));//不判断抬起了，改成判断按下
             end;
           scmDownUp:
             begin
