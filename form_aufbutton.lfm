@@ -15,6 +15,7 @@ object AufButtonForm: TAufButtonForm
   OnHide = FormHide
   OnResize = FormResize
   OnShow = FormShow
+  Position = poScreenCenter
   LCLVersion = '1.8.4.0'
   object Edit_Caption: TEdit
     AnchorSideLeft.Control = Owner
