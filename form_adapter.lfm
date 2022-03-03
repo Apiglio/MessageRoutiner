@@ -1,23 +1,24 @@
 object AdapterForm: TAdapterForm
-  Left = 1123
-  Height = 256
-  Top = 526
+  Left = 489
+  Height = 251
+  Top = 397
   Width = 640
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'ApiglioMR Hook Adapter'
-  ClientHeight = 256
+  ClientHeight = 251
   ClientWidth = 640
   DesignTimePPI = 120
+  OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnHide = FormHide
   OnShow = FormShow
   Position = poScreenCenter
   LCLVersion = '1.8.4.0'
-  object Image1: TImage
+  object Image_QE: TImage
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = Owner
-    AnchorSideTop.Side = asrCenter
     Left = 0
     Height = 256
     Top = 0
@@ -1392,5 +1393,50 @@ object AdapterForm: TAdapterForm
     Width = 192
     Caption = 'Apiglio Message Routiner'#13#10'Hook Adapter'#13#10'By Apiglio'#13#10'Lazarus IDE'
     ParentColor = False
+  end
+  object Memo_Debug: TMemo
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Image_QE
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 0
+    Height = 0
+    Top = 256
+    Width = 640
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    Color = clBlack
+    Font.CharSet = ANSI_CHARSET
+    Font.Color = clWhite
+    Font.Height = -18
+    Font.Name = 'Consolas'
+    Font.Pitch = fpFixed
+    Font.Quality = fqDraft
+    Font.Style = [fsBold]
+    ParentFont = False
+    ScrollBars = ssAutoVertical
+    TabOrder = 0
+  end
+  object Button_Debug: TToggleBox
+    AnchorSideLeft.Control = Owner
+    AnchorSideLeft.Side = asrCenter
+    AnchorSideTop.Control = Image_QE
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Image_QE
+    AnchorSideBottom.Side = asrBottom
+    Left = 536
+    Height = 32
+    Top = 214
+    Width = 94
+    Anchors = [akRight, akBottom]
+    BorderSpacing.Right = 10
+    BorderSpacing.Bottom = 10
+    Caption = '调试消息'
+    OnChange = Button_DebugChange
+    TabOrder = 1
   end
 end

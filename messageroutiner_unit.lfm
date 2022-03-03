@@ -26,6 +26,7 @@ object Form_Routiner: TForm_Routiner
     Width = 96
     Anchors = [akTop, akLeft, akBottom]
     Caption = '更换布局模式'
+    Enabled = False
     Font.CharSet = GB2312_CHARSET
     Font.Color = clBlack
     Font.Height = -15
