@@ -17,7 +17,7 @@ uses
 
 const
 
-  version_number='0.2.0-pre3';
+  version_number='0.2.0-pre2';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -355,10 +355,6 @@ type
     CheckBoxs:array[0..SynCount]of TARVCheckBox;
     AufScriptFrames:array[0..RuleCount] of TAufScriptFrame;
     AufPopupMenu:TAufPopupMenu;
-  public
-    procedure ShortcutAufCommand(str:TStrings);//寻找一个没有在运行的SCAuf执行代码
-    procedure ShortcutAufClear;//中止所有在运行的SCAuf执行代码
-
   public //同步器、异步器
     Synthesis_mode:boolean;//为真时向所有选中的TARVButton.sel_hwnd窗体广播
     Key_State:record
@@ -529,14 +525,13 @@ begin
       Form_Routiner.AufButtons[i,j].Font.Bold:=false;
     end;
 end;
-
 procedure SCAufBeginning(Sender:TObject);
 var AufScpt:TAufScript;
     AAuf:TSCAuf;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TSCAuf;
-  FormRunPerformance.ProgressBar_SCAufsThread.Position:=FormRunPerformance.ProgressBar_SCAufsThread.Position+1;
+  FormRunPerformance.FileCtrls[AAuf.ShortcutIndex].Enabled:=true;
 end;
 procedure SCAufEnding(Sender:TObject);
 var AufScpt:TAufScript;
@@ -544,7 +539,7 @@ var AufScpt:TAufScript;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TSCAuf;
-  FormRunPerformance.ProgressBar_SCAufsThread.Position:=FormRunPerformance.ProgressBar_SCAufsThread.Position-1;
+  FormRunPerformance.FileCtrls[AAuf.ShortcutIndex].Enabled:=false;
 end;
 
 
@@ -840,7 +835,6 @@ begin
     AufScpt.send_error('警告：指令第2参数需要是长度为1的字符串，代码未执行！');
     exit;
   end;
-
   case AAuf.nargs[3].pre of
     '"':begin
           try
@@ -850,8 +844,7 @@ begin
             AufScpt.send_error('警告：指令第3参数需要是长度为1的字符串（或字节类型），代码未执行！');
             exit;
           end;
-          key:=form_adapter.SynToKey(str[1]);
-          //key:=ord(str[1]);
+          key:=ord(str[1]);
         end;
     else try
            key:=AufScpt.TryToDWord(AAuf.nargs[3]);
@@ -860,7 +853,6 @@ begin
            exit;
          end;
   end;
-
   if key in [18,164,165] then alt_offset:=4
   else alt_offset:=0;
   case buttonmode of
@@ -1012,53 +1004,6 @@ begin
   SendMessage(hd,msg+1,wparam,lparam);
 
 end;
-
-procedure _MouseMov(Sender:TObject);//mousemove @w,"LRCSM12",x,y
-var hd,msg,wparam,lparam:longint;
-    x,y:word;
-    AAuf:TAuf;
-    AufScpt:TAufScript;
-    buttonmode:string;
-begin
-  AufScpt:=Sender as TAufScript;
-  AAuf:=AufScpt.Auf as TAuf;
-  if AAuf.ArgsCount<5 then begin
-    AufScpt.send_error('警告：指令需要4个参数，代码未执行！');
-    exit;
-  end;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  try
-    buttonmode:=AufScpt.TryToString(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：指令第2参数需要是字符串，代码未执行！');
-    exit;
-  end;
-  try
-    x:=AufScpt.TryToDWord(AAuf.nargs[3]);
-  except
-    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    y:=AufScpt.TryToDWord(AAuf.nargs[4]);
-  except
-    AufScpt.send_error('警告：指令第4参数错误，代码未执行！');
-    exit;
-  end;
-  buttonmode:=lowercase(buttonmode);
-  wparam:=0;
-  msg:=WM_MOUSEMOVE;
-  if pos('l',buttonmode)>0 then wparam:=wparam or $01;
-  if pos('r',buttonmode)>0 then wparam:=wparam or $02;
-  if pos('s',buttonmode)>0 then wparam:=wparam or $04;
-  if pos('c',buttonmode)>0 then wparam:=wparam or $08;
-  if pos('m',buttonmode)>0 then wparam:=wparam or $10;
-  if pos('1',buttonmode)>0 then wparam:=wparam or $20;
-  if pos('2',buttonmode)>0 then wparam:=wparam or $40;
-  lparam:=(y shl 16) + x;
-  SendMessage(hd,msg,wparam,lparam);
-end;
-
 
 function FunningColorExchange(ori:dword):dword;//  ABCD -> CBAD
 var arr:array[0..3]of byte;
@@ -1238,8 +1183,6 @@ procedure Routiner_Setting(Sender:TObject);
 var AufScpt:TAufScript;
     AAuf:TAuf;
     fo,ww,hh,tt,ll:longint;
-    s1,s2:string;
-    slst:TStringList;
     pf:TForm;
 begin
   AufScpt:=Sender as TAufScript;
@@ -1481,7 +1424,10 @@ begin
       end;
     'shortcut_command':
       begin
-        if AAuf.ArgsCount<5 then begin AufScpt.send_error('set Shortcut_Command需要4个参数，未成功设置！');exit;end;
+        if AAuf.ArgsCount<5 then
+          begin
+            AufScpt.send_error('set Shortcut_Command需要4个参数，未成功设置！');exit
+          end;
         try
           fo:=AufScpt.TryToDWord(AAuf.nargs[2]);
           if (fo<0) or (fo>ShortcutCount) then raise Exception.Create('');
@@ -1489,22 +1435,15 @@ begin
           AufScpt.send_error('第2个参数需要在0-'+IntToStr(ShortcutCount)+'范围内，未成功设置！');
           exit;
         end;
-
-        try s1:=AufScpt.TryToString(AAuf.nargs[3]);
-        except AufScpt.send_error('第3个参数转换为字符串失败，未成功设置！');exit
+        try
+          AdapterForm.Option.Shortcut.ScriptFiles[fo].command:=AufScpt.TryToString(AAuf.nargs[3]);
+        except
+          AufScpt.send_error('第3个参数转换为字符串失败，未成功设置！');exit
         end;
-
-        try s2:=AufScpt.TryToString(AAuf.nargs[4]);
-        except AufScpt.send_error('第4个参数转换为字符串失败，未成功设置！');exit
-        end;
-
-        s2:=StringReplace(s2,'%Q','"',[rfReplaceAll]);
-        //AdapterForm.Option.Shortcut.ScriptFiles[fo].command:=s1;
-        //AdapterForm.Option.Shortcut.ScriptFiles[fo].filename:=s2;
-        if (s1<>'') and (s2<>'') then begin
-          slst:=TStringList.Create;
-          slst.Add(s2);
-          AdapterForm.Option.Shortcut.CommandList.AddObject(s1,TObject(slst));
+        try
+          AdapterForm.Option.Shortcut.ScriptFiles[fo].filename:=AufScpt.TryToString(AAuf.nargs[4]);
+        except
+          AufScpt.send_error('第4个参数转换为字符串失败，未成功设置！');exit
         end;
       end;
     //
@@ -1520,7 +1459,6 @@ begin
   AAuf.Script.add_func('mouse,鼠标动作',@_Mouse,'hwnd,"L/M/R"+"U/D/B",x,y','向hwnd窗口发送一个鼠标消息');
   AAuf.Script.add_func('keypress,键盘按键',@_KeyPress,'hwnd,key|"char",deley','向hwnd窗口发送一对间隔delay毫秒的按键消息');
   AAuf.Script.add_func('mouseclk,鼠标按键',@_MouseClk,'hwnd,"L/M/R",x,y,delay','向hwnd窗口发送一对间隔delay毫秒的鼠标消息');
-  AAuf.Script.add_func('mousemov,鼠标移动',@_MouseMov,'hwnd,"LRSCM12",x,y','向hwnd窗口发送鼠标坐标更新的消息');
   AAuf.Script.add_func('post,发送消息',@PostM,'hwnd,msg,w,l','调用Postmessage');
   AAuf.Script.add_func('send,发送消息并等待处理',@SendM,'hwnd,msg,w,l','调用Sendmessage');
   AAuf.Script.add_func('getwnd_v,返回指定名称窗体',@getwind_name_visible,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
@@ -1858,30 +1796,6 @@ begin
   BlockMsgOffK;
 end;
 
-procedure TForm_Routiner.ShortcutAufCommand(str:TStrings);
-var pi:integer;
-begin
-  pi:=0;
-  while pi<=ShortcutCount do
-    begin
-      if Self.SCAufs[pi].Script.PSW.haltoff then
-        begin
-          Self.SCAufs[pi].Script.command(str);
-          exit;
-        end;
-      inc(pi);
-    end;
-  ShowMessage('快捷键线程池已满(>'+IntToStr(ShortcutCount+1)+')，新动作未开始执行。');
-end;
-
-procedure TForm_Routiner.ShortcutAufClear;
-var pi:integer;
-begin
-  for pi:=0 to ShortcutCount do
-    if not Self.SCAufs[pi].Script.PSW.haltoff then
-        Self.SCAufs[pi].Script.Stop;
-end;
-
 {$define ByteModeRec}
 {$define CodeModeRec}
 
@@ -2057,15 +1971,10 @@ begin
         writeln(sat,'set Shortcut '+'StartKey= '+IntToStr(byte(StartKey)));
         writeln(sat,'set Shortcut '+'EndKey= '+IntToStr(byte(EndKey)));
         writeln(sat,'set Shortcut '+'DownUpKey= '+IntToStr(byte(DownUpKey)));
-        {
         for i:=0 to ShortcutCount do
-          writeln(sat,'set Shortcut_Command '+IntToStr(i)+',"'
-                     +ScriptFiles[i].command+'","'+ScriptFiles[i].filename+'"');
-        }
-        if CommandList.Count>0 then
-        for i:=0 to CommandList.Count-1 do
-          writeln(sat,'set Shortcut_Command '+IntToStr(i)+',"'
-                     +CommandList[i]+'","'+StringReplace(TStringList(CommandList.Objects[i])[0],'"','%Q',[rfReplaceAll])+'"');
+          begin
+            writeln(sat,'set Shortcut_Command '+IntToStr(i)+',"'+ScriptFiles[i].command+'","'+ScriptFiles[i].filename+'"');
+          end;
       end;
     {$endif}
 
@@ -2205,8 +2114,7 @@ begin
       end;
 
     except
-      if FileExists('option.lay') then
-        MessageBox(0,PChar(utf8towincp('布局文件读取失败')),'Error',MB_OK);
+      MessageBox(0,PChar(utf8towincp('布局文件读取失败')),'Error',MB_OK);
       FOR fo:=1 TO 6 DO BEGIN
         forms[fo].Position:=poScreenCenter;
       END;
@@ -2597,7 +2505,7 @@ end;
 
 procedure TForm_Routiner.MenuItem_RunPerformanceClick(Sender: TObject);
 begin
-  FormRunPerformance.ShowModal;
+  FormRunPerformance.Show;
 end;
 
 procedure TForm_Routiner.MenuItem_Setting_LagClick(Sender: TObject);
@@ -3518,13 +3426,14 @@ end;
 procedure TForm_Routiner.FormClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
-  SaveOption;
-  {
-  StopHookM;
-  StopHookK;
-  }
-  Self.MouseUnHook;
-  Self.KeybdUnHook;
+    SaveOption;
+    {
+    StopHookM;
+    StopHookK;
+    }
+    Self.MouseUnHook;
+    Self.KeybdUnHook;
+
 end;
 
 

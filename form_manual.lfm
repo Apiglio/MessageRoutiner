@@ -9,7 +9,6 @@ object Form_Manual: TForm_Manual
   ClientWidth = 800
   DesignTimePPI = 120
   OnResize = FormResize
-  Position = poScreenCenter
   LCLVersion = '1.8.4.0'
   object IpHtmlPanel: TIpHtmlPanel
     Left = 8
