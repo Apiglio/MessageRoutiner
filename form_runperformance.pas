@@ -72,9 +72,12 @@ type
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure RadioGroup_SCMClick(Sender: TObject);
     procedure StringGrid_CommandListEditingDone(Sender: TObject);
     //procedure GroupBox_SCM_FilenameResize(Sender: TObject);
     procedure StringGrid_CommandListResize(Sender: TObject);
+    procedure StringGrid_CommandListSelectCell(Sender: TObject; aCol,
+      aRow: Integer; var CanSelect: Boolean);
   private
     Setting:record
       AufButtonAct1:TShiftState;
@@ -151,6 +154,15 @@ begin
   //
 end;
 
+procedure TFormRunPerformance.RadioGroup_SCMClick(Sender: TObject);
+begin
+  with Sender as TRadioGroup do
+    case ItemIndex of
+      0,1:;
+      2,3:ItemIndex:=1;
+    end;
+end;
+
 procedure TFormRunPerformance.StringGrid_CommandListEditingDone(Sender: TObject
   );
 var tmpSG:TStringGrid;
@@ -168,6 +180,13 @@ begin
       ColWidths[1]:=100;
       ColWidths[2]:=Width-220;
     end;
+end;
+
+procedure TFormRunPerformance.StringGrid_CommandListSelectCell(Sender: TObject;
+  aCol, aRow: Integer; var CanSelect: Boolean);
+begin
+  if aCol<>3 then exit;
+  //为什么会触发两次？
 end;
 
 procedure TFormRunPerformance.Button_OkayClick(Sender: TObject);
@@ -230,8 +249,16 @@ begin
             AdapterForm.Option.Shortcut.CommandList.AddObject(lowercase(s1),TObject(stmp));
           end;
         end;
-
     end;
+
+  try
+    AdapterForm.Option.Shortcut.DownUpKey:=StrToInt(Edit_SCM_KEY_DownUp.Caption);
+    AdapterForm.Option.Shortcut.StartKey:=StrToInt(Edit_SCM_KEY_Start.Caption);
+    AdapterForm.Option.Shortcut.EndKey:=StrToInt(Edit_SCM_KEY_End.Caption);
+  except
+    ShowMessage('唤醒键设置无效，请使用数字！');
+    exit;
+  end;
 
   //Self.Hide;
   ModalResult:=mrOK;
@@ -351,6 +378,7 @@ begin
   with AdapterForm.Option.Shortcut do
     begin
       StringGrid_CommandList.RowCount:=CommandList.Count+2;
+      pi:=-1;
       if CommandList.Count>0 then
       for pi:=0 to CommandList.Count-1 do
         begin
@@ -363,7 +391,6 @@ begin
       StringGrid_CommandList.Cells[2,pi+1]:='';
       //StringGrid_CommandList.Cells[3,pi+1]:='...';
     end;
-
 end;
 
 end.
