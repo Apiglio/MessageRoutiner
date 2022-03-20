@@ -60,13 +60,13 @@ object Form_Routiner: TForm_Routiner
     AnchorSideRight.Control = Splitter_RightV
     AnchorSideBottom.Control = StatusBar
     Left = 614
-    Height = 369
+    Height = 366
     Top = 318
     Width = 396
     HorzScrollBar.Page = 264
     VertScrollBar.Page = 349
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 365
+    ClientHeight = 362
     ClientWidth = 392
     TabOrder = 2
     OnResize = ScrollBox_RecOptionResize
@@ -92,7 +92,7 @@ object Form_Routiner: TForm_Routiner
       ChildSizing.ShrinkVertical = crsScaleChilds
       ChildSizing.Layout = cclLeftToRightThenTopToBottom
       ChildSizing.ControlsPerLine = 2
-      ClientHeight = 54
+      ClientHeight = 49
       ClientWidth = 255
       Columns = 2
       ItemIndex = 0
@@ -115,7 +115,7 @@ object Form_Routiner: TForm_Routiner
       AnchorSideBottom.Control = ScrollBox_RecOption
       AnchorSideBottom.Side = asrBottom
       Left = 5
-      Height = 44
+      Height = 41
       Top = 316
       Width = 259
       Anchors = [akTop, akLeft, akRight, akBottom]
@@ -145,7 +145,7 @@ object Form_Routiner: TForm_Routiner
       ChildSizing.ShrinkVertical = crsScaleChilds
       ChildSizing.Layout = cclLeftToRightThenTopToBottom
       ChildSizing.ControlsPerLine = 2
-      ClientHeight = 28
+      ClientHeight = 23
       ClientWidth = 255
       Columns = 2
       Items.Strings = (
@@ -174,7 +174,7 @@ object Form_Routiner: TForm_Routiner
       BorderSpacing.Left = 5
       BorderSpacing.Top = 10
       Caption = '偏移选项'
-      ClientHeight = 76
+      ClientHeight = 71
       ClientWidth = 255
       TabOrder = 3
       object Button_MouseOri: TButton
@@ -187,7 +187,7 @@ object Form_Routiner: TForm_Routiner
         AnchorSideBottom.Side = asrCenter
         Left = 88
         Height = 28
-        Top = 9
+        Top = 12
         Width = 162
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Left = 5
@@ -201,7 +201,7 @@ object Form_Routiner: TForm_Routiner
       end
       object Label_MouseOri: TLabel
         Left = 8
-        Height = 15
+        Height = 20
         Top = 16
         Width = 75
         Caption = '鼠标原点：'
@@ -209,7 +209,7 @@ object Form_Routiner: TForm_Routiner
       end
       object Label_TimerOffset: TLabel
         Left = 8
-        Height = 15
+        Height = 20
         Top = 50
         Width = 75
         Caption = '计时起始：'
@@ -222,8 +222,8 @@ object Form_Routiner: TForm_Routiner
         AnchorSideRight.Control = Label_TimerOffset_Unit
         Left = 88
         Height = 28
-        Top = 43
-        Width = 81
+        Top = 46
+        Width = 87
         Anchors = [akTop, akLeft, akRight]
         BorderSpacing.Right = 5
         OnMouseEnter = Edit_TimerOffsetMouseEnter
@@ -236,10 +236,10 @@ object Form_Routiner: TForm_Routiner
         AnchorSideTop.Side = asrCenter
         AnchorSideRight.Control = Button_MouseOri
         AnchorSideRight.Side = asrBottom
-        Left = 174
-        Height = 15
+        Left = 180
+        Height = 20
         Top = 50
-        Width = 76
+        Width = 70
         Alignment = taCenter
         Anchors = [akTop, akRight]
         Caption = '毫秒(累计)'
@@ -267,7 +267,7 @@ object Form_Routiner: TForm_Routiner
       ChildSizing.ShrinkVertical = crsScaleChilds
       ChildSizing.Layout = cclLeftToRightThenTopToBottom
       ChildSizing.ControlsPerLine = 2
-      ClientHeight = 28
+      ClientHeight = 23
       ClientWidth = 255
       Columns = 2
       ItemIndex = 1
@@ -418,7 +418,7 @@ object Form_Routiner: TForm_Routiner
     end
     object Label_filter: TLabel
       Left = 16
-      Height = 15
+      Height = 20
       Top = 240
       Width = 45
       Caption = '查找：'
@@ -484,14 +484,14 @@ object Form_Routiner: TForm_Routiner
     AnchorSideRight.Control = Splitter_SyncV
     AnchorSideBottom.Control = StatusBar
     Left = 6
-    Height = 347
+    Height = 344
     Top = 340
     Width = 234
     HorzScrollBar.Page = 1
     HorzScrollBar.Visible = False
     VertScrollBar.Page = 329
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 343
+    ClientHeight = 340
     ClientWidth = 230
     TabOrder = 13
     OnResize = ScrollBox_WndViewResize
@@ -597,14 +597,14 @@ object Form_Routiner: TForm_Routiner
     AnchorSideRight.Control = Splitter_MainV
     AnchorSideBottom.Control = StatusBar
     Left = 246
-    Height = 347
+    Height = 344
     Top = 340
     Width = 362
     HorzScrollBar.Page = 1
     HorzScrollBar.Visible = False
     VertScrollBar.Page = 150
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 343
+    ClientHeight = 340
     ClientWidth = 358
     TabOrder = 15
     OnResize = ScrollBox_SynchronicResize
@@ -5430,8 +5430,8 @@ object Form_Routiner: TForm_Routiner
   end
   object StatusBar: TStatusBar
     Left = 0
-    Height = 26
-    Top = 687
+    Height = 29
+    Top = 684
     Width = 1036
     Panels = <    
       item

@@ -1,10 +1,10 @@
 object FormRunPerformance: TFormRunPerformance
   Left = 1103
-  Height = 450
-  Top = 343
+  Height = 578
+  Top = 215
   Width = 450
   Caption = '全局设置'
-  ClientHeight = 450
+  ClientHeight = 578
   ClientWidth = 450
   Constraints.MinHeight = 450
   Constraints.MinWidth = 450
@@ -22,7 +22,7 @@ object FormRunPerformance: TFormRunPerformance
     AnchorSideBottom.Side = asrBottom
     Left = 79
     Height = 26
-    Top = 419
+    Top = 547
     Width = 94
     Anchors = [akRight, akBottom]
     BorderSpacing.Right = 5
@@ -38,7 +38,7 @@ object FormRunPerformance: TFormRunPerformance
     AnchorSideBottom.Side = asrBottom
     Left = 178
     Height = 26
-    Top = 419
+    Top = 547
     Width = 94
     Anchors = [akLeft, akBottom]
     BorderSpacing.Bottom = 5
@@ -53,7 +53,7 @@ object FormRunPerformance: TFormRunPerformance
     AnchorSideBottom.Side = asrBottom
     Left = 277
     Height = 26
-    Top = 419
+    Top = 547
     Width = 94
     Anchors = [akLeft, akBottom]
     BorderSpacing.Left = 5
@@ -70,7 +70,7 @@ object FormRunPerformance: TFormRunPerformance
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
     Left = 5
-    Height = 410
+    Height = 538
     Top = 5
     Width = 440
     ActivePage = TabSheet_KeyShortOpt
@@ -83,7 +83,7 @@ object FormRunPerformance: TFormRunPerformance
     TabOrder = 3
     object TabSheet_HookOpt: TTabSheet
       Caption = '消息钩子'
-      ClientHeight = 377
+      ClientHeight = 505
       ClientWidth = 432
       object CheckGroup_HookEnabled: TCheckGroup
         AnchorSideLeft.Control = TabSheet_HookOpt
@@ -108,7 +108,7 @@ object FormRunPerformance: TFormRunPerformance
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 2
-        ClientHeight = 34
+        ClientHeight = 29
         ClientWidth = 418
         Columns = 2
         Items.Strings = (
@@ -123,7 +123,7 @@ object FormRunPerformance: TFormRunPerformance
     end
     object TabSheet_ButtonOpt: TTabSheet
       Caption = '按键设置'
-      ClientHeight = 377
+      ClientHeight = 505
       ClientWidth = 432
       object GroupBox_MouseSetting: TGroupBox
         AnchorSideLeft.Control = TabSheet_ButtonOpt
@@ -139,7 +139,7 @@ object FormRunPerformance: TFormRunPerformance
         BorderSpacing.Top = 10
         BorderSpacing.Right = 5
         Caption = '按键鼠标动作设置'
-        ClientHeight = 186
+        ClientHeight = 181
         ClientWidth = 418
         TabOrder = 0
         object Button_AufButtonAct: TButton
@@ -149,7 +149,7 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideRight.Side = asrBottom
           Left = 176
           Height = 28
-          Top = 8
+          Top = 11
           Width = 232
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Right = 10
@@ -165,9 +165,9 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideRight.Control = GroupBox_MouseSetting
           AnchorSideRight.Side = asrCenter
           Left = 10
-          Height = 15
+          Height = 20
           Top = 15
-          Width = 151
+          Width = 145
           BorderSpacing.Left = 10
           BorderSpacing.Top = 15
           Caption = '面板按键 启动/暂停：'
@@ -178,9 +178,9 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideTop.Control = Label_AufButtonAct
           AnchorSideTop.Side = asrBottom
           Left = 10
-          Height = 15
-          Top = 50
-          Width = 143
+          Height = 20
+          Top = 55
+          Width = 139
           BorderSpacing.Left = 10
           BorderSpacing.Top = 20
           Caption = '面板按键 设置窗口：'
@@ -191,9 +191,9 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideTop.Control = Label_AufButtonSetting
           AnchorSideTop.Side = asrBottom
           Left = 10
-          Height = 15
-          Top = 85
-          Width = 143
+          Height = 20
+          Top = 95
+          Width = 139
           BorderSpacing.Left = 10
           BorderSpacing.Top = 20
           Caption = '面板按键 中止运行：'
@@ -204,9 +204,9 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideTop.Control = Label_AufButtonHalt
           AnchorSideTop.Side = asrBottom
           Left = 10
-          Height = 15
-          Top = 120
-          Width = 143
+          Height = 20
+          Top = 135
+          Width = 139
           BorderSpacing.Left = 10
           BorderSpacing.Top = 20
           Caption = '鼠标代键 设置窗口：'
@@ -219,7 +219,7 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideRight.Side = asrBottom
           Left = 176
           Height = 28
-          Top = 43
+          Top = 51
           Width = 232
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Right = 10
@@ -236,7 +236,7 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideRight.Side = asrBottom
           Left = 176
           Height = 28
-          Top = 78
+          Top = 91
           Width = 232
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Right = 10
@@ -253,7 +253,7 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideRight.Side = asrBottom
           Left = 176
           Height = 28
-          Top = 113
+          Top = 131
           Width = 232
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Right = 10
@@ -268,9 +268,9 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideTop.Control = Label_HoldButtonSetting
           AnchorSideTop.Side = asrBottom
           Left = 10
-          Height = 15
-          Top = 155
-          Width = 143
+          Height = 20
+          Top = 175
+          Width = 139
           BorderSpacing.Left = 10
           BorderSpacing.Top = 20
           Caption = '面板按键 跳转启动：'
@@ -283,7 +283,7 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideRight.Side = asrBottom
           Left = 176
           Height = 28
-          Top = 148
+          Top = 171
           Width = 232
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Right = 10
@@ -295,7 +295,7 @@ object FormRunPerformance: TFormRunPerformance
     end
     object TabSheet_KeyShortOpt: TTabSheet
       Caption = '键盘快捷键'
-      ClientHeight = 377
+      ClientHeight = 505
       ClientWidth = 432
       object ScrollBox_KeyShort: TScrollBox
         AnchorSideLeft.Control = TabSheet_KeyShortOpt
@@ -305,18 +305,18 @@ object FormRunPerformance: TFormRunPerformance
         AnchorSideBottom.Control = TabSheet_KeyShortOpt
         AnchorSideBottom.Side = asrBottom
         Left = 5
-        Height = 367
+        Height = 495
         Top = 5
         Width = 422
         HorzScrollBar.Page = 1
         HorzScrollBar.Visible = False
-        VertScrollBar.Page = 346
+        VertScrollBar.Page = 367
         Anchors = [akTop, akLeft, akRight, akBottom]
         BorderSpacing.Left = 5
         BorderSpacing.Top = 5
         BorderSpacing.Right = 5
         BorderSpacing.Bottom = 5
-        ClientHeight = 363
+        ClientHeight = 491
         ClientWidth = 418
         TabOrder = 0
         object RadioGroup_SCM: TRadioGroup
@@ -340,7 +340,7 @@ object FormRunPerformance: TFormRunPerformance
           ChildSizing.ShrinkVertical = crsScaleChilds
           ChildSizing.Layout = cclLeftToRightThenTopToBottom
           ChildSizing.ControlsPerLine = 4
-          ClientHeight = 52
+          ClientHeight = 47
           ClientWidth = 409
           Columns = 4
           ItemIndex = 1
@@ -350,6 +350,7 @@ object FormRunPerformance: TFormRunPerformance
             '循环响应'
             '多键响应'
           )
+          OnClick = RadioGroup_SCMClick
           TabOrder = 0
         end
         object GroupBox_SCM_Key: TGroupBox
@@ -359,7 +360,7 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideRight.Control = ScrollBox_KeyShort
           AnchorSideRight.Side = asrBottom
           Left = 5
-          Height = 92
+          Height = 108
           Top = 92
           Width = 408
           Anchors = [akTop, akLeft, akRight]
@@ -367,14 +368,14 @@ object FormRunPerformance: TFormRunPerformance
           BorderSpacing.Top = 10
           BorderSpacing.Right = 5
           Caption = '唤醒键设置'
-          ClientHeight = 72
+          ClientHeight = 83
           ClientWidth = 404
           TabOrder = 1
           object Label_SCM_KEY_Start: TLabel
             AnchorSideLeft.Control = GroupBox_SCM_Key
             AnchorSideTop.Control = GroupBox_SCM_Key
             Left = 10
-            Height = 15
+            Height = 20
             Top = 15
             Width = 90
             BorderSpacing.Left = 10
@@ -387,8 +388,8 @@ object FormRunPerformance: TFormRunPerformance
             AnchorSideTop.Control = Label_SCM_KEY_Start
             AnchorSideTop.Side = asrBottom
             Left = 10
-            Height = 15
-            Top = 45
+            Height = 20
+            Top = 50
             Width = 90
             BorderSpacing.Left = 10
             BorderSpacing.Top = 15
@@ -400,7 +401,7 @@ object FormRunPerformance: TFormRunPerformance
             AnchorSideLeft.Side = asrBottom
             AnchorSideTop.Control = Label_SCM_KEY_Start
             Left = 178
-            Height = 15
+            Height = 20
             Top = 15
             Width = 90
             BorderSpacing.Left = 20
@@ -416,7 +417,7 @@ object FormRunPerformance: TFormRunPerformance
             AnchorSideRight.Side = asrBottom
             Left = 110
             Height = 28
-            Top = 8
+            Top = 11
             Width = 48
             BorderSpacing.Left = 10
             BorderSpacing.Right = 5
@@ -433,7 +434,7 @@ object FormRunPerformance: TFormRunPerformance
             AnchorSideRight.Side = asrBottom
             Left = 110
             Height = 28
-            Top = 38
+            Top = 46
             Width = 48
             BorderSpacing.Left = 10
             BorderSpacing.Right = 5
@@ -450,7 +451,7 @@ object FormRunPerformance: TFormRunPerformance
             AnchorSideRight.Side = asrBottom
             Left = 278
             Height = 28
-            Top = 8
+            Top = 11
             Width = 48
             BorderSpacing.Left = 10
             BorderSpacing.Right = 5
@@ -467,7 +468,7 @@ object FormRunPerformance: TFormRunPerformance
             AnchorSideBottom.Side = asrBottom
             Left = 178
             Height = 28
-            Top = 38
+            Top = 46
             Width = 148
             Anchors = [akTop, akLeft, akRight, akBottom]
             Caption = '手工输入'
@@ -483,8 +484,8 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideBottom.Control = ScrollBox_KeyShort
           AnchorSideBottom.Side = asrBottom
           Left = 5
-          Height = 97
-          Top = 261
+          Height = 209
+          Top = 277
           Width = 408
           Anchors = [akTop, akLeft, akRight, akBottom]
           BorderSpacing.Left = 5
@@ -492,7 +493,7 @@ object FormRunPerformance: TFormRunPerformance
           BorderSpacing.Right = 5
           BorderSpacing.Bottom = 5
           Caption = '快捷键设置'
-          ClientHeight = 77
+          ClientHeight = 184
           ClientWidth = 404
           TabOrder = 2
           object StringGrid_CommandList: TStringGrid
@@ -503,7 +504,7 @@ object FormRunPerformance: TFormRunPerformance
             AnchorSideBottom.Control = GroupBox_SCM_Command
             AnchorSideBottom.Side = asrBottom
             Left = 5
-            Height = 67
+            Height = 174
             Top = 5
             Width = 394
             Anchors = [akTop, akLeft, akRight, akBottom]
@@ -515,6 +516,7 @@ object FormRunPerformance: TFormRunPerformance
             TabOrder = 0
             OnEditingDone = StringGrid_CommandListEditingDone
             OnResize = StringGrid_CommandListResize
+            OnSelectCell = StringGrid_CommandListSelectCell
             ColWidths = (
               80
               78
@@ -532,14 +534,14 @@ object FormRunPerformance: TFormRunPerformance
           AnchorSideRight.Side = asrBottom
           Left = 5
           Height = 67
-          Top = 189
+          Top = 205
           Width = 408
           Anchors = [akTop, akLeft, akRight]
           BorderSpacing.Left = 5
           BorderSpacing.Top = 5
           BorderSpacing.Right = 5
           Caption = '快捷键线程'
-          ClientHeight = 47
+          ClientHeight = 42
           ClientWidth = 404
           TabOrder = 3
           object Button_SCAufClear: TButton
