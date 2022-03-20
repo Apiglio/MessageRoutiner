@@ -17,7 +17,7 @@ uses
 
 const
 
-  version_number='0.2.0-pre3';
+  version_number='0.2.0';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
