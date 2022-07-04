@@ -10,14 +10,14 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
-  Windows, StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, Dos, LazUTF8
+  Windows, StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, Dos, LazUTF8, RegExpr
   {$ifndef insert},
   Apiglio_Useful, aufscript_frame, auf_ram_var, form_adapter, unit_bitmapdata
   {$endif};
 
 const
 
-  version_number='0.2.0';
+  version_number='0.2.1';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -46,7 +46,7 @@ type
   public
     info:record
       hd:HWND;
-      name,classname:string;
+      name,classname,fullname:string;
       Left,Top,Height,Width:word;
     end;
     child:TList;
@@ -176,6 +176,7 @@ type
     Button_Wnd_Record: TButton;
     Button_advanced: TButton;
     Button_Wnd_Synthesis: TButton;
+    CheckBox_UseReg: TCheckBox;
     CheckBox_ViewEnabled: TCheckBox;
     CheckGroup_KeyMouse: TCheckGroup;
     Edit_TimerOffset: TEdit;
@@ -410,9 +411,11 @@ type
 var
   Form_Routiner: TForm_Routiner;
   WndRoot:TWindow;
+  WndFlat,WndSub:TStringList;
   Desktop:record
     Width,Height:longint;
   end;
+  Reg:TRegExpr;
 
 implementation
 uses form_settinglag, form_aufbutton, form_manual, form_runperformance,
@@ -451,14 +454,7 @@ begin
   gettime(h,m,s,ms);
   result:=ms*10+s*1000+m*60000+h*3600000;
 end;
-{
-function GetTimeStr:string;
-var h,m,s,ms:word;
-begin
-  gettime(h,m,s,ms);
-  result:=Usf.zeroplus(h,2)+':'+Usf.zeroplus(m,2)+':'+Usf.zeroplus(s,2)+'.'+Usf.zeroplus(ms,2);
-end;
-}
+
 procedure MouseActByteToMouseActSetting(MouseActByte:byte;var shift:TShiftState;var button:TMouseButton);
 var butt:byte;
 begin
@@ -580,13 +576,14 @@ begin
   wnd.free;
 end;
 
-procedure GetChildWindows(wnd:TWindow;filter:string='');
+procedure GetChildWindows(wnd:TWindow;filter:string='';UseReg:boolean=false);
 var hd:HWND;
     info:tagWindowInfo;
     w,h:word;
     title,classname,caption:string;
     ttmp,ctmp:{PChar}array[0..199]of char;
     new_wnd:TWindow;
+    FilterRes:boolean;
 begin
   hd:=GetWindow(wnd.info.hd,GW_CHILD);
   while hd<>0 do
@@ -602,10 +599,28 @@ begin
       h:=info.rcWindow.Bottom-info.rcWindow.Top;
       new_wnd:=TWindow.Create(hd,wincptoutf8(title),wincptoutf8(classname),info.rcWindow.Left,info.rcWindow.Top,w,h);
       new_wnd.parent:=Wnd;
+      if new_wnd.parent.info.name='WndRoot' then new_wnd.info.fullname:='['+IntToHex(new_wnd.info.hd,8)+']'+new_wnd.info.name
+      else new_wnd.info.fullname:=new_wnd.parent.info.fullname+'/['+IntToHex(new_wnd.info.hd,8)+']'+new_wnd.info.name;
       wnd.child.add(new_wnd);
+      WndFlat.Objects[WndFlat.Add(new_wnd.info.fullname)]:=new_wnd;
       if title='' then title:=' ';
 
-      IF (filter='') or (pos(lowercase(filter),lowercase(title))>0) or (pos(lowercase(filter),lowercase(classname))>0) THEN
+      if filter='' then FilterRes:=true
+      else begin
+        if UseReg then begin
+          Reg.Expression:=filter;
+          try
+            FilterRes:=Reg.Exec(title);
+            if not FilterRes then FilterRes:=Reg.Exec(classname);
+          except
+            FilterRes:=true;
+          end;
+        end else begin
+          FilterRes:=(pos(lowercase(filter),lowercase(title))>0) or (pos(lowercase(filter),lowercase(classname))>0)
+        end;
+      end;
+
+      IF FilterRes THEN
         BEGIN
           with Form_Routiner.Setting.WndListShowingOption do
             begin
@@ -634,21 +649,23 @@ begin
 end;
 
 
-procedure WndFinder(filter:string='');
+procedure WndFinder(filter:string='';UseReg:boolean=false);
 var hd:HWND;
     info:tagWindowInfo;
 begin
   ClearWindows(WndRoot);
+  WndFlat.Clear;
   hd:=GetDesktopWindow;//得到桌面窗口
   WndRoot:=TWindow.Create(hd,'WndRoot','',0,0,0,0);
   WndRoot.parent:=nil;
   WndRoot.node:=nil;
+  WndFlat.Objects[WndFlat.Add('')]:=nil;
 
   GetWindowInfo(hd,info);
   Desktop.Width:=info.rcWindow.Right-info.rcWindow.Left;
   Desktop.Height:=info.rcWindow.Bottom-info.rcWindow.Top;
 
-  GetChildWindows(WndRoot,filter);
+  GetChildWindows(WndRoot,filter,UseReg);
 end;
 
 
@@ -736,6 +753,166 @@ begin
     end;
 end;
 
+procedure wndlist_update(Sender:TObject);
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    filter_str,use_reg_str:string;
+    use_reg:boolean=false;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(2) then exit;
+  try
+    filter_str:=AufScpt.TryToString(AAuf.nargs[1]);
+  except
+    AufScpt.send_error('警告：第1个参数转为字符串失败，代码未执行！');
+    exit;
+  end;
+  if AAuf.ArgsCount>=3 then
+  try
+    use_reg_str:=AufScpt.TryToString(AAuf.nargs[2]);
+  except
+    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
+    exit;
+  end;
+  case lowercase(use_reg_str) of
+    'on':use_reg:=true;
+    else use_reg:=false;
+  end;
+  Form_Routiner.TreeView_Wnd.items.clear;
+  WndFinder(filter_str,use_reg);
+  //Form_Routiner.Memo_Tmp.Clear;
+  //for use_reg_str in WndFlat do AufScpt.writeln(use_reg_str);
+  Application.ProcessMessages;
+end;
+
+procedure wndlist_find(Sender:TObject);
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    filter_str,use_reg_str:string;
+    use_reg:boolean=false;
+  function CheckWnd(WndName:string):boolean;
+  begin
+    try
+       if use_reg then result:=Reg.Exec(WndName)
+       else result:=pos(filter_str,WndName)>0;
+    except
+      result:=false;
+    end;
+  end;
+
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(2) then exit;
+  try
+    filter_str:=AufScpt.TryToString(AAuf.nargs[1]);
+  except
+    AufScpt.send_error('警告：第1个参数转为字符串失败，代码未执行！');
+    exit;
+  end;
+  if AAuf.ArgsCount>=3 then
+  try
+    use_reg_str:=AufScpt.TryToString(AAuf.nargs[2]);
+  except
+    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
+    exit;
+  end
+  else use_reg_str:='';
+  case lowercase(use_reg_str) of
+    'on':use_reg:=true;
+    else use_reg:=false;
+  end;
+  Reg.Expression:=filter_str;
+  for use_reg_str in WndFlat do begin
+    if CheckWnd(use_reg_str) then AufScpt.writeln(use_reg_str);
+  end;
+end;
+
+procedure wndlist_set_comp(Sender:TObject);
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    stmp:string;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  WndSub.Clear;
+  for stmp in WndFlat do WndSub.Add(stmp);
+end;
+
+procedure wndlist_find_new(Sender:TObject);//wndlist.find_new @hwnd,filter,use_reg
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    filter_str,use_reg_str:string;
+    use_reg:boolean;
+    tmp:TAufRamVar;
+    hd:hwnd;
+    pi,useless:integer;
+    WndTmp:TStringList;
+  function CheckWnd(WndName:string):boolean;
+  begin
+    try
+     if use_reg then result:=Reg.Exec(WndName)
+     else result:=pos(filter_str,WndName)>0;
+    except
+      result:=false;
+    end;
+  end;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(3) then exit;
+  try
+    filter_str:=AufScpt.TryToString(AAuf.nargs[2]);
+  except
+    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
+    exit;
+  end;
+  try
+    tmp:=AufScpt.RamVar(AAuf.nargs[1]);
+    if tmp.size<4 then raise Exception.Create('');
+  except
+    AufScpt.send_error('警告：第1个参数需要是四位及以上整型变量，代码未执行！');
+    exit;
+  end;
+  if AAuf.ArgsCount>=4 then
+  try
+    use_reg_str:=AufScpt.TryToString(AAuf.nargs[3]);
+  except
+    AufScpt.send_error('警告：第3个参数转为字符串失败，代码未执行！');
+    exit;
+  end
+  else use_reg_str:='';
+  case lowercase(use_reg_str) of
+    'on':use_reg:=true;
+    else use_reg:=false;
+  end;
+  WndTmp:=TStringList.Create;
+  try
+    for pi:=0 to WndFlat.Count-1 do begin
+      WndTmp.Add(WndFlat[pi]);
+      WndTmp.Objects[pi]:=WndFlat.Objects[pi];
+    end;
+    pi:=0;
+    while pi<WndTmp.Count do begin
+      if WndSub.Find(WndTmp[pi],useless) then WndTmp.Delete(pi)
+      else begin
+        if lowercase(AAuf.args[0])='wndlist.list_new' then AufScpt.writeln(WndTmp[pi]);
+        inc(pi);
+      end;
+    end;
+    hd:=0;
+    for pi:=0 to WndTmp.Count-1 do
+      if CheckWnd(WndTmp[pi]) then begin
+        hd:=qword(WndTmp.Objects[pi]);
+        break;
+      end;
+  finally
+    WndTmp.Free;
+  end;
+  dword_to_arv(hd,tmp);
+end;
+
 procedure SendString(Sender:TObject);
 var hd:longint;
     str:string;
@@ -758,25 +935,7 @@ begin
       sendmessage(hd,WM_CHAR,ord(str[i]),0);
     end;
 end;
-{
-procedure SendWideString(Sender:TObject);
-var hd:longint;
-    str:string;
-    i:integer;
-    AAuf:TAuf;
-    AufScpt:TAufScript;
-begin
-  AufScpt:=Sender as TAufScript;
-  AAuf:=AufScpt.Auf as TAuf;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  str:=AAuf.nargs[2].arg;
-  if odd(length(str)) then begin AufScpt.IO_fptr.echo(AAuf.Owner,'错误：widestring长度为奇数');exit end;
-  for i:=2 to length(str) div 2 do
-    begin
-      sendmessage(hd,WM_IME_CHAR,(ord(str[i-1]) shl 8) + ord(str[i]),0);
-    end;
-end;
-}
+
 procedure SendM(Sender:TObject);
 var hd,msg,wparam,lparam:longint;
     AAuf:TAuf;
@@ -1445,7 +1604,7 @@ begin
               'class=':case lowercase(AAuf.nargs[3].arg) of 'true','t','on','y','yes':ClassNameVisible:=true; else ClassNameVisible:=false;end;
               'namecell=':try NameCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('namecell 需要数字参数') end;
               'aligncell=':try AlignCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('aligncell 需要数字参数') end;
-              else AufScpt.send_error('Action_Setting之后需要使用hwnd=,name=,class,namecell=,aligncell=进行设置。');
+              else AufScpt.send_error('Action_Setting之后需要使用hwnd=,name=,class=,namecell=,aligncell=进行设置。');
             end;
           end;
         except
@@ -1525,6 +1684,12 @@ begin
   AAuf.Script.add_func('send,发送消息并等待处理',@SendM,'hwnd,msg,w,l','调用Sendmessage');
   AAuf.Script.add_func('getwnd_v,返回指定名称窗体',@getwind_name_visible,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
   AAuf.Script.add_func('getwnd_t,返回指定窗体',@getwind_top,'','返回当前置顶的窗体句柄');
+  AAuf.Script.add_func('wndlist.update,刷新窗体列表',@wndlist_update,'filter,"on/off"','刷新窗体列表，filter为筛选字符串，第2参数规定是否使用正则表达式');
+  AAuf.Script.add_func('wndlist.find,递归新窗体查找',@wndlist_find,'filter,"on/off"','查找符合条件的递归窗体，filter为筛选字符串，第2参数规定是否使用正则表达式');
+  AAuf.Script.add_func('wndlist.set_comp,创建对照窗体列表',@wndlist_set_comp,'','将当前WndList保存为对比列表');
+  AAuf.Script.add_func('wndlist.find_new,返回新窗体列表',@wndlist_find_new,'hwnd,filter,"on/off"','从对比列表返回第一个符合条件的新增窗体，filter为筛选字符串，第2参数规定是否使用正则表达式');
+  AAuf.Script.add_func('wndlist.list_new,查找新窗体列表',@wndlist_find_new,'hwnd,filter,"on/off"','从对比列表列出符合条件的新增窗体，并返回第一个，filter为筛选字符串，第2参数规定是否使用正则表达式');
+
   AAuf.Script.add_func('getpixel,获取像素点',@_GetPixel,'hwnd,x,y,out_var','返回窗体指定像素点颜色');
   AAuf.Script.add_func('getrect,获取画面',@_GetPixelRect,'hwnd,x1,x2,y1,y2,out_var','返回窗体指定矩形范围内像素点颜色');
   AAuf.Script.add_func('ramimg,显示画面',@_RamImage,'col,row,in_var','根据内存变量显示图片');
@@ -2226,7 +2391,7 @@ end;
 procedure TForm_Routiner.WindowsFilter;
 begin
   TreeView_Wnd.items.clear;
-  WndFinder(utf8towincp(Edit_TreeView.Text));
+  WndFinder(utf8towincp(Edit_TreeView.Text),CheckBox_UseReg.Checked);
 end;
 
 procedure TForm_Routiner.CurrentAufStrAdd(str:string);inline;
@@ -2475,44 +2640,44 @@ end;
 
 procedure TForm_Routiner.MenuItem_Func_AufClick(Sender: TObject);
 begin
-  ManualForm.Show;
   ManualForm.CastHtml('Manual\AufScript.html');
+  ManualForm.ShowModal;
 end;
 
 procedure TForm_Routiner.MenuItem_Func_BasicClick(Sender: TObject);
 begin
-  ManualForm.Show;
   ManualForm.CastHtml('Manual\BasicManual.html');
+  ManualForm.ShowModal;
 end;
 
 procedure TForm_Routiner.MenuItem_Func_ButtonsClick(Sender: TObject);
 begin
-  ManualForm.Show;
   ManualForm.CastHtml('Manual\AufButtons.html');
+  ManualForm.ShowModal;
 end;
 
 procedure TForm_Routiner.MenuItem_Func_DiffClick(Sender: TObject);
 begin
-  ManualForm.Show;
   ManualForm.CastHtml('Manual\Differential.html');
+  ManualForm.ShowModal;
 end;
 
 procedure TForm_Routiner.MenuItem_Func_KeyClick(Sender: TObject);
 begin
-  ManualForm.Show;
   ManualForm.CastHtml('Manual\KeyCoding.html');
+  ManualForm.ShowModal;
 end;
 
 procedure TForm_Routiner.MenuItem_Func_RecClick(Sender: TObject);
 begin
-  ManualForm.Show;
   ManualForm.CastHtml('Manual\KeyRecord.html');
+  ManualForm.ShowModal;
 end;
 
 procedure TForm_Routiner.MenuItem_Func_SynClick(Sender: TObject);
 begin
-  ManualForm.Show;
   ManualForm.CastHtml('Manual\Synchronization.html');
+  ManualForm.ShowModal;
 end;
 
 procedure TForm_Routiner.MenuItem_Lay_simpleClick(Sender: TObject);
@@ -2728,8 +2893,9 @@ begin
 end;
 
 procedure TForm_Routiner.ScrollBox_WndListResize(Sender: TObject);
-var TreeViewH,TreeViewW:longint;
+//var TreeViewH,TreeViewW:longint;
 begin
+  {
   with Sender as TScrollBox do
     begin
       TreeViewW:=(Width - 2*gap);
@@ -2746,6 +2912,8 @@ begin
   Label_Filter.Left:=TreeView_Wnd.Left;
   Edit_TreeView.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width;
   Button_TreeViewFresh.Left:=TreeView_Wnd.Left +10 + Label_Filter.Width + 10 + Edit_TreeView.Width;
+  }
+  TreeView_Wnd.Width:=(Sender as TScrollBox).Width - 2*gap;
 end;
 
 procedure TForm_Routiner.ScrollBox_WndViewResize(Sender: TObject);
@@ -2797,7 +2965,7 @@ end;
 
 procedure TForm_Routiner.ScrollBox_RecOptionResize(Sender: TObject);
 begin
-  ////
+
 end;
 
 
@@ -3873,5 +4041,16 @@ begin
 end;
 
 
+initialization
+  Reg:=TRegExpr.Create;
+  WndFlat:=TStringList.Create;
+  WndFlat.Sorted:=true;
+  WndSub:=TStringList.Create;
+  WndSub.Sorted:=true;
+
+finalization
+  Reg.Free;
+  WndFlat.Free;
+  WndSub.Free;
 end.
 

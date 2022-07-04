@@ -8,7 +8,7 @@ object AdapterForm: TAdapterForm
   Caption = 'ApiglioMR Hook Adapter'
   ClientHeight = 251
   ClientWidth = 640
-  DesignTimePPI = 120
+  DesignTimePPI = 144
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -1388,9 +1388,9 @@ object AdapterForm: TAdapterForm
   end
   object Label_auther: TLabel
     Left = 328
-    Height = 60
+    Height = 96
     Top = 144
-    Width = 192
+    Width = 223
     Caption = 'Apiglio Message Routiner'#13#10'Hook Adapter'#13#10'By Apiglio'#13#10'Lazarus IDE'
     ParentColor = False
   end
