@@ -78,6 +78,7 @@ type
     procedure StringGrid_CommandListResize(Sender: TObject);
     procedure StringGrid_CommandListSelectCell(Sender: TObject; aCol,
       aRow: Integer; var CanSelect: Boolean);
+    procedure ToggleBox_SCM_KEY_manualChange(Sender: TObject);
   private
     Setting:record
       AufButtonAct1:TShiftState;
@@ -187,6 +188,14 @@ procedure TFormRunPerformance.StringGrid_CommandListSelectCell(Sender: TObject;
 begin
   if aCol<>3 then exit;
   //为什么会触发两次？
+end;
+
+procedure TFormRunPerformance.ToggleBox_SCM_KEY_manualChange(Sender: TObject);
+begin
+  with Sender as TToggleBox do begin
+    if Checked then Font.Bold:=true
+    else Font.Bold:=false;
+  end;
 end;
 
 procedure TFormRunPerformance.Button_OkayClick(Sender: TObject);

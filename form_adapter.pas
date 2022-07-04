@@ -503,7 +503,7 @@ begin
   str:=lowercase(Self.Status.Shortcut.Exec_Command);
 
   case str of
-    #$C0:Form_Routiner.Button_Wnd_SynthesisClick(Form_Routiner.Button_Wnd_Synthesis);
+    '`':Form_Routiner.Button_Wnd_SynthesisClick(Form_Routiner.Button_Wnd_Synthesis);
     '1','2','3','4','5','6','7','8','9','0':
       begin
         pi:=(ord(str[1])-ord('0')+9) mod 10;
