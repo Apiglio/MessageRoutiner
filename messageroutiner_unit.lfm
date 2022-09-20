@@ -416,8 +416,6 @@ object Form_Routiner: TForm_Routiner
       BorderSpacing.Right = 5
       BorderSpacing.Bottom = 5
       Font.CharSet = ANSI_CHARSET
-      Font.Height = -17
-      Font.Name = 'Consolas'
       Font.Pitch = fpFixed
       Font.Quality = fqDraft
       ParentFont = False
@@ -589,17 +587,19 @@ object Form_Routiner: TForm_Routiner
       Height = 97
       Top = 120
       Width = 194
+      Brush.Color = clSilver
       ParentShowHint = False
       OnMouseEnter = WindowPosPadMouseEnter
       OnMouseLeave = WindowPosPadMouseLeave
     end
     object WindowPosPadWind: TShape
-      Left = 88
-      Height = 41
-      Top = 152
-      Width = 66
-      Brush.Color = clBlack
-      Brush.Style = bsDiagCross
+      Left = 152
+      Height = 57
+      Top = 144
+      Width = 42
+      Brush.Color = clGray
+      OnMouseEnter = WindowPosPadWindMouseEnter
+      OnMouseLeave = WindowPosPadWindMouseLeave
     end
     object Memo_Tmp: TMemo
       Left = 16
@@ -611,6 +611,24 @@ object Form_Routiner: TForm_Routiner
       OnMouseLeave = Memo_TmpMouseLeave
       ParentShowHint = False
       TabOrder = 3
+    end
+    object Label_WindowPosPadState: TLabel
+      AnchorSideLeft.Control = WindowPosPad
+      AnchorSideLeft.Side = asrCenter
+      AnchorSideTop.Control = WindowPosPad
+      AnchorSideTop.Side = asrCenter
+      Left = 86
+      Height = 24
+      Top = 156
+      Width = 54
+      BorderSpacing.Left = 8
+      BorderSpacing.Top = 8
+      Caption = '屏幕外'
+      Font.Color = clWhite
+      ParentColor = False
+      ParentFont = False
+      OnMouseEnter = Label_WindowPosPadStateMouseEnter
+      OnMouseLeave = Label_WindowPosPadStateMouseLeave
     end
   end
   object Splitter_SyncV: TSplitter

@@ -73,13 +73,13 @@ object FormRunPerformance: TFormRunPerformance
     Height = 596
     Top = 5
     Width = 570
-    ActivePage = TabSheet_HookOpt
+    ActivePage = TabSheet_KeyShortOpt
     Anchors = [akTop, akLeft, akRight, akBottom]
     BorderSpacing.Left = 5
     BorderSpacing.Top = 5
     BorderSpacing.Right = 5
     BorderSpacing.Bottom = 35
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 3
     object TabSheet_HookOpt: TTabSheet
       Caption = '消息钩子'

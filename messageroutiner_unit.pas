@@ -17,7 +17,7 @@ uses
 
 const
 
-  version_number='0.2.1';
+  version_number='0.2.2';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -181,6 +181,7 @@ type
     CheckGroup_KeyMouse: TCheckGroup;
     Edit_TimerOffset: TEdit;
     Edit_TreeView: TEdit;
+    Label_WindowPosPadState: TLabel;
     ScrollBox_ImageView: TScrollBox;
     GroupBox_OffsetSetting: TGroupBox;
     ScrollBox_RecOption: TScrollBox;
@@ -262,6 +263,8 @@ type
     procedure Edit_TimerOffsetMouseEnter(Sender: TObject);
     procedure Edit_TimerOffsetMouseLeave(Sender: TObject);
     procedure FormActivate(Sender: TObject);
+    procedure Label_WindowPosPadStateMouseEnter(Sender: TObject);
+    procedure Label_WindowPosPadStateMouseLeave(Sender: TObject);
     procedure Memo_TmpMouseEnter(Sender: TObject);
     procedure Memo_TmpMouseLeave(Sender: TObject);
     procedure Memo_TmpRecMouseEnter(Sender: TObject);
@@ -317,6 +320,8 @@ type
     procedure WindowPosPadMouseEnter(Sender: TObject);
     procedure WindowPosPadMouseLeave(Sender: TObject);
     procedure WindowPosPadViceChange(Sender: TObject);
+    procedure WindowPosPadWindMouseEnter(Sender: TObject);
+    procedure WindowPosPadWindMouseLeave(Sender: TObject);
 
   private
     Tim:TTimer;//因为不知道怎么处理汉字输入法造成连续的OnChange事件，迫不得已采用延时50ms检测连续输入的办法。
@@ -1604,7 +1609,7 @@ begin
               'class=':case lowercase(AAuf.nargs[3].arg) of 'true','t','on','y','yes':ClassNameVisible:=true; else ClassNameVisible:=false;end;
               'namecell=':try NameCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('namecell 需要数字参数') end;
               'aligncell=':try AlignCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('aligncell 需要数字参数') end;
-              else AufScpt.send_error('Action_Setting之后需要使用hwnd=,name=,class=,namecell=,aligncell=进行设置。');
+              else AufScpt.send_error('Action_Setting之后需要使用pos=,hwnd=,name=,class=,namecell=,aligncell=进行设置。');
             end;
           end;
         except
@@ -2999,6 +3004,16 @@ begin
   (Sender as TMemo).Clear;
 end;
 
+procedure TForm_Routiner.WindowPosPadWindMouseEnter(Sender: TObject);
+begin
+  Self.ShowManual('窗体列表中选中窗体在屏幕中的位置预览。');
+end;
+
+procedure TForm_Routiner.WindowPosPadWindMouseLeave(Sender: TObject);
+begin
+  Self.ShowManual('');
+end;
+
 procedure TForm_Routiner.FormCreate(Sender: TObject);
 var i,j:byte;
     page:integer;
@@ -3452,6 +3467,16 @@ begin
   if assigned(Form_HoldButtonSetting) then Form_HoldButtonSetting.Hide;
 end;
 
+procedure TForm_Routiner.Label_WindowPosPadStateMouseEnter(Sender: TObject);
+begin
+  Self.ShowManual('窗体列表中选中窗体在屏幕中的位置预览。');
+end;
+
+procedure TForm_Routiner.Label_WindowPosPadStateMouseLeave(Sender: TObject);
+begin
+  Self.ShowManual('');
+end;
+
 procedure TForm_Routiner.Memo_TmpMouseEnter(Sender: TObject);
 begin
   Self.ShowManual('同步器模式下推荐将此文本框设置为焦点，写入的内容会自动删除。');
@@ -3665,17 +3690,22 @@ begin
   tmp:=Self.TreeView_Wnd.Selected;
   if tmp = nil then begin
     ww:=0;ll:=0;tt:=0;hh:=0;
+    Label_WindowPosPadState.Caption:='无句柄';
   end else with TWindow(tmp.Data).info do begin
     ww:=Width;
     hh:=Height;
     ll:=Left;
     tt:=Top;
+    if ww*hh<=16 then Label_WindowPosPadState.Caption:='窗体过小'
+    else if ((ll+ww<0) or (ll>Desktop.Width)) and ((tt+hh<0) or (tt>Desktop.Height)) then Label_WindowPosPadState.Caption:='屏幕外'
+    else Label_WindowPosPadState.Caption:='';
   end;
   Self.WindowPosPadWind.Top:=Self.WindowPosPad.Top+tt*Self.WindowPosPad.Height div Desktop.Height;
   Self.WindowPosPadWind.Left:=Self.WindowPosPad.Left+ll*Self.WindowPosPad.Width div Desktop.Width;
   Self.WindowPosPadWind.Width:=ww*Self.WindowPosPad.Width div Desktop.Width;
   Self.WindowPosPadWind.Height:=hh*Self.WindowPosPad.Height div Desktop.Height;
-
+  if Label_WindowPosPadState.Caption<>'' then WindowPosPad.Brush.Color:=clSilver
+  else WindowPosPad.Brush.Color:=clWhite;
 end;
 
 procedure TForm_Routiner.ShowManual(msg:string);
