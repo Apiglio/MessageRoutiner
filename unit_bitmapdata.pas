@@ -18,184 +18,183 @@ unit unit_bitmapdata;
 interface
 
 uses
-    Windows, Classes, SysUtils, Graphics;
+  Windows, Classes, SysUtils, Graphics;
 
 const
-    BD_COLORLESS = -1; //无色
-    BD_BITCOUNT = 24; //图象位数
-    BD_BYTECOUNT = BD_BITCOUNT shr 3; //每象素占用字节数
-    BD_LINEWIDTH = 32; //每行数据对齐宽度（位）
+  BD_COLORLESS = -1;                 //无色
+  BD_BITCOUNT  = 24;                 //图象位数
+  BD_BYTECOUNT = BD_BITCOUNT shr 3;  //每象素占用字节数
+  BD_LINEWIDTH = 32;                 //每行数据对齐宽度（位）
 
 type
-    //字节数组
-    TByteAry = array [0..0] of Byte;
-    PByteAry = ^TByteAry;
+  //字节数组
+  TByteAry = array [0..0] of Byte;
+  PByteAry = ^TByteAry;
 
-   //颜色变化范围，R、G、B三个通道的绝对差值
-   TBDColorRange = record
-       R : Integer;
-       G : Integer;
-       B : Integer;
-    end;
+  //颜色变化范围，R、G、B三个通道的绝对差值
+  TBDColorRange = record
+    R : Integer;
+    G : Integer;
+    B : Integer;
+  end;
 
-    TBDColor = Integer; //BGR格式颜色
+  TBDColor = Integer; //BGR格式颜色
 
-   //转换函数
-    function BGR(B,G,R : Byte): TBDColor;
-    function RGBtoBGR(C : TColor): TBDColor;
-    function BGRtoRGB(C : TBDColor): TColor;
-    //比较颜色
-    function BDCompareColor(C1,C2 : TBDColor; const Range : TBDColorRange): Boolean;
+  //转换函数
+  function BGR(B,G,R : Byte): TBDColor;
+  function RGBtoBGR(C : TColor): TBDColor;
+  function BGRtoRGB(C : TBDColor): TColor;
+  //比较颜色
+  function BDCompareColor(C1,C2 : TBDColor; const Range : TBDColorRange): Boolean;
 
 type
-   TBDBitmapData = class; //位图数据
+  TBDBitmapData = class; //位图数据
 
-   //枚举子图回调函数，查找多个子图时回调，返回是否继续枚举，
-   //Left：找到子图的左边距；
-   //Top：找到子图的顶边距；
-   //Bmp：找到子图数据；
-   //lParam：调用时设置的参数。
-   TBDEnumImageProc = function (Left,Top : Integer; Bmp : TBDBitmapData; lParam : Integer): Boolean;
+  //枚举子图回调函数，查找多个子图时回调，返回是否继续枚举，
+  //Left：找到子图的左边距；
+  //Top：找到子图的顶边距；
+  //Bmp：找到子图数据；
+  //lParam：调用时设置的参数。
+  TBDEnumImageProc = function (Left,Top : Integer; Bmp : TBDBitmapData; lParam : Integer): Boolean;
 
-   //枚举颜色回调函数，查找多个颜色时回调，返回是否继续枚举，
-   //Left：找到颜色的左边距；
-   //Top：找到颜色的顶边距；
-   //Color：找到的颜色；
-   //lParam：调用时设置的参数。
-   TBDEnumColorProc = function (Left,Top : Integer; Color : TBDColor; lParam : Integer): Boolean;
+  //枚举颜色回调函数，查找多个颜色时回调，返回是否继续枚举，
+  //Left：找到颜色的左边距；
+  //Top：找到颜色的顶边距；
+  //Color：找到的颜色；
+  //lParam：调用时设置的参数。
+  TBDEnumColorProc = function (Left,Top : Integer; Color : TBDColor; lParam : Integer): Boolean;
 
-   //位图数据
-   TBDBitmapData = class
-   private
-       FName : String; //位图名称
-       FWidth : Integer; //位图宽度（象素）
-       FHeight : Integer; //位图高度（象素）
-       FBackColor : TBDColor; //背景颜色（BGR格式）
-       FLineWidth : Integer; //对齐后每行数据宽度（字节）
-       FSpareWidth : Integer; //对齐后每行数据多余宽度（字节）
-       FSize : Integer; //位图数据长度
-       FBufSize : Integer; //缓冲区实际长度
-       FBits : PByteAry; //位图数据缓冲区
-       function InitData(AWidth,AHeight : Integer): Boolean;
-       function GetPixels(Left,Top : Integer): TBDColor;
-       procedure SetPixels(Left,Top : Integer; Value : TBDColor);
-    public
-       Error : String;
-       constructor Create(const AName : String = '');
-       destructor Destroy; override;
-       procedure Clear;
-       function LoadFromStream(Stream : TStream; ABackColor : TBDColor = BD_COLORLESS): Boolean;
-       function SaveToStream(Stream : TStream):Boolean;
-       function LoadFromFile(const FileName : string; ABackColor : TBDColor = BD_COLORLESS): Boolean;
-       function SaveToFile(const FileName : string): Boolean;
-       function LoadFromBitmap(Bitmap : TBitmap): Boolean;
-       function SaveToBitmap(Bitmap : TBitmap): Boolean;
-       function CopyFormScreen(Wnd : HWND; Left : Integer = -1; Top : Integer = -1; AWidth : Integer = -1; AHeight : Integer = -1): Boolean;
-       function CopyFormCursor: Boolean;
-       function Compare(Bmp : TBDBitmapData; Left : Integer = 0; Top : Integer = 0): Boolean; overload;
-       function Compare(Bmp : TBDBitmapData; const Range : TBDColorRange; Left : Integer = 0; Top : Integer = 0): Boolean; overload;
-       function FindImage(Bmp : TBDBitmapData; var Left,Top : Integer): Boolean; overload;
-       function FindImage(Bmp : TBDBitmapData; const Range : TBDColorRange; var Left,Top : Integer): Boolean; overload;
-       function FindCenterImage(Bmp : TBDBitmapData; var Left,Top : Integer): Boolean; overload;
-       function FindCenterImage(Bmp : TBDBitmapData; const Range : TBDColorRange; var Left,Top : Integer): Boolean; overload;
-       function EnumImage(Bmp : TBDBitmapData; EnumImageProc : TBDEnumImageProc; lParam : Integer = 0): Boolean; overload;
-       function EnumImage(Bmp : TBDBitmapData; const Range : TBDColorRange; EnumImageProc : TBDEnumImageProc; lParam : Integer = 0): Boolean; overload;
-       function FindColor(Color : TBDColor; var Left,Top : Integer): Boolean; overload;
-       function FindColor(Color : TBDColor; const Range : TBDColorRange; var Left,Top : Integer): Boolean; overload;
-       function FindCenterColor(Color : TBDColor; var Left,Top : Integer): Boolean; overload;
-       function FindCenterColor(Color : TBDColor; const Range : TBDColorRange; var Left,Top : Integer): Boolean; overload;
-       function EnumColor(Color : TBDColor; EnumColorProc : TBDEnumColorProc; lParam : Integer = 0): Boolean; overload;
-       function EnumColor(Color : TBDColor; const Range : TBDColorRange; EnumColorProc : TBDEnumColorProc; lParam : Integer = 0): Boolean; overload;
-     public
-       property Name : String read FName write FName; //位图名称
-       property Width : Integer read FWidth; //位图宽度（象素）
-       property Height : Integer read FHeight; //位图高度（象素）
-       property BackColor : TBDColor read FBackColor write FBackColor; //背景颜色（BGR格式）
-       property LineWidth : Integer read FLineWidth; //对齐后每行数据宽度（字节）
-       property SpareWidth : Integer read FSpareWidth; //对齐后每行数据多余宽度（字节）
-       property Size : Integer read FSize; //位图数据长度
-       property Bits : PByteAry read FBits; //位图数据缓冲区
-       property Pixels[Left,Top : Integer] : TBDColor read GetPixels write SetPixels; default;
-    end;
+  //位图数据
+  TBDBitmapData = class
+  private
+    FName : String; //位图名称
+    FWidth : Integer; //位图宽度（象素）
+    FHeight : Integer; //位图高度（象素）
+    FBackColor : TBDColor; //背景颜色（BGR格式）
+    FLineWidth : Integer; //对齐后每行数据宽度（字节）
+    FSpareWidth : Integer; //对齐后每行数据多余宽度（字节）
+    FSize : Integer; //位图数据长度
+    FBufSize : Integer; //缓冲区实际长度
+    FBits : PByteAry; //位图数据缓冲区
+    function InitData(AWidth,AHeight : Integer): Boolean;
+    function GetPixels(Left,Top : Integer): TBDColor;
+    procedure SetPixels(Left,Top : Integer; Value : TBDColor);
+  public
+    Error : String;
+    constructor Create(const AName : String = '');
+    destructor Destroy; override;
+    procedure Clear;
+    function LoadFromStream(Stream : TStream; ABackColor : TBDColor = BD_COLORLESS): Boolean;
+    function SaveToStream(Stream : TStream):Boolean;
+    function LoadFromFile(const FileName : string; ABackColor : TBDColor = BD_COLORLESS): Boolean;
+    function SaveToFile(const FileName : string): Boolean;
+    function LoadFromBitmap(Bitmap : TBitmap): Boolean;
+    function SaveToBitmap(Bitmap : TBitmap): Boolean;
+    function CopyFormScreen(Wnd : HWND; Left : Integer = -1; Top : Integer = -1; AWidth : Integer = -1; AHeight : Integer = -1): Boolean;
+    function CopyFormCursor: Boolean;
+    function Compare(Bmp : TBDBitmapData; Left : Integer = 0; Top : Integer = 0): Boolean; overload;
+    function Compare(Bmp : TBDBitmapData; const Range : TBDColorRange; Left : Integer = 0; Top : Integer = 0): Boolean; overload;
+    function FindImage(Bmp : TBDBitmapData; var Left,Top : Integer): Boolean; overload;
+    function FindImage(Bmp : TBDBitmapData; const Range : TBDColorRange; var Left,Top : Integer): Boolean; overload;
+    function FindCenterImage(Bmp : TBDBitmapData; var Left,Top : Integer): Boolean; overload;
+    function FindCenterImage(Bmp : TBDBitmapData; const Range : TBDColorRange; var Left,Top : Integer): Boolean; overload;
+    function EnumImage(Bmp : TBDBitmapData; EnumImageProc : TBDEnumImageProc; lParam : Integer = 0): Boolean; overload;
+    function EnumImage(Bmp : TBDBitmapData; const Range : TBDColorRange; EnumImageProc : TBDEnumImageProc; lParam : Integer = 0): Boolean; overload;
+    function FindColor(Color : TBDColor; var Left,Top : Integer): Boolean; overload;
+    function FindColor(Color : TBDColor; const Range : TBDColorRange; var Left,Top : Integer): Boolean; overload;
+    function FindCenterColor(Color : TBDColor; var Left,Top : Integer): Boolean; overload;
+    function FindCenterColor(Color : TBDColor; const Range : TBDColorRange; var Left,Top : Integer): Boolean; overload;
+    function EnumColor(Color : TBDColor; EnumColorProc : TBDEnumColorProc; lParam : Integer = 0): Boolean; overload;
+    function EnumColor(Color : TBDColor; const Range : TBDColorRange; EnumColorProc : TBDEnumColorProc; lParam : Integer = 0): Boolean; overload;
+  public
+    property Name : String read FName write FName; //位图名称
+    property Width : Integer read FWidth; //位图宽度（象素）
+    property Height : Integer read FHeight; //位图高度（象素）
+    property BackColor : TBDColor read FBackColor write FBackColor; //背景颜色（BGR格式）
+    property LineWidth : Integer read FLineWidth; //对齐后每行数据宽度（字节）
+    property SpareWidth : Integer read FSpareWidth; //对齐后每行数据多余宽度（字节）
+    property Size : Integer read FSize; //位图数据长度
+    property Bits : PByteAry read FBits; //位图数据缓冲区
+    property Pixels[Left,Top : Integer] : TBDColor read GetPixels write SetPixels; default;
+  end;
 
 implementation
 
 type
-   //矩阵遍历方向
-    TAspect = (asLeft, asRight, asUp, asDown);
+  //矩阵遍历方向
+  TAspect = (asLeft, asRight, asUp, asDown);
 
 const
-   //移动坐标差，用于矩阵遍历
-    MoveVal : array [asLeft..asDown] of TPoint = (
-       (X : -1; Y :  0), //asLeft
-       (X :  1; Y :  0), //asRight
-       (X :  0; Y : -1), //asUp
-       (X :  0; Y : 1)  //asDown
-    );
+  //移动坐标差，用于矩阵遍历
+  MoveVal : array [asLeft..asDown] of TPoint = (
+    (X : -1; Y :  0), //asLeft
+    (X :  1; Y :  0), //asRight
+    (X :  0; Y : -1), //asUp
+    (X :  0; Y :  1)  //asDown
+  );
 
 var
-    ScreenWidth : Integer;
+    ScreenWidth  : Integer;
     ScreenHeight : Integer;
-    IconWidth : Integer;
-    IconHeight : Integer;
+    IconWidth    : Integer;
+    IconHeight   : Integer;
 
 //根据B、G、R三个通道的值生成一个BGR格式颜色。
 function BGR(B,G,R : Byte): TBDColor;
 begin
-    result:=(B or (G shl 8) or (R shl 16));
+  result:=(B or (G shl 8) or (R shl 16));
 end;
 
 //RGB颜色格式转换到BGR颜色格式。
 function RGBtoBGR(C : TColor): TBDColor;
 begin
-    result:=((C and $FF0000) shr 16) or (C and $00FF00) or ((C and $0000FF) shl 16);
+  result:=((C and $FF0000) shr 16) or (C and $00FF00) or ((C and $0000FF) shl 16);
 end;
 
 //BGR颜色格式转换到RGB颜色格式。
 function BGRtoRGB(C : TBDColor): TColor;
 begin
-    result:=((C and $FF0000) shr 16) or (C and $00FF00) or ((C and $0000FF) shl 16);
+  result:=((C and $FF0000) shr 16) or (C and $00FF00) or ((C and $0000FF) shl 16);
 end;
 
 //根据颜色范围Range比较颜色C1和C2，返回C1和C2是否相似，
 //C1,C2：BGR格式颜色；
 //Range：为颜色变化范围。
 function BDCompareColor(C1,C2 : TBDColor; const Range : TBDColorRange): Boolean;
-var
-    C : Integer;
+var C : Integer;
 begin
-   result:=false;
-    //B
-    C:=(C1 and $FF)-(C2 and $FF);
-    if (C>Range.B) or (C<-Range.B) then exit;
-    //G
-    C:=((C1 and $FF00) shr 8)-((C2 and $FF00) shr 8);
-    if (C>Range.G) or (C<-Range.G) then exit;
-    //R
-    C:=((C1 and $FF0000) shr 16)-((C2 and $FF0000) shr 16);
-    if (C>Range.R) or (C<-Range.R) then exit;
-    //
-   result:=true;
+  result:=false;
+  //B
+  C:=(C1 and $FF)-(C2 and $FF);
+  if (C>Range.B) or (C<-Range.B) then exit;
+  //G
+  C:=((C1 and $FF00) shr 8)-((C2 and $FF00) shr 8);
+  if (C>Range.G) or (C<-Range.G) then exit;
+  //R
+  C:=((C1 and $FF0000) shr 16)-((C2 and $FF0000) shr 16);
+  if (C>Range.R) or (C<-Range.R) then exit;
+  //
+  result:=true;
 end;
 
 {TBDBitmapData} //位图数据
 
 constructor TBDBitmapData.Create(const AName : String);
 begin
-   self.FName:=AName;
-   self.FWidth:=0;
-   self.FHeight:=0;
-   self.FBackColor:=BD_COLORLESS;
-   self.FLineWidth:=0;
-   self.FSize:=0;
-   self.FBufSize:=0;
-   self.FBits:=nil;
-   self.Error:='';
+  self.FName:=AName;
+  self.FWidth:=0;
+  self.FHeight:=0;
+  self.FBackColor:=BD_COLORLESS;
+  self.FLineWidth:=0;
+  self.FSize:=0;
+  self.FBufSize:=0;
+  self.FBits:=nil;
+  self.Error:='';
 end;
 
 destructor TBDBitmapData.Destroy;
 begin
-   self.Clear;
+  self.Clear;
 end;
 
 //根据当前的AWidth和AHeight初始化数据，分配内存，返回是否成功，
@@ -203,36 +202,34 @@ end;
 //AWidth：位图的宽度；
 //AHeight：位图的高度。
 function TBDBitmapData.InitData(AWidth,AHeight : Integer): Boolean;
-var
-    Align : Integer;
+var Align : Integer;
 begin
-   self.Error:='';
-   result:=true;
-    if (self.FWidth=AWidth) and
-      (self.FHeight=AHeight) then exit;
-   //计算对齐后的每行数据宽度
-   self.FWidth:=AWidth;
-   self.FHeight:=AHeight;
-   Align:=BD_LINEWIDTH-1;
-   self.FLineWidth:=(((self.FWidth*BD_BITCOUNT)+Align) and ($7FFFFFFF-Align)) shr 3;
-   self.FSpareWidth:=self.FLineWidth-(self.FWidth*BD_BYTECOUNT);
-   self.FSize:=self.FLineWidth*self.FHeight;
-    //分配内存
-    if self.FSize<=self.FBufSize then exit;
-    if self.FBits<>nil then FreeMem(self.FBits);
-    try
-       GetMem(self.FBits,self.FSize);
-    except
-       on EOutOfMemory do begin
-           self.FSize:=0;
-           self.FBufSize:=0;
-           self.FBits:=nil;
-           self.Error:='内存不足！';
-           result:=false;
-           exit;
-       end;
+  self.Error:='';
+  result:=true;
+  if (self.FWidth=AWidth) and (self.FHeight=AHeight) then exit;
+  //计算对齐后的每行数据宽度
+  self.FWidth:=AWidth;
+  self.FHeight:=AHeight;
+  Align:=BD_LINEWIDTH-1;
+  self.FLineWidth:=(((self.FWidth*BD_BITCOUNT)+Align) and ($7FFFFFFF-Align)) shr 3;
+  self.FSpareWidth:=self.FLineWidth-(self.FWidth*BD_BYTECOUNT);
+  self.FSize:=self.FLineWidth*self.FHeight;
+  //分配内存
+  if self.FSize<=self.FBufSize then exit;
+  if self.FBits<>nil then FreeMem(self.FBits);
+  try
+    GetMem(self.FBits,self.FSize);
+  except
+    on EOutOfMemory do begin
+      self.FSize:=0;
+      self.FBufSize:=0;
+      self.FBits:=nil;
+      self.Error:='内存不足！';
+      result:=false;
+      exit;
     end;
-   self.FBufSize:=self.FSize;
+  end;
+  self.FBufSize:=self.FSize;
 end;
 
 //获取指定位置象素的颜色值，
@@ -240,15 +237,15 @@ end;
 //Top：象素的顶边距。
 function TBDBitmapData.GetPixels(Left,Top : Integer): TBDColor;
 begin
-    if (Left<0) or (Left>=self.FWidth) or
-      (Top<0) or (Top>=self.FHeight) then
-    begin
-       result:=0;
-       exit;
-    end;
-   result:=((PInteger(@(self.FBits[
-       ((self.FHeight-Top-1)*self.FLineWidth)+(Left*BD_BYTECOUNT)
-       ])))^ and $FFFFFF);
+  if (Left<0) or (Left>=self.FWidth) or
+    (Top<0) or (Top>=self.FHeight) then
+  begin
+     result:=0;
+     exit;
+  end;
+  result:=((PInteger(@(self.FBits[
+     ((self.FHeight-Top-1)*self.FLineWidth)+(Left*BD_BYTECOUNT)
+     ])))^ and $FFFFFF);
 end;
 
 //设置指定位置象素的颜色值，
@@ -256,35 +253,33 @@ end;
 //Top：象素的顶边距；
 //Value：BGR格式颜色。
 procedure TBDBitmapData.SetPixels(Left,Top : Integer; Value : TBDColor);
-var
-    Off : Integer;
+var Off : Integer;
 begin
-    if (Left<0) or (Left>=self.FWidth) or
-      (Top<0) or (Top>=self.FHeight) then exit;
-   Off:=((self.FHeight-Top-1)*self.FLineWidth)+(Left*BD_BYTECOUNT);
-    //B
-   self.FBits[Off]:=pByte(Value and $FF);
-    //G
-   self.FBits[Off+1]:=pByte((Value and $FF00) shr 8);
-    //R
-   self.FBits[Off+2]:=pByte((Value and $FF0000) shr 16);
+  if (Left<0) or (Left>=self.FWidth) or (Top<0) or (Top>=self.FHeight) then exit;
+  Off:=((self.FHeight-Top-1)*self.FLineWidth)+(Left*BD_BYTECOUNT);
+  //B
+  self.FBits[Off]:=pByte(Value and $FF);
+  //G
+  self.FBits[Off+1]:=pByte((Value and $FF00) shr 8);
+  //R
+  self.FBits[Off+2]:=pByte((Value and $FF0000) shr 16);
 end;
 
 //清除当前的位图数据。
 procedure TBDBitmapData.Clear;
 begin
-   self.FWidth:=0;
-   self.FHeight:=0;
-   self.FBackColor:=BD_COLORLESS;
-   self.FLineWidth:=0;
-   self.FSize:=0;
-   self.FBufSize:=0;
-    if self.FBits<>nil then
-    begin
-       FreeMem(self.FBits);
-       self.FBits:=nil;
-    end;
-   self.Error:='';
+  self.FWidth:=0;
+  self.FHeight:=0;
+  self.FBackColor:=BD_COLORLESS;
+  self.FLineWidth:=0;
+  self.FSize:=0;
+  self.FBufSize:=0;
+  if self.FBits<>nil then
+  begin
+    FreeMem(self.FBits);
+    self.FBits:=nil;
+  end;
+ self.Error:='';
 end;
 
 //从数据流中导入位图数据，返回是否成功，
@@ -294,18 +289,18 @@ end;
 //ABackColor：位图的背景颜色，可省略。
 function TBDBitmapData.LoadFromStream(Stream : TStream; ABackColor : TBDColor): Boolean;
 var
-    FileHeader : TBitmapFileHeader;
-    InfoHeader : TBitmapInfoHeader;
+  FileHeader : TBitmapFileHeader;
+  InfoHeader : TBitmapInfoHeader;
 begin
-    if Stream=nil then
-    begin
-       self.Error:='没有指定数据流！';
-       result:=false;
-       exit;
-    end;
-   //读取文件头
-   Stream.Read(FileHeader,SizeOf(TBitmapFileHeader));
-   Stream.Read(InfoHeader,SizeOf(TBitmapInfoHeader));
+  if Stream=nil then
+  begin
+    self.Error:='没有指定数据流！';
+    result:=false;
+    exit;
+  end;
+  //读取文件头
+  Stream.Read(FileHeader,SizeOf(TBitmapFileHeader));
+  Stream.Read(InfoHeader,SizeOf(TBitmapInfoHeader));
     with FileHeader,InfoHeader do
     begin
        //确定位图格式
@@ -435,31 +430,30 @@ end;
 //如果失败将设置self.Error说明情况，
 //Bitmap：TBitmap对象。
 function TBDBitmapData.SaveToBitmap(Bitmap : TBitmap): Boolean;
-var
-    Stream : TMemoryStream;
+var Stream : TMemoryStream;
 begin
-    if Bitmap=nil then
-    begin
-       self.Error:='没有指定位图！';
-       result:=false;
-       exit;
-    end;
-   Stream:=TMemoryStream.Create;
-   result:=self.SaveToStream(Stream);
-    if not result then
-    begin
-       Stream.Free;
-       exit;
-    end;
-   Stream.Position:=0;
-   Bitmap.LoadFromStream(Stream);
-    if self.FBackColor<>BD_COLORLESS then
-    begin
-       Bitmap.TransparentColor:=BGRtoRGB(self.FBackColor);
-       Bitmap.Transparent:=true;
-    end
-    else Bitmap.Transparent:=false;
-   Stream.Free;
+  if Bitmap=nil then
+  begin
+    self.Error:='没有指定位图！';
+    result:=false;
+    exit;
+  end;
+  Stream:=TMemoryStream.Create;
+  result:=self.SaveToStream(Stream);
+  if not result then
+  begin
+    Stream.Free;
+    exit;
+  end;
+  Stream.Position:=0;
+  Bitmap.LoadFromStream(Stream);
+  if self.FBackColor<>BD_COLORLESS then
+  begin
+    Bitmap.TransparentColor:=BGRtoRGB(self.FBackColor);
+    Bitmap.Transparent:=true;
+  end
+  else Bitmap.Transparent:=false;
+  Stream.Free;
 end;
 
 //从屏幕上的指定范围中截图，并导入数据，返回是否成功，
@@ -469,125 +463,121 @@ end;
 //AWidth：截图的宽度，可省略；
 //AHeight：截图的高度，可省略。
 function TBDBitmapData.CopyFormScreen(Wnd:HWND;Left,Top,AWidth,AHeight:Integer): Boolean;
-var
-    //Wnd : HWND;
+var //Wnd : HWND;
     DC,MemDC : HDC;
     Bitmap,OldBitmap : HBITMAP;
     BitInfo : TBitmapInfo;
 begin
-    //参数调整
-    if (Left<0) or (Left>=ScreenWidth) then Left:=0;
-    if (Top<0) or (Top>=ScreenHeight) then Top:=0;
-    if AWidth<=0 then AWidth:=ScreenWidth-Left;
-    if AHeight<=0 then AHeight:=ScreenHeight-Top;
-   //数据初始化
-   self.FBackColor:=BD_COLORLESS;
-    if not self.InitData(AWidth,AHeight) then
-    begin
-       result:=false;
-       exit;
-    end;
-   //截图
-   //Wnd:=GetDesktopWindow();
-   DC:=GetWindowDC(Wnd);
-   MemDC:=CreateCompatibleDC(DC);
-   Bitmap:=CreateCompatibleBitmap(DC,self.FWidth,self.FHeight);
-   OldBitmap:=SelectObject(MemDC,Bitmap);
-   result:=BitBlt(MemDC,0,0,self.FWidth,self.FHeight,DC,Left,Top,SRCCOPY);
-   Bitmap:=SelectObject(MemDC,OldBitmap);
-    if not result then
-    begin
-       DeleteDC(MemDC);
-       DeleteObject(Bitmap);
-       ReleaseDC(Wnd,DC);
-       self.Error:='截图失败！';
-       exit;
-    end;
-   //位图信息初始化
-    with BitInfo.bmiHeader do
-    begin
-       biSize:=SizeOf(TBitmapInfoHeader);
-       biWidth:=self.FWidth;
-       biHeight:=self.FHeight;
-       biPlanes:=1;
-       biBitCount:=BD_BITCOUNT;
-       biCompression:=BI_RGB;
-       biSizeImage:=0;
-       biXPelsPerMeter:=0;
-       biYPelsPerMeter:=0;
-       biClrUsed:=0;
-       biClrImportant:=0;
-    end;
-    //提取数据
-   result:=GetDIBits(DC,Bitmap,0,self.FHeight,Pointer(self.FBits),BitInfo,DIB_RGB_COLORS)<>0;
-    if result then self.Error:=''
-   else self.Error:='提取数据失败！';
-   DeleteDC(MemDC);
-   DeleteObject(Bitmap);
-   ReleaseDC(Wnd,DC);
+  //参数调整
+  if (Left<0) or (Left>=ScreenWidth) then Left:=0;
+  if (Top<0) or (Top>=ScreenHeight) then Top:=0;
+  if AWidth<=0 then AWidth:=ScreenWidth-Left;
+  if AHeight<=0 then AHeight:=ScreenHeight-Top;
+  //数据初始化
+  self.FBackColor:=BD_COLORLESS;
+  if not self.InitData(AWidth,AHeight) then
+  begin
+    result:=false;
+    exit;
+  end;
+  //截图
+  //Wnd:=GetDesktopWindow();
+  DC:=GetWindowDC(Wnd);
+  MemDC:=CreateCompatibleDC(DC);
+  Bitmap:=CreateCompatibleBitmap(DC,self.FWidth,self.FHeight);
+  OldBitmap:=SelectObject(MemDC,Bitmap);
+  result:=BitBlt(MemDC,0,0,self.FWidth,self.FHeight,DC,Left,Top,SRCCOPY);
+  Bitmap:=SelectObject(MemDC,OldBitmap);
+  if not result then
+  begin
+    DeleteDC(MemDC);
+    DeleteObject(Bitmap);
+    ReleaseDC(Wnd,DC);
+    self.Error:='截图失败！';
+    exit;
+  end;
+  //位图信息初始化
+  with BitInfo.bmiHeader do
+  begin
+    biSize:=SizeOf(TBitmapInfoHeader);
+    biWidth:=self.FWidth;
+    biHeight:=self.FHeight;
+    biPlanes:=1;
+    biBitCount:=BD_BITCOUNT;
+    biCompression:=BI_RGB;
+    biSizeImage:=0;
+    biXPelsPerMeter:=0;
+    biYPelsPerMeter:=0;
+    biClrUsed:=0;
+    biClrImportant:=0;
+  end;
+  //提取数据
+  result:=GetDIBits(DC,Bitmap,0,self.FHeight,Pointer(self.FBits),BitInfo,DIB_RGB_COLORS)<>0;
+  if result then self.Error:='' else self.Error:='提取数据失败！';
+  DeleteDC(MemDC);
+  DeleteObject(Bitmap);
+  ReleaseDC(Wnd,DC);
 end;
 
 //截取鼠标指针的位图，并导入数据，返回是否成功，
 //如果失败将设置self.Error说明情况，
 //如果鼠标指针是动画指针，默认截取第一帧画面。
 function TBDBitmapData.CopyFormCursor: Boolean;
-var
-    Wnd : HWND;
+var Wnd : HWND;
     DC,MemDC : HDC;
-   Bitmap,OldBitmap : HBITMAP;
+    Bitmap,OldBitmap : HBITMAP;
     CurInfo : TCursorInfo;
     BitInfo : TBitmapInfo;
 begin
-   //数据初始化
-   self.FBackColor:=BD_COLORLESS;
-   self.InitData(IconWidth,IconHeight);
-   //获取鼠标指针信息
-   FillChar(CurInfo,SizeOf(TCursorInfo),0);
-   CurInfo.cbSize:=SizeOf(TCursorInfo);
-    if not GetCursorInfo(CurInfo) then
-    begin
-       self.Error:='获取鼠标指针信息失败！';
-       result:=false;
-       exit;
-    end;
-   //截取鼠标指针位图
-   Wnd:=GetDesktopWindow();
-   DC:=GetWindowDC(Wnd);
-   MemDC:=CreateCompatibleDC(DC);
- Bitmap:=CreateCompatibleBitmap(DC,self.FWidth,self.FHeight);
- OldBitmap:=SelectObject(MemDC,Bitmap);
-   result:=DrawIconEx(MemDC,0,0,CurInfo.hCursor,0,0,0,0,DI_IMAGE);
-   Bitmap:=SelectObject(MemDC,OldBitmap);
+  //数据初始化
+  self.FBackColor:=BD_COLORLESS;
+  self.InitData(IconWidth,IconHeight);
+  //获取鼠标指针信息
+  FillChar(CurInfo,SizeOf(TCursorInfo),0);
+  CurInfo.cbSize:=SizeOf(TCursorInfo);
+  if not GetCursorInfo(CurInfo) then
+  begin
+    self.Error:='获取鼠标指针信息失败！';
+    result:=false;
+    exit;
+  end;
+  //截取鼠标指针位图
+  Wnd:=GetDesktopWindow();
+  DC:=GetWindowDC(Wnd);
+  MemDC:=CreateCompatibleDC(DC);
+  Bitmap:=CreateCompatibleBitmap(DC,self.FWidth,self.FHeight);
+  OldBitmap:=SelectObject(MemDC,Bitmap);
+    result:=DrawIconEx(MemDC,0,0,CurInfo.hCursor,0,0,0,0,DI_IMAGE);
+    Bitmap:=SelectObject(MemDC,OldBitmap);
     if not result then
     begin
-       DeleteDC(MemDC);
-       DeleteObject(Bitmap);
-       ReleaseDC(Wnd,DC);
-       self.Error:='截取鼠标指针位图失败！';
-       exit;
+      DeleteDC(MemDC);
+      DeleteObject(Bitmap);
+      ReleaseDC(Wnd,DC);
+      self.Error:='截取鼠标指针位图失败！';
+      exit;
     end;
    //位图信息初始化
     with BitInfo.bmiHeader do
     begin
-       biSize:=SizeOf(TBitmapInfoHeader);
-       biWidth:=self.FWidth;
-       biHeight:=self.FHeight;
-       biPlanes:=1;
-       biBitCount:=BD_BITCOUNT;
-       biCompression:=BI_RGB;
-       biSizeImage:=0;
-       biXPelsPerMeter:=0;
-       biYPelsPerMeter:=0;
-       biClrUsed:=0;
-       biClrImportant:=0;
+      biSize:=SizeOf(TBitmapInfoHeader);
+      biWidth:=self.FWidth;
+      biHeight:=self.FHeight;
+      biPlanes:=1;
+      biBitCount:=BD_BITCOUNT;
+      biCompression:=BI_RGB;
+      biSizeImage:=0;
+      biXPelsPerMeter:=0;
+      biYPelsPerMeter:=0;
+      biClrUsed:=0;
+      biClrImportant:=0;
     end;
     //提取数据
-   result:=GetDIBits(DC,Bitmap,0,self.FHeight,Pointer(self.FBits),BitInfo,DIB_RGB_COLORS)<>0;
-    if result then self.Error:=''
-   else          self.Error:='提取数据失败！';
-   DeleteDC(MemDC);
-   DeleteObject(Bitmap);
-   ReleaseDC(Wnd,DC);
+    result:=GetDIBits(DC,Bitmap,0,self.FHeight,Pointer(self.FBits),BitInfo,DIB_RGB_COLORS)<>0;
+    if result then self.Error:='' else self.Error:='提取数据失败！';
+    DeleteDC(MemDC);
+    DeleteObject(Bitmap);
+    ReleaseDC(Wnd,DC);
 end;
 
 //在当前位图的指定位置比较Bmp位图，返回是否一致，
@@ -597,38 +587,36 @@ end;
 //Left：比较时的左边距，可省略；
 //Top：比较时的顶边距，可省略。
 function TBDBitmapData.Compare(Bmp : TBDBitmapData; Left,Top : Integer): Boolean;
-var
-   x,y,Off1,Off2 : Integer;
+var x,y,Off1,Off2 : Integer;
     c1,c2 : TBDColor;
 begin
-    if ((Left+Bmp.FWidth)>self.FWidth) or
-      ((Top+Bmp.FHeight)>self.FHeight) then
+  if ((Left+Bmp.FWidth)>self.FWidth) or
+    ((Top+Bmp.FHeight)>self.FHeight) then
+  begin
+    result:=false;
+    exit;
+  end;
+  Off1:=((self.FHeight-Bmp.FHeight-Top)*self.FLineWidth)+(Left*BD_BYTECOUNT);
+  Off2:=0;
+  result:=true;
+  for y:=0 to Bmp.FHeight-1 do
+  begin
+    for x:=0 to Bmp.FWidth-1 do
     begin
-       result:=false;
-       exit;
+      c1:=((PInteger(@(self.FBits[Off1])))^ and $FFFFFF);
+      c2:=((PInteger(@(Bmp.FBits[Off2])))^ and $FFFFFF);
+      if (c1<>self.FBackColor) and (c2<>Bmp.FBackColor) and (c1<>c2) then
+      begin
+        result:=false;
+        break;
+      end;
+      Off1:=Off1+3;
+      Off2:=Off2+3;
     end;
-   Off1:=((self.FHeight-Bmp.FHeight-Top)*self.FLineWidth)+(Left*BD_BYTECOUNT);
-   Off2:=0;
-   result:=true;
-    for y:=0 to Bmp.FHeight-1 do
-    begin
-       for x:=0 to Bmp.FWidth-1 do
-       begin
-           c1:=((PInteger(@(self.FBits[Off1])))^ and $FFFFFF);
-           c2:=((PInteger(@(Bmp.FBits[Off2])))^ and $FFFFFF);
-           if (c1<>self.FBackColor) and (c2<>Bmp.FBackColor) and
-              (c1<>c2) then
-           begin
-               result:=false;
-               break;
-           end;
-           Off1:=Off1+3;
-           Off2:=Off2+3;
-       end;
-       if not result then break;
-       Off1:=Off1+(self.FLineWidth-Bmp.FLineWidth)+Bmp.FSpareWidth;
-       Off2:=Off2+Bmp.FSpareWidth;
-    end;
+    if not result then break;
+    Off1:=Off1+(self.FLineWidth-Bmp.FLineWidth)+Bmp.FSpareWidth;
+    Off2:=Off2+Bmp.FSpareWidth;
+  end;
 end;
 
 //在当前位图的指定位置模糊比较Bmp位图，返回是否一致，
@@ -639,38 +627,36 @@ end;
 //Left：比较时的左边距，可省略；
 //Top：比较时的顶边距，可省略。
 function TBDBitmapData.Compare(Bmp : TBDBitmapData; const Range : TBDColorRange; Left,Top : Integer): Boolean;
-var
-   x,y,Off1,Off2 : Integer;
+var x,y,Off1,Off2 : Integer;
     c1,c2 : TBDColor;
 begin
-    if ((Left+Bmp.FWidth)>self.FWidth) or
-      ((Top+Bmp.FHeight)>self.FHeight) then
-    begin
-       result:=false;
-       exit;
-    end;
-   Off1:=((self.FHeight-Bmp.FHeight-Top)*self.FLineWidth)+(Left*BD_BYTECOUNT);
-   Off2:=0;
-   result:=true;
-    for y:=0 to Bmp.FHeight-1 do
-    begin
-       for x:=0 to Bmp.FWidth-1 do
+  if ((Left+Bmp.FWidth)>self.FWidth) or ((Top+Bmp.FHeight)>self.FHeight) then
+  begin
+    result:=false;
+    exit;
+  end;
+  Off1:=((self.FHeight-Bmp.FHeight-Top)*self.FLineWidth)+(Left*BD_BYTECOUNT);
+  Off2:=0;
+  result:=true;
+  for y:=0 to Bmp.FHeight-1 do
+  begin
+     for x:=0 to Bmp.FWidth-1 do
+     begin
+       c1:=((PInteger(@(self.FBits[Off1])))^ and $FFFFFF);
+       c2:=((PInteger(@(Bmp.FBits[Off2])))^ and $FFFFFF);
+       if (c1<>self.FBackColor) and (c2<>Bmp.FBackColor) and
+         (not BDCompareColor(c1,c2,Range)) then
        begin
-           c1:=((PInteger(@(self.FBits[Off1])))^ and $FFFFFF);
-           c2:=((PInteger(@(Bmp.FBits[Off2])))^ and $FFFFFF);
-           if (c1<>self.FBackColor) and (c2<>Bmp.FBackColor) and
-              (not BDCompareColor(c1,c2,Range)) then
-           begin
-               result:=false;
-               break;
-           end;
-           Off1:=Off1+3;
-           Off2:=Off2+3;
+         result:=false;
+         break;
        end;
-       if not result then break;
-       Off1:=Off1+(self.FLineWidth-Bmp.FLineWidth)+Bmp.FSpareWidth;
-       Off2:=Off2+Bmp.FSpareWidth;
-    end;
+       Off1:=Off1+3;
+       Off2:=Off2+3;
+     end;
+     if not result then break;
+     Off1:=Off1+(self.FLineWidth-Bmp.FLineWidth)+Bmp.FSpareWidth;
+     Off2:=Off2+Bmp.FSpareWidth;
+  end;
 end;
 
 //从当前位图中查找与Bmp一致的子图，返回是否找到，
@@ -682,30 +668,25 @@ end;
 //Left：找到子图的左边距；
 //Top：找到子图的顶边距。
 function TBDBitmapData.FindImage(Bmp : TBDBitmapData; var Left,Top : Integer): Boolean;
-var
-    x,y : Integer;
+var x,y : Integer;
 begin
-   result:=false; x:=0;
-    for y:=0 to self.FHeight-Bmp.FHeight-1 do
-    begin
-       for x:=0 to self.FWidth-Bmp.FWidth-1 do
-       begin
-           if self.Compare(Bmp,x,y) then
-           begin
-               result:=true;
-               break;
-           end;
-       end;
-       if result then break;
+  result:=false; x:=0;
+  for y:=0 to self.FHeight-Bmp.FHeight-1 do begin
+    for x:=0 to self.FWidth-Bmp.FWidth-1 do begin
+      if self.Compare(Bmp,x,y) then begin
+        result:=true;
+        break;
+      end;
     end;
-    if result then
-    begin
-       Left:=x; Top:=y;
-    end
-    else
-    begin
-       Left:=-1; Top:=-1;
-    end;
+    if result then break;
+  end;
+  if result then begin
+    Left:=x;
+    Top:=y;
+  end else begin
+    Left:=-1;
+    Top:=-1;
+  end;
 end;
 
 //从当前位图中模糊查找与Bmp一致的子图，返回是否找到，
@@ -718,30 +699,23 @@ end;
 //Left：找到子图的左边距；
 //Top：找到子图的顶边距。
 function TBDBitmapData.FindImage(Bmp : TBDBitmapData; const Range : TBDColorRange; var Left,Top : Integer): Boolean;
-var
-    x,y : Integer;
+var x,y : Integer;
 begin
-   result:=false; x:=0;
-    for y:=0 to self.FHeight-Bmp.FHeight-1 do
-    begin
-       for x:=0 to self.FWidth-Bmp.FWidth-1 do
-       begin
-           if self.Compare(Bmp,Range,x,y) then
-           begin
-               result:=true;
-               break;
-           end;
-       end;
-       if result then break;
+  result:=false; x:=0;
+  for y:=0 to self.FHeight-Bmp.FHeight-1 do begin
+    for x:=0 to self.FWidth-Bmp.FWidth-1 do begin
+      if self.Compare(Bmp,Range,x,y) then begin
+        result:=true;
+        break;
+      end;
     end;
-    if result then
-    begin
-       Left:=x; Top:=y;
-    end
-    else
-    begin
-       Left:=-1; Top:=-1;
-    end;
+    if result then break;
+  end;
+  if result then begin
+    Left:=x; Top:=y;
+  end else begin
+    Left:=-1; Top:=-1;
+  end;
 end;
 
 //从当前位图中查找与Bmp一致的子图，返回是否找到，
@@ -753,43 +727,42 @@ end;
 //Left：找到子图的左边距；
 //Top：找到子图的顶边距。
 function TBDBitmapData.FindCenterImage(Bmp : TBDBitmapData; var Left,Top : Integer): Boolean;
-var
-    Aspect : TAspect;
-   VisitCount,Count,i : Integer;
+var Aspect : TAspect;
+    VisitCount,Count,i : Integer;
 begin
-   result:=false;
-   VisitCount:=0;
-   Aspect:=asUp;
-   Count:=1;
-    while VisitCount<(self.FWidth*self.FHeight) do
+  result:=false;
+  VisitCount:=0;
+  Aspect:=asUp;
+  Count:=1;
+  while VisitCount<(self.FWidth*self.FHeight) do
+  begin
+    for i:=0 to Count-1 do
     begin
-       for i:=0 to Count-1 do
-       begin
-           if (Left>=0) and (Left<self.FWidth) and
-              (Top>=0) and (Top<self.FHeight) then
-           begin
-               if self.Compare(Bmp,Left,Top) then
-               begin
-                   result:=true;
-                   break;
-               end;
-               VisitCount:=VisitCount+1;
-           end;
-           Left:=Left+MoveVal[Aspect].X;
-           Top:=Top+MoveVal[Aspect].Y;
-       end;
-       if result then break;
-       case Aspect of
-           asLeft  : begin Aspect:=asUp;   Count:=Count+1; end;
-           asRight : begin Aspect:=asDown; Count:=Count+1; end;
-           asUp    : begin Aspect:=asRight; end;
-           asDown  : begin Aspect:=asLeft; end;
-       end;
+      if (Left>=0) and (Left<self.FWidth) and
+        (Top>=0) and (Top<self.FHeight) then
+      begin
+        if self.Compare(Bmp,Left,Top) then
+        begin
+          result:=true;
+          break;
+        end;
+        VisitCount:=VisitCount+1;
+      end;
+      Left:=Left+MoveVal[Aspect].X;
+      Top:=Top+MoveVal[Aspect].Y;
     end;
-    if not result then
-    begin
-       Left:=-1; Top:=-1;
+    if result then break;
+    case Aspect of
+      asLeft  : begin Aspect:=asUp;   Count:=Count+1; end;
+      asRight : begin Aspect:=asDown; Count:=Count+1; end;
+      asUp    : begin Aspect:=asRight; end;
+      asDown  : begin Aspect:=asLeft; end;
     end;
+  end;
+  if not result then
+  begin
+    Left:=-1; Top:=-1;
+  end;
 end;
 
 //从当前位图中模糊查找与Bmp一致的子图，返回是否找到，
@@ -802,43 +775,42 @@ end;
 //Left：找到子图的左边距；
 //Top：找到子图的顶边距。
 function TBDBitmapData.FindCenterImage(Bmp : TBDBitmapData; const Range : TBDColorRange; var Left,Top : Integer): Boolean;
-var
-    Aspect : TAspect;
-   VisitCount,Count,i : Integer;
+var Aspect : TAspect;
+    VisitCount,Count,i : Integer;
 begin
-   result:=false;
-   VisitCount:=0;
-   Aspect:=asUp;
-   Count:=1;
-    while VisitCount<(self.FWidth*self.FHeight) do
+  result:=false;
+  VisitCount:=0;
+  Aspect:=asUp;
+  Count:=1;
+  while VisitCount<(self.FWidth*self.FHeight) do
+  begin
+    for i:=0 to Count-1 do
     begin
-       for i:=0 to Count-1 do
-       begin
-           if (Left>=0) and (Left<self.FWidth) and
-              (Top>=0) and (Top<self.FHeight) then
-           begin
-               if self.Compare(Bmp,Range,Left,Top) then
-               begin
-                   result:=true;
-                   break;
-               end;
-               VisitCount:=VisitCount+1;
-           end;
-           Left:=Left+MoveVal[Aspect].X;
-           Top:=Top+MoveVal[Aspect].Y;
-       end;
-       if result then break;
-       case Aspect of
-           asLeft  : begin Aspect:=asUp;   Count:=Count+1; end;
-           asRight : begin Aspect:=asDown; Count:=Count+1; end;
-           asUp    : begin Aspect:=asRight; end;
-           asDown  : begin Aspect:=asLeft; end;
-       end;
+      if (Left>=0) and (Left<self.FWidth) and
+        (Top>=0) and (Top<self.FHeight) then
+      begin
+        if self.Compare(Bmp,Range,Left,Top) then
+        begin
+          result:=true;
+          break;
+        end;
+        VisitCount:=VisitCount+1;
+      end;
+      Left:=Left+MoveVal[Aspect].X;
+      Top:=Top+MoveVal[Aspect].Y;
     end;
-    if not result then
-    begin
-       Left:=-1; Top:=-1;
+    if result then break;
+    case Aspect of
+      asLeft  : begin Aspect:=asUp;   Count:=Count+1; end;
+      asRight : begin Aspect:=asDown; Count:=Count+1; end;
+      asUp    : begin Aspect:=asRight; end;
+      asDown  : begin Aspect:=asLeft; end;
     end;
+  end;
+  if not result then
+  begin
+    Left:=-1; Top:=-1;
+  end;
 end;
 
 //从当前位图中查找所有与Bmp一致的子图，返回是否找到，
@@ -850,24 +822,23 @@ end;
 //EnumImageProc：回调函数；
 //lParam：调用回调函数时发出的参数，可省略。
 function TBDBitmapData.EnumImage(Bmp : TBDBitmapData; EnumImageProc : TBDEnumImageProc; lParam : Integer): Boolean;
-var
-    x,y : Integer;
+var x,y : Integer;
     Res : Boolean;
 begin
-   result:=false; Res:=true;
-    for y:=0 to self.FHeight-Bmp.FHeight-1 do
+  result:=false; Res:=true;
+  for y:=0 to self.FHeight-Bmp.FHeight-1 do
+  begin
+    for x:=0 to self.FWidth-Bmp.FWidth-1 do
     begin
-       for x:=0 to self.FWidth-Bmp.FWidth-1 do
-       begin
-           if self.Compare(Bmp,x,y) then
-           begin
-               result:=true;
-               Res:=EnumImageProc(x,y,Bmp,lParam);
-               if not Res then break;
-           end;
-       end;
-       if not Res then break;
+      if self.Compare(Bmp,x,y) then
+      begin
+        result:=true;
+        Res:=EnumImageProc(x,y,Bmp,lParam);
+        if not Res then break;
+      end;
     end;
+    if not Res then break;
+  end;
 end;
 
 //从当前位图中模糊查找所有与Bmp一致的子图，返回是否找到，
@@ -880,24 +851,23 @@ end;
 //EnumImageProc：回调函数；
 //lParam：调用回调函数时发出的参数，可省略。
 function TBDBitmapData.EnumImage(Bmp : TBDBitmapData; const Range : TBDColorRange; EnumImageProc : TBDEnumImageProc; lParam : Integer): Boolean;
-var
-    x,y : Integer;
+var x,y : Integer;
     Res : Boolean;
 begin
-   result:=false; Res:=true;
-    for y:=0 to self.FHeight-Bmp.FHeight-1 do
+  result:=false; Res:=true;
+  for y:=0 to self.FHeight-Bmp.FHeight-1 do
+  begin
+    for x:=0 to self.FWidth-Bmp.FWidth-1 do
     begin
-       for x:=0 to self.FWidth-Bmp.FWidth-1 do
-       begin
-           if self.Compare(Bmp,Range,x,y) then
-           begin
-               result:=true;
-               Res:=EnumImageProc(x,y,Bmp,lParam);
-               if not Res then break;
-           end;
-       end;
-       if not Res then break;
+      if self.Compare(Bmp,Range,x,y) then
+      begin
+        result:=true;
+        Res:=EnumImageProc(x,y,Bmp,lParam);
+        if not Res then break;
+      end;
     end;
+    if not Res then break;
+  end;
 end;
 
 //从当前位图中查找指定的颜色，忽略self.FBackColor设置，返回是否找到，
@@ -909,31 +879,25 @@ end;
 //Left：找到颜色的左边距；
 //Top：找到颜色的顶边距。
 function TBDBitmapData.FindColor(Color : TBDColor; var Left,Top : Integer): Boolean;
-var
-   x,y,LineOff,Off : Integer;
+var x,y,LineOff,Off : Integer;
 begin
-   result:=false;
-   LineOff:=self.FSize; x:=0;
-    for y:=0 to self.FHeight-1 do
-    begin
-       LineOff:=LineOff-self.FLineWidth;
-       Off:=LineOff;
-       for x:=0 to self.FWidth-1 do
-       begin
-           result:=((PInteger(@(self.FBits[Off])))^ and $FFFFFF)=Color;
-           if result then break;
-           Off:=Off+3;
-       end;
-       if result then break;
+  result:=false;
+  LineOff:=self.FSize; x:=0;
+  for y:=0 to self.FHeight-1 do begin
+    LineOff:=LineOff-self.FLineWidth;
+    Off:=LineOff;
+    for x:=0 to self.FWidth-1 do begin
+      result:=((PInteger(@(self.FBits[Off])))^ and $FFFFFF)=Color;
+      if result then break;
+      Off:=Off+3;
     end;
-    if result then
-    begin
-       Left:=x; Top:=y;
-    end
-    else
-    begin
-       Left:=-1; Top:=-1;
-    end;
+    if result then break;
+  end;
+  if result then begin
+    Left:=x; Top:=y;
+  end else begin
+    Left:=-1; Top:=-1;
+  end;
 end;
 
 //从当前位图中模糊查找指定的颜色，忽略self.FBackColor设置，返回是否找到，
@@ -946,33 +910,27 @@ end;
 //Left：找到颜色的左边距；
 //Top：找到颜色的顶边距。
 function TBDBitmapData.FindColor(Color : TBDColor; const Range : TBDColorRange; var Left,Top : Integer): Boolean;
-var
-   x,y,LineOff,Off : Integer;
+var x,y,LineOff,Off : Integer;
 begin
-   result:=false;
-   LineOff:=self.FSize; x:=0;
-    for y:=0 to self.FHeight-1 do
-    begin
-       LineOff:=LineOff-self.FLineWidth;
-       Off:=LineOff;
-       for x:=0 to self.FWidth-1 do
-       begin
-           result:=BDCompareColor(
-               ((PInteger(@(self.FBits[Off])))^ and $FFFFFF),
-               Color,Range);
-           if result then break;
-           Off:=Off+3;
-       end;
-       if result then break;
+  result:=false;
+  LineOff:=self.FSize; x:=0;
+  for y:=0 to self.FHeight-1 do begin
+    LineOff:=LineOff-self.FLineWidth;
+    Off:=LineOff;
+    for x:=0 to self.FWidth-1 do begin
+      result:=BDCompareColor(
+        ((PInteger(@(self.FBits[Off])))^ and $FFFFFF),
+        Color,Range);
+      if result then break;
+      Off:=Off+3;
     end;
-    if result then
-    begin
-       Left:=x; Top:=y;
-    end
-    else
-    begin
-       Left:=-1; Top:=-1;
-    end;
+    if result then break;
+  end;
+  if result then begin
+    Left:=x; Top:=y;
+  end else begin
+    Left:=-1; Top:=-1;
+  end;
 end;
 
 //从当前位图中查找指定的颜色，忽略self.FBackColor设置，返回是否找到，
@@ -984,43 +942,42 @@ end;
 //Left：找到颜色的左边距；
 //Top：找到颜色的顶边距。
 function TBDBitmapData.FindCenterColor(Color : TBDColor; var Left,Top : Integer): Boolean;
-var
-    Aspect : TAspect;
-   VisitCount,Count,i : Integer;
+var Aspect : TAspect;
+    VisitCount,Count,i : Integer;
 begin
-   result:=false;
-   VisitCount:=0;
-   Aspect:=asUp;
-   Count:=1;
-    while VisitCount<(self.FWidth*self.FHeight) do
+  result:=false;
+  VisitCount:=0;
+  Aspect:=asUp;
+  Count:=1;
+  while VisitCount<(self.FWidth*self.FHeight) do
+  begin
+    for i:=0 to Count-1 do
     begin
-       for i:=0 to Count-1 do
-       begin
-           if (Left>=0) and (Left<self.FWidth) and
-              (Top>=0) and (Top<self.FHeight) then
-           begin
-               if self.GetPixels(Left,Top)=Color then
-               begin
-                   result:=true;
-                   break;
-               end;
-               VisitCount:=VisitCount+1;
-           end;
-           Left:=Left+MoveVal[Aspect].X;
-           Top:=Top+MoveVal[Aspect].Y;
-       end;
-       if result then break;
-       case Aspect of
-           asLeft  : begin Aspect:=asUp;   Count:=Count+1; end;
-           asRight : begin Aspect:=asDown; Count:=Count+1; end;
-           asUp    : begin Aspect:=asRight; end;
-           asDown  : begin Aspect:=asLeft; end;
-       end;
+      if (Left>=0) and (Left<self.FWidth) and
+        (Top>=0) and (Top<self.FHeight) then
+      begin
+        if self.GetPixels(Left,Top)=Color then
+        begin
+          result:=true;
+          break;
+        end;
+        VisitCount:=VisitCount+1;
+      end;
+      Left:=Left+MoveVal[Aspect].X;
+      Top:=Top+MoveVal[Aspect].Y;
     end;
-    if not result then
-    begin
-       Left:=-1; Top:=-1;
+    if result then break;
+    case Aspect of
+      asLeft  : begin Aspect:=asUp;   Count:=Count+1; end;
+      asRight : begin Aspect:=asDown; Count:=Count+1; end;
+      asUp    : begin Aspect:=asRight; end;
+      asDown  : begin Aspect:=asLeft; end;
     end;
+  end;
+  if not result then
+  begin
+    Left:=-1; Top:=-1;
+  end;
 end;
 
 //从当前位图中模糊查找指定的颜色，忽略self.FBackColor设置，返回是否找到，
@@ -1033,43 +990,42 @@ end;
 //Left：找到颜色的左边距；
 //Top：找到颜色的顶边距。
 function TBDBitmapData.FindCenterColor(Color : TBDColor; const Range : TBDColorRange; var Left,Top : Integer): Boolean;
-var
-    Aspect : TAspect;
-   VisitCount,Count,i : Integer;
+var Aspect : TAspect;
+    VisitCount,Count,i : Integer;
 begin
-   result:=false;
-   VisitCount:=0;
-   Aspect:=asUp;
-   Count:=1;
-    while VisitCount<(self.FWidth*self.FHeight) do
+  result:=false;
+  VisitCount:=0;
+  Aspect:=asUp;
+  Count:=1;
+  while VisitCount<(self.FWidth*self.FHeight) do
+  begin
+    for i:=0 to Count-1 do
     begin
-       for i:=0 to Count-1 do
-       begin
-           if (Left>=0) and (Left<self.FWidth) and
-              (Top>=0) and (Top<self.FHeight) then
-           begin
-               if BDCompareColor(self.GetPixels(Left,Top),Color,Range) then
-               begin
-                   result:=true;
-                   break;
-               end;
-               VisitCount:=VisitCount+1;
-           end;
-           Left:=Left+MoveVal[Aspect].X;
-           Top:=Top+MoveVal[Aspect].Y;
-       end;
-       if result then break;
-       case Aspect of
-           asLeft  : begin Aspect:=asUp;   Count:=Count+1; end;
-           asRight : begin Aspect:=asDown; Count:=Count+1; end;
-           asUp    : begin Aspect:=asRight; end;
-           asDown  : begin Aspect:=asLeft; end;
-       end;
+      if (Left>=0) and (Left<self.FWidth) and
+        (Top>=0) and (Top<self.FHeight) then
+      begin
+        if BDCompareColor(self.GetPixels(Left,Top),Color,Range) then
+        begin
+          result:=true;
+          break;
+        end;
+        VisitCount:=VisitCount+1;
+      end;
+      Left:=Left+MoveVal[Aspect].X;
+      Top:=Top+MoveVal[Aspect].Y;
     end;
-    if not result then
-    begin
-       Left:=-1; Top:=-1;
+    if result then break;
+    case Aspect of
+      asLeft  : begin Aspect:=asUp;   Count:=Count+1; end;
+      asRight : begin Aspect:=asDown; Count:=Count+1; end;
+      asUp    : begin Aspect:=asRight; end;
+      asDown  : begin Aspect:=asLeft; end;
     end;
+  end;
+  if not result then
+  begin
+    Left:=-1; Top:=-1;
+  end;
 end;
 
 //从当前位图中查找所有指定的颜色，忽略self.FBackColor设置，返回是否找到，
@@ -1081,30 +1037,29 @@ end;
 //EnumColorProc：回调函数；
 //lParam：调用回调函数时发出的参数，可省略。
 function TBDBitmapData.EnumColor(Color : TBDColor; EnumColorProc : TBDEnumColorProc; lParam : Integer): Boolean;
-var
-   x,y,LineOff,Off : Integer;
+var x,y,LineOff,Off : Integer;
     Res : Boolean;
     c : TBDColor;
 begin
-   result:=false;
-   LineOff:=self.FSize; Res:=true;
-    for y:=0 to self.FHeight-1 do
+  result:=false;
+  LineOff:=self.FSize; Res:=true;
+  for y:=0 to self.FHeight-1 do
+  begin
+    LineOff:=LineOff-self.FLineWidth;
+    Off:=LineOff;
+    for x:=0 to self.FWidth-1 do
     begin
-       LineOff:=LineOff-self.FLineWidth;
-       Off:=LineOff;
-       for x:=0 to self.FWidth-1 do
-       begin
-           c:=((PInteger(@(self.FBits[Off])))^ and $FFFFFF);
-           result:=c=Color;
-           if result then
-           begin
-               Res:=EnumColorProc(x,y,c,lParam);
-               if not Res then break;
-           end;
-           Off:=Off+3;
-       end;
-       if not Res then break;
+      c:=((PInteger(@(self.FBits[Off])))^ and $FFFFFF);
+      result:=c=Color;
+      if result then
+      begin
+        Res:=EnumColorProc(x,y,c,lParam);
+        if not Res then break;
+      end;
+      Off:=Off+3;
     end;
+    if not Res then break;
+  end;
 end;
 
 //从当前位图中模糊查找所有指定的颜色，忽略self.FBackColor设置，返回是否找到，
@@ -1117,39 +1072,38 @@ end;
 //EnumColorProc：回调函数；
 //lParam：调用回调函数时发出的参数，可省略。
 function TBDBitmapData.EnumColor(Color : TBDColor; const Range : TBDColorRange; EnumColorProc : TBDEnumColorProc; lParam : Integer): Boolean;
-var
-   x,y,LineOff,Off : Integer;
+var x,y,LineOff,Off : Integer;
     Res : Boolean;
     c : TBDColor;
 begin
-   result:=false;
-   LineOff:=self.FSize; Res:=true;
-    for y:=0 to self.FHeight-1 do
+  result:=false;
+  LineOff:=self.FSize; Res:=true;
+  for y:=0 to self.FHeight-1 do
+  begin
+    LineOff:=LineOff-self.FLineWidth;
+    Off:=LineOff;
+    for x:=0 to self.FWidth-1 do
     begin
-       LineOff:=LineOff-self.FLineWidth;
-       Off:=LineOff;
-       for x:=0 to self.FWidth-1 do
-       begin
-           c:=((PInteger(@(self.FBits[Off])))^ and $FFFFFF);
-           result:=BDCompareColor(c,Color,Range);
-           if result then
-           begin
-               Res:=EnumColorProc(x,y,c,lParam);
-               if not Res then break;
-           end;
-           Off:=Off+3;
-       end;
-       if not Res then break;
+      c:=((PInteger(@(self.FBits[Off])))^ and $FFFFFF);
+      result:=BDCompareColor(c,Color,Range);
+      if result then
+      begin
+        Res:=EnumColorProc(x,y,c,lParam);
+        if not Res then break;
+      end;
+      Off:=Off+3;
     end;
+    if not Res then break;
+  end;
 end;
 
 //单元初始化
 initialization
 begin
-    ScreenWidth :=GetSystemMetrics(SM_CXSCREEN);
-   ScreenHeight:=GetSystemMetrics(SM_CYSCREEN);
-   IconWidth  :=GetSystemMetrics(SM_CXICON);
-   IconHeight  :=GetSystemMetrics(SM_CYICON);
+  ScreenWidth  :=GetSystemMetrics(SM_CXSCREEN);
+  ScreenHeight :=GetSystemMetrics(SM_CYSCREEN);
+  IconWidth    :=GetSystemMetrics(SM_CXICON);
+  IconHeight   :=GetSystemMetrics(SM_CYICON);
 end;
 
 end.
