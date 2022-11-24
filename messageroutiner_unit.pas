@@ -17,7 +17,7 @@ uses
 
 const
 
-  version_number='0.2.2';
+  version_number='0.2.3';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -424,7 +424,7 @@ var
 
 implementation
 uses form_settinglag, form_aufbutton, form_manual, form_runperformance,
-     unit_holdbuttonsetting;
+     unit_holdbuttonsetting, auf_ram_image;
 
 {$R *.lfm}
 
@@ -661,6 +661,7 @@ begin
   ClearWindows(WndRoot);
   WndFlat.Clear;
   hd:=GetDesktopWindow;//得到桌面窗口
+  GlobalExpressionList.TryAddExp('desktop',narg('',IntToStr(hd),''));
   WndRoot:=TWindow.Create(hd,'WndRoot','',0,0,0,0);
   WndRoot.parent:=nil;
   WndRoot.node:=nil;
@@ -1349,7 +1350,6 @@ begin
   end;
 end;
 
-
 procedure _RamImage(Sender:TObject);//ramimg col,row,@var
 var x,y:word;
     pos,pot:longint;
@@ -1388,6 +1388,83 @@ begin
   Form_Routiner.Image_Ram.Picture.BitMap.PixelFormat:=pf32bit;
   Form_Routiner.Image_Ram.Picture.Bitmap.SetSize(x,y);
   CopyMemory(Form_Routiner.Image_Ram.Picture.Bitmap.ScanLine[0],tmp.Head,tmp.size);
+
+  Form_Routiner.Image_Ram.Picture.Bitmap.SaveToFile('ram.bmp');
+  Form_Routiner.Image_Ram.Refresh;
+  Form_Routiner.ScrollBox_SynchronicResize(Form_Routiner.ScrollBox_Synchronic);
+  Form_Routiner.ScrollBox_WndListResize(Form_Routiner.ScrollBox_Synchronic);
+  Form_Routiner.ScrollBox_WndListResize(Form_Routiner.ScrollBox_WndList);
+  Form_Routiner.ScrollBox_RecOptionResize(Form_Routiner.ScrollBox_RecOption);
+
+end;
+
+
+procedure _ARI_GetRect(Sender:TObject);//ari.get hwnd,@img[,x,y,w,h]
+var hd:longint;
+    info:tagWINDOWINFO;
+    mem:TMemoryStream;
+    xx,yy,ww,hh:dword;
+    tmp:TAufRamVar;
+    AAuf:TAuf;
+    AufScpt:TAufScript;
+    BDBitmapData:TBDBitmapData;
+
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(3) then exit;
+  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
+  if hd=0 then begin AufScpt.send_error('警告：窗体句柄无效，代码未执行！');exit end;
+  if not AAuf.TryArgToARV(2,8,8,[ARV_FixNum],tmp) then exit;
+  if AAuf.ArgsCount>3 then begin
+    if not AAuf.TryArgToDWord(3,xx) then exit;
+    if not AAuf.TryArgToDWord(4,yy) then exit;
+    if not AAuf.TryArgToDWord(5,ww) then exit;
+    if not AAuf.TryArgToDWord(6,hh) then exit;
+  end else begin
+    xx:=0;
+    yy:=0;
+    GetWindowInfo(hd,info);
+    ww:=info.rcWindow.Width;
+    hh:=info.rcWindow.Height;
+  end;
+
+  BDBitmapData:=TBDBitmapData.Create;
+  mem:=TMemoryStream.Create;
+  try
+    BDBitmapData.CopyFormScreen(hd,xx,yy,ww,hh);
+    BDBitmapData.SaveToStream(mem);
+    mem.Position:=0;
+    (arv_to_obj(tmp) as TARImage).LoadFromStream(mem);
+  finally
+    BDBitmapData.Free;
+    mem.Free;
+  end;
+end;
+
+procedure _ARI_Display(Sender:TObject);//ari.dsp @img
+var ww,hh:word;
+    tmp:TAufRamVar;
+    AAuf:TAuf;
+    AufScpt:TAufScript;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(2) then exit;
+  AAuf.TryArgToARV(1,8,8,[ARV_FixNum],tmp);
+  if not (arv_to_obj(tmp) is TARImage) then begin
+    AufScpt.send_error('ARI图像无效。');
+    exit;
+  end;
+  with (arv_to_obj(tmp) as TARImage).FPicture do begin
+    ww:=Width;
+    hh:=Height;
+  end;
+  Form_Routiner.Image_Ram.Picture.Free;
+  Form_Routiner.Image_Ram.Picture:=TPicture.Create;
+  Form_Routiner.Image_Ram.Picture.BitMap.PixelFormat:=pf32bit;
+  Form_Routiner.Image_Ram.Picture.Bitmap.SetSize(ww,hh);
+  Form_Routiner.Image_Ram.Picture.Bitmap.Assign((arv_to_obj(tmp) as TARImage).FPicture.Bitmap);
 
   Form_Routiner.Image_Ram.Picture.Bitmap.SaveToFile('ram.bmp');
   Form_Routiner.Image_Ram.Refresh;
@@ -1698,6 +1775,10 @@ begin
   AAuf.Script.add_func('getpixel,获取像素点',@_GetPixel,'hwnd,x,y,out_var','返回窗体指定像素点颜色');
   AAuf.Script.add_func('getrect,获取画面',@_GetPixelRect,'hwnd,x1,x2,y1,y2,out_var','返回窗体指定矩形范围内像素点颜色');
   AAuf.Script.add_func('ramimg,显示画面',@_RamImage,'col,row,in_var','根据内存变量显示图片');
+  AAuf.Script.add_func('ari.get,获取画面ARI',@_ARI_GetRect,'hwnd,@img','读取窗体画面并保存到ARI图像中');
+  AAuf.Script.add_func('ari.dsp,显示画面ARI',@_ARI_Display,'@img','从ARI图像中显示图片');
+
+
 
 end;
 procedure GlobalExpressionInitialize;
