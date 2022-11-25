@@ -7,8 +7,8 @@ unit MessageRoutiner_Unit;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
-  Windows, StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, Dos, LazUTF8, RegExpr
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Windows,
+  StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, Spin, Dos, LazUTF8, RegExpr
   {$ifndef insert},
   Apiglio_Useful, aufscript_frame, auf_ram_var, form_adapter, unit_bitmapdata
   {$endif};
@@ -36,7 +36,7 @@ const
 
 type
 
-  TLayoutSet = (Lay_Command=0,Lay_Advanced=1,Lay_Synchronic=2,Lay_Buttons=3,Lay_Recorder=4,Lay_Customer=5);
+  TLayoutSet = (Lay_Command=0,Lay_Advanced=1,Lay_Synchronic=2,Lay_Buttons=3,Lay_Recorder=4,Lay_Customer=5,Lay_ImgMerger=6);
 
 
   { TWindow }
@@ -168,18 +168,30 @@ type
   { TForm_Routiner }
 
   TForm_Routiner = class(TForm)
+    Button_MergerAppend: TButton;
+    Button_MergerSave: TButton;
+    Button_MergerClear: TButton;
+    Button_MergerTarget: TButton;
+    Button_MergerPosition: TButton;
     Button_MouseOri: TButton;
     Button_excel: TButton;
     Button_TreeViewFresh: TButton;
     Button_Wnd_Record: TButton;
     Button_advanced: TButton;
     Button_Wnd_Synthesis: TButton;
+    CheckBox_MergerAutoAppend: TCheckBox;
+    CheckBox_MergerTarget: TCheckBox;
     CheckBox_UseReg: TCheckBox;
     CheckBox_ViewEnabled: TCheckBox;
     CheckGroup_KeyMouse: TCheckGroup;
     Edit_TimerOffset: TEdit;
     Edit_TreeView: TEdit;
+    Label_MergerIntervalsEvery: TLabel;
+    Label_MergerIntervalsMS: TLabel;
+    CheckBox_MergerPosition: TCheckBox;
     Label_WindowPosPadState: TLabel;
+    MenuItem_Lay_ImgMerge: TMenuItem;
+    Panel_ImageMerger: TPanel;
     ScrollBox_ImageView: TScrollBox;
     GroupBox_OffsetSetting: TGroupBox;
     ScrollBox_RecOption: TScrollBox;
@@ -202,6 +214,7 @@ type
     ScrollBox_AufButton: TScrollBox;
     ScrollBox_HoldButton: TScrollBox;
     ScrollBox_WndList: TScrollBox;
+    SpinEdit_MergerIntervals: TSpinEdit;
     Splitter_SyncV: TSplitter;
     Splitter_LeftH: TSplitter;
     Splitter_ButtonV: TSplitter;
@@ -254,6 +267,9 @@ type
     procedure Button_Wnd_RecordMouseLeave(Sender: TObject);
     procedure Button_Wnd_SynthesisMouseEnter(Sender: TObject);
     procedure Button_Wnd_SynthesisMouseLeave(Sender: TObject);
+    procedure CheckBox_MergerAutoAppendChange(Sender: TObject);
+    procedure CheckBox_MergerPositionChange(Sender: TObject);
+    procedure CheckBox_MergerTargetChange(Sender: TObject);
     procedure CheckBox_ViewEnabledChange(Sender: TObject);
     procedure CheckGroup_KeyMouseItemClick(Sender: TObject; Index: integer);
     procedure CheckGroup_KeyMouseMouseEnter(Sender: TObject);
@@ -267,6 +283,7 @@ type
     procedure Memo_TmpMouseLeave(Sender: TObject);
     procedure Memo_TmpRecMouseEnter(Sender: TObject);
     procedure Memo_TmpRecMouseLeave(Sender: TObject);
+    procedure MenuItem_Lay_ImgMergeClick(Sender: TObject);
     procedure RadioGroup_DelayModeClick(Sender: TObject);
     procedure RadioGroup_DelayModeMouseEnter(Sender: TObject);
     procedure RadioGroup_DelayModeMouseLeave(Sender: TObject);
@@ -1770,10 +1787,8 @@ begin
   AAuf.Script.add_func('getpixel,获取像素点',@_GetPixel,'hwnd,x,y,out_var','返回窗体指定像素点颜色');
   AAuf.Script.add_func('getrect,获取画面',@_GetPixelRect,'hwnd,x1,x2,y1,y2,out_var','返回窗体指定矩形范围内像素点颜色');
   AAuf.Script.add_func('ramimg,显示画面',@_RamImage,'col,row,in_var','根据内存变量显示图片');
-  AAuf.Script.add_func('ari.get,获取画面ARI',@_ARI_GetRect,'hwnd,@img','读取窗体画面并保存到ARI图像中');
+  AAuf.Script.add_func('ari.get,获取画面ARI',@_ARI_GetRect,'hwnd,@img[,x,y,w,h]','读取窗体画面并保存到ARI图像中');
   AAuf.Script.add_func('ari.dsp,显示画面ARI',@_ARI_Display,'@img','从ARI图像中显示图片');
-
-
 
 end;
 procedure GlobalExpressionInitialize;
@@ -2585,6 +2600,12 @@ begin
   Self.FormResize(Self);
 end;
 
+procedure TForm_Routiner.MenuItem_Lay_ImgMergeClick(Sender: TObject);
+begin
+  Self.SetLayout(byte(Lay_ImgMerger));
+  Self.FormResize(Self);
+end;
+
 procedure TForm_Routiner.MenuItem_Lay_SaveOptionClick(Sender: TObject);
 begin
   Self.SaveOption;
@@ -2691,12 +2712,13 @@ end;
 
 procedure TForm_Routiner.ScrollBox_SynchronicResize(Sender: TObject);
 var i:byte;
-    SyncW{,SyncH}:longint;
+    SyncW{,SyncH},TreW:longint;
 begin
   with Sender as TScrollBox do
     begin
       SyncW:=(Width - 2*gap);
       //SyncH:=(Height- 2*gap);
+      TreW:=(Width - 6*gap) div 3;
     end;
   for i:=0 to SynCount do
     begin
@@ -2713,7 +2735,10 @@ begin
       Self.CheckBoxs[i].Left:=SyncW-100;
       Self.CheckBoxs[i].Top:=Self.Buttons[i].Top+3;
     end;
-  Self.ScrollBox_ImageView.Top:=Self.CheckBoxs[SynCount].Top+Self.CheckBoxs[SynCount].Height+gap;
+  if Layout.LayoutCode=Lay_ImgMerger then
+    Self.ScrollBox_ImageView.Top:=gap
+  else
+    Self.ScrollBox_ImageView.Top:=Self.CheckBoxs[SynCount].Top+Self.CheckBoxs[SynCount].Height+gap;
   Self.ScrollBox_ImageView.Height:=Self.ScrollBox_Synchronic.Height-Self.ScrollBox_ImageView.Top-gap;
   if Self.ScrollBox_ImageView.Height<48 then Self.CheckBox_ViewEnabled.Visible:=false
   else Self.CheckBox_ViewEnabled.Visible:=true;
@@ -2724,7 +2749,16 @@ begin
       Self.Image_Ram.Width:=(Sender as TScrollBox).Width-2*gap;
       with Self.Image_Ram do Height:=Width * Picture.Bitmap.Height div Picture.Bitmap.Width;
     end;
-
+  Button_MergerPosition.Height:=SynchronicH;
+  Button_MergerTarget.Height:=SynchronicH;
+  SpinEdit_MergerIntervals.Height:=SynchronicH;
+  Button_MergerSave.Height:=SynchronicH;
+  Button_MergerClear.Height:=SynchronicH;
+  Button_MergerAppend.Height:=SynchronicH;
+  Button_MergerSave.Width:=TreW;
+  Button_MergerClear.Width:=TreW;
+  Button_MergerAppend.Width:=TreW;
+  Panel_ImageMerger.Height:=4*SynchronicH+5*Gap;
 end;
 
 procedure TForm_Routiner.ScrollBox_WndListResize(Sender: TObject);
@@ -2968,6 +3002,8 @@ begin
   //Self.BorderStyle:=bsSingle;
 
   WindowsFilter;
+
+  ScrollBox_ImageView.BringToFront;//LAY_ImgMerger时，遮盖ARV
   FormResize(nil);
 
   tim:=TTimer.Create(Self);
@@ -3027,6 +3063,7 @@ begin
     Lay_Synchronic:MinSizeCheck(ARVControlW+360,(SynCount+2)*(SynchronicH+gap)+gap+StatusBarH);
     Lay_Buttons:MinSizeCheck((ButtonColumn+1+8+1)*(gap+SynchronicW)+2*gap,(SynCount+1)*(gap+SynchronicH)+2*gap+MainMenuH+StatusBarH);
     Lay_Recorder:MinSizeCheck(480+WindowsListW,300+(SynCount+1)*(gap+SynchronicH)+gap);
+    Lay_ImgMerger:MinSizeCheck(300+WindowsListW,300+StatusBarH);
   end;
   Self.Splitter_LeftV.Left:=0;
   Self.Splitter_RightV.Left:=Self.Width-sp_thick;
@@ -3082,6 +3119,16 @@ begin
         Self.Splitter_RightH.Top:=0;
         Self.Splitter_RecH.Top:=0;
         Self.Button_Wnd_Record.Enabled:=true;
+      end;
+    Lay_ImgMerger:
+      begin
+        Self.Splitter_MainV.Left:=Self.Width-WindowsListW;
+        Self.Splitter_SyncV.Left:=0;
+        Self.Splitter_ButtonV.Left:=max(Self.Splitter_MainV.Left+2*sp_thick,Self.Width-sp_thick-8*(gap+SynchronicW)-gap)-sp_thick;
+        Self.Splitter_LeftH.Top:=0;
+        Self.Splitter_RightH.Top:=0;
+        Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH-StatusBarH;
+        Self.Button_Wnd_Record.Enabled:=false;
       end;
     Lay_Customer:
       begin
@@ -3191,6 +3238,22 @@ end;
 procedure TForm_Routiner.Button_Wnd_SynthesisMouseLeave(Sender: TObject);
 begin
   Self.ShowManual('');
+end;
+
+procedure TForm_Routiner.CheckBox_MergerAutoAppendChange(Sender: TObject);
+begin
+  SpinEdit_MergerIntervals.Enabled:=(Sender as TCheckBox).Checked;
+  Button_MergerAppend.Enabled:=not (Sender as TCheckBox).Checked;
+end;
+
+procedure TForm_Routiner.CheckBox_MergerPositionChange(Sender: TObject);
+begin
+  Button_MergerPosition.Enabled:=(Sender as TCheckBox).Checked;
+end;
+
+procedure TForm_Routiner.CheckBox_MergerTargetChange(Sender: TObject);
+begin
+  Button_MergerTarget.Enabled:=(Sender as TCheckBox).Checked;
 end;
 
 procedure TForm_Routiner.CheckBox_ViewEnabledChange(Sender: TObject);
@@ -3366,6 +3429,7 @@ begin
   Self.MainMenu.Items[1].Items[3].Enabled:=true;
   Self.MainMenu.Items[1].Items[4].Enabled:=true;
   Self.MainMenu.Items[1].Items[5].Enabled:=true;
+  Self.MainMenu.Items[1].Items[6].Enabled:=true;
   case TLayoutSet(layoutcode) of
   Lay_Command:
     begin
@@ -3413,6 +3477,15 @@ begin
       Self.Constraints.MinWidth:=480+WindowsListW;
       Self.Constraints.MaxWidth:=0;
       Self.MainMenu.Items[1].Items[4].Enabled:=false;
+    end;
+  Lay_ImgMerger:
+    begin
+      Self.Layout.LayoutCode:=Lay_ImgMerger;
+      Self.Constraints.MinHeight:=300+StatusBarH;
+      Self.Constraints.MaxHeight:=0;
+      Self.Constraints.MinWidth:=300+WindowsListW;
+      Self.Constraints.MaxWidth:=0;
+      Self.MainMenu.Items[1].Items[5].Enabled:=false;
     end;
   Lay_Customer:
     begin
