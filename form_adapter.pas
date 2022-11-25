@@ -1,5 +1,3 @@
-{$define HookAdapter}//主单元也有一个需要同步修改
-
 unit form_adapter;
 
 {$mode objfpc}{$H+}
@@ -351,7 +349,6 @@ begin
       Rec.SyntaxMode:=smRapid;
       Rec.TimeMode:=rtmSleep;
     end;
-  {$ifdef HookAdapter}
   with Form_Routiner do
     begin
       KeybdHookEnabled:=false;
@@ -359,7 +356,6 @@ begin
       KeybdHook;
       //MouseHook;//初始不开鼠标钩子
   end;
-  {$endif}
   Self.ShortcutMode:=true;
   with Self.Option.Shortcut do
     begin
