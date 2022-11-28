@@ -1,7 +1,7 @@
 object AdapterForm: TAdapterForm
-  Left = 489
+  Left = 490
   Height = 251
-  Top = 397
+  Top = 398
   Width = 640
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle

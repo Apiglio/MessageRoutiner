@@ -1,7 +1,7 @@
 object AufButtonForm: TAufButtonForm
-  Left = 929
+  Left = 930
   Height = 384
-  Top = 474
+  Top = 475
   Width = 640
   BorderIcons = [biSystemMenu]
   Caption = '面板按键设置'
@@ -9,7 +9,7 @@ object AufButtonForm: TAufButtonForm
   ClientWidth = 640
   Constraints.MinHeight = 360
   Constraints.MinWidth = 640
-  DesignTimePPI = 120
+  DesignTimePPI = 144
   OnActivate = FormActivate
   OnCreate = FormCreate
   OnHide = FormHide
@@ -21,7 +21,7 @@ object AufButtonForm: TAufButtonForm
     AnchorSideLeft.Control = Owner
     AnchorSideRight.Control = SynEdit_FileView
     Left = 10
-    Height = 28
+    Height = 32
     Top = 31
     Width = 226
     Anchors = [akTop, akLeft, akRight]
@@ -34,9 +34,9 @@ object AufButtonForm: TAufButtonForm
   object Label_Caption: TLabel
     AnchorSideLeft.Control = Owner
     Left = 10
-    Height = 15
+    Height = 24
     Top = 8
-    Width = 75
+    Width = 90
     BorderSpacing.Left = 10
     Caption = '按键名称：'
     ParentColor = False
@@ -44,9 +44,9 @@ object AufButtonForm: TAufButtonForm
   object Label_Window: TLabel
     AnchorSideLeft.Control = Owner
     Left = 10
-    Height = 15
+    Height = 24
     Top = 71
-    Width = 75
+    Width = 90
     BorderSpacing.Left = 10
     Caption = '发送窗体：'
     ParentColor = False
@@ -55,13 +55,13 @@ object AufButtonForm: TAufButtonForm
     AnchorSideLeft.Control = Owner
     AnchorSideRight.Control = SynEdit_FileView
     Left = 10
-    Height = 28
+    Height = 32
     Top = 94
     Width = 226
     Anchors = [akTop, akLeft, akRight]
     BorderSpacing.Left = 10
     BorderSpacing.Right = 10
-    ItemHeight = 20
+    ItemHeight = 24
     ItemIndex = 0
     Items.Strings = (
       '@win0'
@@ -73,9 +73,9 @@ object AufButtonForm: TAufButtonForm
   object Label_Syntax: TLabel
     AnchorSideLeft.Control = Owner
     Left = 10
-    Height = 15
+    Height = 24
     Top = 207
-    Width = 75
+    Width = 90
     BorderSpacing.Left = 10
     Caption = '脚本预览：'
     ParentColor = False
@@ -83,9 +83,9 @@ object AufButtonForm: TAufButtonForm
   object Label_FileName: TLabel
     AnchorSideLeft.Control = Owner
     Left = 10
-    Height = 15
+    Height = 24
     Top = 135
-    Width = 75
+    Width = 90
     BorderSpacing.Left = 10
     Caption = '脚本文件：'
     ParentColor = False
@@ -124,7 +124,7 @@ object AufButtonForm: TAufButtonForm
     ParentColor = False
     ParentFont = False
     TabOrder = 3
-    Gutter.Width = 57
+    Gutter.Width = 61
     Gutter.MouseActions = <>
     RightGutter.Width = 0
     RightGutter.MouseActions = <>
@@ -583,7 +583,7 @@ object AufButtonForm: TAufButtonForm
         MouseActions = <>
       end
       object SynGutterLineNumber1: TSynGutterLineNumber
-        Width = 17
+        Width = 21
         MouseActions = <>
         MarkupInfo.Background = clBtnFace
         MarkupInfo.Foreground = clNone
@@ -697,7 +697,7 @@ object AufButtonForm: TAufButtonForm
     ParentColor = False
     ParentFont = False
     TabOrder = 8
-    Gutter.Width = 59
+    Gutter.Width = 63
     Gutter.MouseActions = <>
     RightGutter.Width = 0
     RightGutter.MouseActions = <>
@@ -1151,7 +1151,7 @@ object AufButtonForm: TAufButtonForm
         MouseActions = <>
       end
       object SynGutterLineNumber1: TSynGutterLineNumber
-        Width = 17
+        Width = 21
         MouseActions = <>
         MarkupInfo.Background = clBtnFace
         MarkupInfo.Foreground = clNone
@@ -1187,9 +1187,9 @@ object AufButtonForm: TAufButtonForm
     AnchorSideLeft.Control = SynEdit_FileView
     AnchorSideTop.Control = Label_Caption
     Left = 246
-    Height = 15
+    Height = 24
     Top = 8
-    Width = 105
+    Width = 126
     Caption = '脚本文件预览：'
     ParentColor = False
   end

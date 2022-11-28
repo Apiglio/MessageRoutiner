@@ -1,13 +1,13 @@
 object Form_Manual: TForm_Manual
-  Left = 876
+  Left = 877
   Height = 600
-  Top = 336
+  Top = 337
   Width = 800
   BorderIcons = [biSystemMenu]
   Caption = '操作指南'
   ClientHeight = 600
   ClientWidth = 800
-  DesignTimePPI = 120
+  DesignTimePPI = 144
   OnResize = FormResize
   Position = poScreenCenter
   LCLVersion = '1.8.4.0'

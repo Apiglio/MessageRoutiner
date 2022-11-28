@@ -1,12 +1,12 @@
 object SettingLagForm: TSettingLagForm
-  Left = 446
+  Left = 447
   Height = 391
-  Top = 363
+  Top = 364
   Width = 584
   Caption = '异步器设置'
   ClientHeight = 391
   ClientWidth = 584
-  DesignTimePPI = 120
+  DesignTimePPI = 144
   OnCreate = FormCreate
   Position = poScreenCenter
   LCLVersion = '1.8.4.0'
@@ -35,10 +35,10 @@ object SettingLagForm: TSettingLagForm
     AnchorSideTop.Side = asrCenter
     AnchorSideRight.Control = Owner
     AnchorSideRight.Side = asrBottom
-    Left = 424
-    Height = 15
-    Top = 188
-    Width = 150
+    Left = 394
+    Height = 24
+    Top = 183
+    Width = 180
     Anchors = [akTop, akRight]
     BorderSpacing.Right = 10
     Caption = '此版本异步器暂时停用'

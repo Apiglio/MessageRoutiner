@@ -1,7 +1,7 @@
 object FormRunPerformance: TFormRunPerformance
-  Left = 1192
+  Left = 1193
   Height = 636
-  Top = 347
+  Top = 348
   Width = 580
   Caption = '全局设置'
   ClientHeight = 636
