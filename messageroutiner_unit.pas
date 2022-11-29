@@ -15,7 +15,7 @@ uses
 
 const
 
-  version_number='0.2.4';
+  version_number='0.2.5';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -494,10 +494,6 @@ uses form_settinglag, form_aufbutton, form_manual, form_runperformance,
 
 {$R *.lfm}
 
-//function StartHookK(MsgID:Word):Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StartHook';
-//function StopHookK:Bool;stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'StopHook';
-//procedure SetCallHandleK(sender:HWND);stdcall;external 'DesktopCommander_keyboard_dll.dll' name 'SetCallHandle';
-
 function StartHookK(MsgID:Word):Bool;stdcall;external 'AufMR_KeyBD.dll' name 'StartHook';
 function StopHookK:Bool;stdcall;external 'AufMR_KeyBD.dll' name 'StopHook';
 procedure SetCallHandleK(sender:HWND);stdcall;external 'AufMR_KeyBD.dll' name 'SetCallHandle';
@@ -650,9 +646,7 @@ end;
 procedure SCAufStr(Sender:TObject;str:string);
 var tmp:byte;
 begin
-  //ShowMessage(str);
   if str='' then exit;
-  //if (Sender as TAufScript).PSW.haltoff then exit;
   tmp:=MessageBox(0,PChar(utf8towincp('是否继续执行？')+#13+#10+utf8towincp('错误信息：'+str)),'SCAuf',MB_RETRYCANCEL);
   if tmp=IDCANCEL then (Sender as TAufScript).Stop;
 end;
@@ -699,12 +693,10 @@ begin
   hd:=GetWindow(wnd.info.hd,GW_CHILD);
   while hd<>0 do
     begin
-      //getmem(ttmp,200);
       GetWindowText(hd,ttmp,200);
       GetClassName(hd,ctmp,200);
       title:=ttmp;
       classname:=ctmp;
-      ////freemem(ttmp);
       GetWindowInfo(hd,info);
       w:=info.rcWindow.Right-info.rcWindow.Left;
       h:=info.rcWindow.Bottom-info.rcWindow.Top;
@@ -804,20 +796,8 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if not AAuf.CheckArgs(3) then exit;
-  try
-    wind_name:=AufScpt.TryToString(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
-    exit;
-  end;
-  try
-    tmp:=AufScpt.RamVar(AAuf.nargs[1]);
-    if tmp.size<4 then raise Exception.Create('');
-  except
-    AufScpt.send_error('警告：第1个参数需要是四位及以上整型变量，代码未执行！');
-    exit;
-  end;
-
+  if not AAuf.TryArgToString(2,wind_name) then exit;
+  if not AAuf.TryArgToARV(1,tmp.size,High(dword),[ARV_FixNum],tmp) then exit;
   hd:=FindWindow(nil,PChar(utf8towincp(wind_name)));
   while (hd<>0) and hidden do begin
     hidden:=false;
@@ -840,21 +820,9 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if not AAuf.CheckArgs(2) then exit;
-  try
-    tmp:=AufScpt.RamVar(AAuf.nargs[1]);
-    if (tmp.size<4) or (tmp.VarType<>ARV_FixNum)then raise Exception.Create('');
-  except
-    AufScpt.send_error('警告：'+AAuf.args[0]+'的参数需要是不小于4字节的整型变量，代码未执行！');
-    exit;
-  end;
+  if not AAuf.TryArgToARV(1,4,High(dword),[ARV_FixNum],tmp) then exit;
   if AAuf.ArgsCount>2 then begin
-    try
-      name_tmp:=AufScpt.RamVar(AAuf.nargs[2]);
-      if name_tmp.VarType<>ARV_Char then raise Exception.Create('');
-    except
-      AufScpt.send_error('警告：'+AAuf.args[0]+'的第二个参数需要是字符型变量，代码按照单参数执行！');
-      exit;
-    end;
+    if not AAuf.TryArgToARV(2,4,High(dword),[ARV_FixNum],name_tmp) then exit;
   end else name_tmp.size:=0;
   hd:=GetForegroundWindow;
   dword_to_arv(hd,tmp);
@@ -874,19 +842,10 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if not AAuf.CheckArgs(2) then exit;
-  try
-    filter_str:=AufScpt.TryToString(AAuf.nargs[1]);
-  except
-    AufScpt.send_error('警告：第1个参数转为字符串失败，代码未执行！');
-    exit;
-  end;
-  if AAuf.ArgsCount>=3 then
-  try
-    use_reg_str:=AufScpt.TryToString(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
-    exit;
-  end;
+  if not AAuf.TryArgToString(1,filter_str) then exit;
+  if AAuf.ArgsCount>=3 then begin
+    if not AAuf.TryArgToString(2,use_reg_str) then exit;
+  end else use_reg_str:='';
   case lowercase(use_reg_str) of
     'on':use_reg:=true;
     else use_reg:=false;
@@ -917,20 +876,10 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if not AAuf.CheckArgs(2) then exit;
-  try
-    filter_str:=AufScpt.TryToString(AAuf.nargs[1]);
-  except
-    AufScpt.send_error('警告：第1个参数转为字符串失败，代码未执行！');
-    exit;
-  end;
-  if AAuf.ArgsCount>=3 then
-  try
-    use_reg_str:=AufScpt.TryToString(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
-    exit;
-  end
-  else use_reg_str:='';
+  if not AAuf.TryArgToString(1,filter_str) then exit;
+  if AAuf.ArgsCount>=3 then begin
+    AAuf.TryArgToString(2,use_reg_str);
+  end else use_reg_str:='';
   case lowercase(use_reg_str) of
     'on':use_reg:=true;
     else use_reg:=false;
@@ -974,27 +923,11 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if not AAuf.CheckArgs(3) then exit;
-  try
-    filter_str:=AufScpt.TryToString(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
-    exit;
-  end;
-  try
-    tmp:=AufScpt.RamVar(AAuf.nargs[1]);
-    if tmp.size<4 then raise Exception.Create('');
-  except
-    AufScpt.send_error('警告：第1个参数需要是四位及以上整型变量，代码未执行！');
-    exit;
-  end;
-  if AAuf.ArgsCount>=4 then
-  try
-    use_reg_str:=AufScpt.TryToString(AAuf.nargs[3]);
-  except
-    AufScpt.send_error('警告：第3个参数转为字符串失败，代码未执行！');
-    exit;
-  end
-  else use_reg_str:='';
+  if not AAuf.TryArgToString(2,filter_str) then exit;
+  if not AAuf.TryArgToARV(1,4,High(dword),[ARV_FixNum],tmp) then exit;
+  if AAuf.ArgsCount>=4 then begin
+    if not AAuf.TryArgToString(3,use_reg_str) then exit;
+  end else use_reg_str:='';
   case lowercase(use_reg_str) of
     'on':use_reg:=true;
     else use_reg:=false;
@@ -1034,18 +967,10 @@ var hd:longint;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  try
-    str:=AufScpt.TryToString(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：第2个参数转为字符串失败，代码未执行！');
-    exit;
-  end;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  if not AAuf.TryArgToString(2,str) then exit;
   str:=utf8towincp(str);
-  for i:=1 to length(str) do
-    begin
-      sendmessage(hd,WM_CHAR,ord(str[i]),0);
-    end;
+  for i:=1 to length(str) do sendmessage(hd,WM_CHAR,ord(str[i]),0);
 end;
 
 procedure SendM(Sender:TObject);
@@ -1055,8 +980,9 @@ var hd,msg,wparam,lparam:longint;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  msg:=Round(AufScpt.to_double(AAuf.nargs[2].pre,AAuf.nargs[2].arg));
+  if not AAuf.CheckArgs(5) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  if not AAuf.TryArgToLong(2,msg) then exit;
   case AAuf.nargs[3].pre of
     '"':wparam:=ord(AAuf.nargs[3].arg[1]);
     else wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
@@ -1075,8 +1001,9 @@ var hd,msg,wparam,lparam:longint;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  msg:=Round(AufScpt.to_double(AAuf.nargs[2].pre,AAuf.nargs[2].arg));
+  if not AAuf.CheckArgs(5) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  if not AAuf.TryArgToLong(2,msg) then exit;
   case AAuf.nargs[3].pre of
     '"':wparam:=ord(AAuf.nargs[3].arg[1]);
     else wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
@@ -1099,37 +1026,19 @@ var hd,msg,wparam,lparam:longint;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  if AAuf.ArgsCount<4 then begin
-    AufScpt.send_error('警告：指令需要3个参数，代码未执行！');
-    exit;
-  end;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  try
-    buttonmode:=AufScpt.TryToString(AAuf.nargs[2]);
-    if length(buttonmode)<>1 then raise Exception.Create('');
-  except
-    AufScpt.send_error('警告：指令第2参数需要是长度为1的字符串，代码未执行！');
-    exit;
-  end;
-
+  if not AAuf.CheckArgs(4) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  if not AAuf.TryArgToStrParam(2,['d','u'],false,buttonmode) then exit;
   case AAuf.nargs[3].pre of
     '"':begin
-          try
-            str:=AufScpt.TryToString(AAuf.nargs[3]);
-            if length(str)<>1 then raise Exception.Create('');
-          except
-            AufScpt.send_error('警告：指令第3参数需要是长度为1的字符串（或字节类型），代码未执行！');
+          if not AAuf.TryArgToString(3,str) then exit;
+          if length(str) <> 1 then begin
+            AufScpt.send_error('警告：指令第3参数不是字符或数字，代码未执行！');
             exit;
           end;
           key:=form_adapter.SynToKey(str[1]);
-          //key:=ord(str[1]);
         end;
-    else try
-           key:=AufScpt.TryToDWord(AAuf.nargs[3]);
-         except
-           AufScpt.send_error('警告：指令第3参数需要是字节类型（或长度为1的字符串），代码未执行！');
-           exit;
-         end;
+    else if not AAuf.TryArgToByte(3,key) then exit;
   end;
 
   if key in [18,164,165] then alt_offset:=4
@@ -1137,10 +1046,6 @@ begin
   case buttonmode of
     'd','D':msg:=WM_KeyDown+alt_offset;
     'u','U':msg:=WM_KeyUp+alt_offset;
-    else begin
-      AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
-      exit;
-    end;
   end;
   wparam:=key;
   lparam:=(key shl 16) + 1;
@@ -1155,18 +1060,15 @@ var hd,key,delay:longint;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  if AAuf.ArgsCount<4 then begin
-    AufScpt.send_error('警告：指令需要3个参数，代码未执行！');
-    exit;
-  end;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
+  if not AAuf.CheckArgs(4) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
   case AAuf.nargs[2].pre of
     '"':key:=ord(AAuf.nargs[2].arg[1]);
-    else key:=Round(AufScpt.to_double(AAuf.nargs[2].pre,AAuf.nargs[2].arg));
+    else if not AAuf.TryArgToLong(2,key) then exit;
   end;
   if key in [18,164,165] then alt_offset:=4
   else alt_offset:=0;
-  delay:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
+  if not AAuf.TryArgToLong(3,delay) then exit;
   if delay=0 then delay:=50;
   PostMessage(hd,WM_KeyDown+alt_offset,key,{(key shl 32)+}1);
   process_sleep(delay);
@@ -1176,37 +1078,18 @@ end;
 
 procedure _Mouse(Sender:TObject);//mouse @w,"L/M/R"+"D/U/B",x,y
 var hd,msg,wparam,lparam:longint;
-    x,y:word;
+    x,y:dword;
     AAuf:TAuf;
     AufScpt:TAufScript;
     buttonmode:string;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  if AAuf.ArgsCount<5 then begin
-    AufScpt.send_error('警告：指令需要4个参数，代码未执行！');
-    exit;
-  end;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  try
-    buttonmode:=AufScpt.TryToString(AAuf.nargs[2]);
-    if length(buttonmode)<>2 then raise Exception.Create('');
-  except
-    AufScpt.send_error('警告：指令第2参数需要是长度为2的字符串，代码未执行！');
-    exit;
-  end;
-  try
-    x:=AufScpt.TryToDWord(AAuf.nargs[3]);
-  except
-    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    y:=AufScpt.TryToDWord(AAuf.nargs[4]);
-  except
-    AufScpt.send_error('警告：指令第4参数错误，代码未执行！');
-    exit;
-  end;
+  if not AAuf.CheckArgs(5) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  if not AAuf.TryArgToStrParam(2,['ld','md','rd','lu','mu','ru','lb','mb','rb'],false,buttonmode) then exit;
+  if not AAuf.TryArgToDWord(3,x) then exit;
+  if not AAuf.TryArgToDWord(4,y) then exit;
   case lowercase(buttonmode) of
     'ld':msg:=WM_LButtonDown;
     'md':msg:=WM_MButtonDown;
@@ -1217,10 +1100,6 @@ begin
     'lb':msg:=WM_LBUTTONDBLCLK;
     'mb':msg:=WM_MBUTTONDBLCLK;
     'rb':msg:=WM_RBUTTONDBLCLK;
-    else begin
-      AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
-      exit;
-    end;
   end;
   wparam:=0;
   lparam:=(y shl 16) + x;
@@ -1229,52 +1108,24 @@ end;
 
 procedure _MouseClk(Sender:TObject);//mouseclk @w,"L/M/R",x,y,delay
 var hd,msg,wparam,lparam:longint;
-    x,y,delay:word;
+    x,y,delay:dword;
     AAuf:TAuf;
     AufScpt:TAufScript;
     buttonmode:string;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  if AAuf.ArgsCount<6 then begin
-    AufScpt.send_error('警告：mouseclk指令需要5个参数，代码未执行！');
-    exit;
-  end;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  try
-    buttonmode:=AufScpt.TryToString(AAuf.nargs[2]);
-    if length(buttonmode)<>1 then raise Exception.Create('');
-  except
-    AufScpt.send_error('警告：指令第2参数需要是长度为1的字符串，代码未执行！');
-    exit;
-  end;
-  try
-    x:=AufScpt.TryToDWord(AAuf.nargs[3]);
-  except
-    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    y:=AufScpt.TryToDWord(AAuf.nargs[4]);
-  except
-    AufScpt.send_error('警告：指令第4参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    delay:=AufScpt.TryToDWord(AAuf.nargs[5]);
-  except
-    AufScpt.send_error('警告：指令第5参数错误，代码未执行！');
-    exit;
-  end;
+  if not AAuf.CheckArgs(6) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  if not AAuf.TryArgToStrParam(2,['l','m','r'],false,buttonmode) then exit;
+  if not AAuf.TryArgToDWord(3,x) then exit;
+  if not AAuf.TryArgToDWord(4,y) then exit;
+  if not AAuf.TryArgToDWord(5,delay) then exit;
   if delay=0 then delay:=50;
-  case buttonmode of
-    'l','L':msg:=WM_LButtonDown;
-    'm','M':msg:=WM_MButtonDown;
-    'r','R':msg:=WM_RButtonDown;
-    else begin
-      AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
-      exit;
-    end;
+  case lowercase(buttonmode) of
+    'l':msg:=WM_LButtonDown;
+    'm':msg:=WM_MButtonDown;
+    'r':msg:=WM_RButtonDown;
   end;
   wparam:=0;
   lparam:=(y shl 16) + x;
@@ -1286,36 +1137,18 @@ end;
 
 procedure _MouseMov(Sender:TObject);//mousemove @w,"LRCSM12",x,y
 var hd,msg,wparam,lparam:longint;
-    x,y:word;
+    x,y:dword;
     AAuf:TAuf;
     AufScpt:TAufScript;
     buttonmode:string;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  if AAuf.ArgsCount<5 then begin
-    AufScpt.send_error('警告：指令需要4个参数，代码未执行！');
-    exit;
-  end;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
-  try
-    buttonmode:=AufScpt.TryToString(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：指令第2参数需要是字符串，代码未执行！');
-    exit;
-  end;
-  try
-    x:=AufScpt.TryToDWord(AAuf.nargs[3]);
-  except
-    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    y:=AufScpt.TryToDWord(AAuf.nargs[4]);
-  except
-    AufScpt.send_error('警告：指令第4参数错误，代码未执行！');
-    exit;
-  end;
+  if not AAuf.CheckArgs(5) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  if not AAuf.TryArgToString(2,buttonmode) then exit;
+  if not AAuf.TryArgToDWord(3,x) then exit;
+  if not AAuf.TryArgToDWord(4,y) then exit;
   buttonmode:=lowercase(buttonmode);
   wparam:=0;
   msg:=WM_MOUSEMOVE;
@@ -1346,48 +1179,28 @@ end;
 
 procedure _GetPixel(Sender:TObject);//getpixel hwnd,col,row,@var
 var hd:longint;
-    x,y:word;
-    res:dword;
+    x,y,res:dword;
     tmp:TAufRamVar;
     AAuf:TAuf;
     AufScpt:TAufScript;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  if AAuf.ArgsCount<5 then begin
-    AufScpt.send_error('警告：指令需要4个参数，代码未执行！');
-    exit;
-  end;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
+  if not AAuf.CheckArgs(5) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
   if hd=0 then begin     AufScpt.send_error('警告：窗体句柄无效，代码未执行！');exit end;
   hd:=GetDC(hd);
   if hd=0 then begin     AufScpt.send_error('警告：窗体句柄无对应HDC，代码未执行！');exit end;
-  try
-    x:=AufScpt.TryToDWord(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    y:=AufScpt.TryToDWord(AAuf.nargs[3]);
-  except
-    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    tmp:=AufScpt.RamVar(AAuf.nargs[4]);
-    if (tmp.size<4) or (tmp.VarType<>ARV_FixNum) then raise Exception.Create('');
-  except
-    AufScpt.send_error('警告：指令第4参数不是四位以上整数变量，代码未执行！');
-    exit;
-  end;
+  if not AAuf.TryArgToDWord(2,x) then exit;
+  if not AAuf.TryArgToDWord(3,y) then exit;
+  if not AAuf.TryArgToARV(4,4,High(dword),[ARV_FixNum],tmp) then exit;
   res:=FunningColorExchange(GetPixel(hd,x,y));
   dword_to_arv(res,tmp);
 end;
 
 procedure _GetPixelRect(Sender:TObject);//getrect hwnd,x1,x2,y1,y2,@var
 var hd:longint;
-    x1,x2,y1,y2,x,y,px,py:word;
+    x1,x2,y1,y2,x,y,px,py:dword;
     img_size:dword;
     tmp:TAufRamVar;
     AAuf:TAuf;
@@ -1397,45 +1210,16 @@ var hd:longint;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  if AAuf.ArgsCount<7 then begin
-    AufScpt.send_error('警告：指令需要6个参数，代码未执行！');
-    exit;
-  end;
-  hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
+  if not AAuf.CheckArgs(7) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
   if hd=0 then begin     AufScpt.send_error('警告：窗体句柄无效，代码未执行！');exit end;
-  try
-    x1:=AufScpt.TryToDWord(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    x2:=AufScpt.TryToDWord(AAuf.nargs[3]);
-  except
-    AufScpt.send_error('警告：指令第3参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    y1:=AufScpt.TryToDWord(AAuf.nargs[4]);
-  except
-    AufScpt.send_error('警告：指令第4参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    y2:=AufScpt.TryToDWord(AAuf.nargs[5]);
-  except
-    AufScpt.send_error('警告：指令第5参数错误，代码未执行！');
-    exit;
-  end;
+  if not AAuf.TryArgToDWord(2,x1) then exit;
+  if not AAuf.TryArgToDWord(3,x2) then exit;
+  if not AAuf.TryArgToDWord(4,y1) then exit;
+  if not AAuf.TryArgToDWord(5,y2) then exit;
   if (x2<x1) or (y2<y1) then begin AufScpt.send_error('警告：未选中任何一个像素，代码未执行！');exit end;
   img_size:=(x2-x1+1)*(y2-y1+1);
-  try
-    tmp:=AufScpt.RamVar(AAuf.nargs[6]);
-    if (tmp.size<>img_size*4) or (tmp.VarType<>ARV_FixNum) then raise Exception.Create('');
-  except
-    AufScpt.send_error('警告：指令第6参数不是'+IntToStr(img_size*4)+'位整数变量，代码未执行！');
-    exit;
-  end;
+  if not AAuf.TryArgToARV(6,img_size*4,img_size*4,[ARV_FixNum],tmp) then exit;
   BDBitmapData:=TBDBitmapData.Create;
   try
     BDBitmapData.CopyFormScreen(hd,x1,y1,x2-x1+1,y2-y1+1);
@@ -1457,7 +1241,7 @@ begin
 end;
 
 procedure _RamImage(Sender:TObject);//ramimg col,row,@var
-var x,y:word;
+var x,y:dword;
     pos,pot:longint;
     dit:pbyte;
     tmp:TAufRamVar;
@@ -1466,29 +1250,10 @@ var x,y:word;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  if AAuf.ArgsCount<4 then begin
-    AufScpt.send_error('警告：指令需要3个参数，代码未执行！');
-    exit;
-  end;
-  try
-    x:=AufScpt.TryToDWord(AAuf.nargs[1]);
-  except
-    AufScpt.send_error('警告：指令第1参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    y:=AufScpt.TryToDWord(AAuf.nargs[2]);
-  except
-    AufScpt.send_error('警告：指令第2参数错误，代码未执行！');
-    exit;
-  end;
-  try
-    tmp:=AufScpt.RamVar(AAuf.nargs[3]);
-    if (tmp.size<>x*y*4) then raise Exception.Create('');
-  except
-    AufScpt.send_error('警告：指令第3参数不是'+IntToStr(x*y*4)+'位整数变量，代码未执行！');
-    exit;
-  end;
+  if not AAuf.CheckArgs(4) then exit;
+  if not AAuf.TryArgToDWord(1,x) then exit;
+  if not AAuf.TryArgToDWord(2,y) then exit;
+  if not AAuf.TryArgToARV(3,x*y*4,x*y*4,[ARV_FixNum,ARV_Float,ARV_Char],tmp) then exit;
   Form_Routiner.Image_Ram.Picture.Free;
   Form_Routiner.Image_Ram.Picture:=TPicture.Create;
   Form_Routiner.Image_Ram.Picture.BitMap.PixelFormat:=pf32bit;
@@ -1528,7 +1293,6 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if not AAuf.CheckArgs(3) then exit;
-  //hd:=Round(AufScpt.to_double(AAuf.nargs[1].pre,AAuf.nargs[1].arg));
   if not AAuf.TryArgToLong(1,hd) then exit;
   if hd=0 then begin AufScpt.send_error('警告：窗体句柄无效，代码未执行！');exit end;
   if not AAuf.TryArgToARV(2,8,8,[ARV_FixNum],tmp) then exit;
@@ -1583,15 +1347,14 @@ begin
   end;
 
   if AAuf.ArgsCount>2 then begin
-    if not AAuf.TryArgToString(2,mode) then exit;
-  end else mode:='';
+    if not AAuf.TryArgToStrParam(2,['-d','-u'],false,mode) then exit;
+  end else mode:='-u';
 
   Form_Routiner.Image_Ram.Picture.Free;
   Form_Routiner.Image_Ram.Picture:=TPicture.Create;
   Form_Routiner.Image_Ram.Picture.BitMap.PixelFormat:=pf32bit;
   Form_Routiner.Image_Ram.Picture.Bitmap.SetSize(ww,hh);
   Form_Routiner.Image_Ram.Picture.Bitmap.Assign((arv_to_obj(tmp) as TARImage).FPicture.Bitmap);
-  //Form_Routiner.Image_Ram.Picture.Bitmap.SaveToFile('ram.bmp');
   Form_Routiner.Image_Ram.Refresh;
   case lowercase(mode) of
     '-d':with Form_Routiner.ScrollBox_ImageViewScroll.VertScrollBar do Position:=Range-1;
@@ -1611,21 +1374,24 @@ var AufScpt:TAufScript;
     s1,s2:string;
     slst:TStringList;
     pf:TForm;
+    branch,option:string;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-
-  case lowercase(AAuf.args[1]) of
+  if not AAuf.TryArgToStrParam(1,
+  ['title','version','axis','form','layout','customer_layout','aufbutton',
+  'holdbutton','action_setting','wndlist','shortcut','shortcut_command'],
+  false,branch) then exit;
+  case lowercase(branch) of
     'title':;//do nothing
     'version':;//do nothing
     'axis':
       begin
-        if AAuf.ArgsCount<4 then
-          begin
-            AufScpt.send_error('set Axis需要3个参数，未成功设置！');
-            exit
-          end;
-        case lowercase(AAuf.args[2]) of
+        if AAuf.ArgsCount<4 then begin
+          AufScpt.send_error('set Axis需要3个参数，未成功设置！');exit
+        end;
+        if not AAuf.TryArgToStrParam(2,['mainv=','syncv=','buttonv=','lefth=','righth=','rech=','codev='],false,option) then exit;
+        case lowercase(option) of
           'mainv=':
             begin
               try Form_Routiner.Splitter_MainV.Left:=StrToInt(AAuf.nargs[3].arg);
@@ -1667,15 +1433,13 @@ begin
                 Form_Routiner.AufScriptFrames[fo].Frame.TrackBar.Position:=StrToInt(AAuf.nargs[3].arg);
               except AufScpt.send_error('参数错误，未成功设置！');end;
             end;
-          else AufScpt.send_error('set Axis之后需要使用MainV=,SyncV=,ButtonV=,LeftH=,RightH=,RecH=,CodeV=进行设置。');
         end;
       end;
     'form':
       begin
-        if AAuf.ArgsCount<7 then
-          begin
-            AufScpt.send_error('set Form需要6个参数，未成功设置！');exit
-          end;
+        if AAuf.ArgsCount<7 then begin
+          AufScpt.send_error('set Form需要6个参数，未成功设置！');exit
+        end;
         try
           fo:=StrToInt(AAuf.nargs[2].arg);
           tt:=StrToInt(AAuf.nargs[3].arg);
@@ -1704,11 +1468,9 @@ begin
       end;
     'layout':
       begin
-        if AAuf.ArgsCount<3 then
-          begin
-            AufScpt.send_error('set Layout需要2个参数，未成功设置！');
-            exit
-          end;
+        if AAuf.ArgsCount<3 then begin
+          AufScpt.send_error('set Layout需要2个参数，未成功设置！');exit
+        end;
         try fo:=StrToInt(AAuf.nargs[2].arg);
         except AufScpt.send_error('set Layout之后的参数需要是数字，未设置成功。');exit end;
         Form_Routiner.Layout.LayoutCode:=TLayoutSet(fo);
@@ -1717,10 +1479,9 @@ begin
       end;
     'customer_layout':
       begin
-        if AAuf.ArgsCount<10 then
-          begin
-            AufScpt.send_error('set Customer_Layout需要9个参数，未成功设置！');exit
-          end;
+        if AAuf.ArgsCount<10 then begin
+          AufScpt.send_error('set Customer_Layout需要9个参数，未成功设置！');exit
+        end;
         try
           Form_Routiner.Layout.customer_layout.Width:=StrToInt(AAuf.nargs[2].arg);
           Form_Routiner.Layout.customer_layout.Height:=StrToInt(AAuf.nargs[3].arg);
@@ -1736,10 +1497,9 @@ begin
       end;
     'aufbutton':
       begin
-        if AAuf.ArgsCount<7 then
-          begin
-            AufScpt.send_error('set AufButton需要6个参数，未成功设置！');exit
-          end;
+        if AAuf.ArgsCount<7 then begin
+          AufScpt.send_error('set AufButton需要6个参数，未成功设置！');exit
+        end;
         try
           {winID}ww:=StrToInt(AAuf.nargs[2].arg);
           {colID}hh:=StrToInt(AAuf.nargs[3].arg);
@@ -1756,10 +1516,9 @@ begin
       end;
     'holdbutton':
       begin
-        if AAuf.ArgsCount<8 then
-          begin
-            AufScpt.send_error('set HoldButton需要7个参数，未成功设置！');exit
-          end;
+        if AAuf.ArgsCount<8 then begin
+          AufScpt.send_error('set HoldButton需要7个参数，未成功设置！');exit
+        end;
         try
           {ID}fo:=StrToInt(AAuf.nargs[2].arg);
           {key1}tt:=StrToInt(AAuf.nargs[4].arg);
@@ -1782,18 +1541,17 @@ begin
       end;
     'action_setting':
       begin
-        if AAuf.ArgsCount<4 then
-          begin
-            AufScpt.send_error('set Action_Setting需要3个参数，未成功设置！');exit
-          end;
+        if AAuf.ArgsCount<4 then begin
+          AufScpt.send_error('set Action_Setting需要3个参数，未成功设置！');exit
+        end;
+        if not AAuf.TryArgToStrParam(2,['ab_act=','ab_adv=','ab_halt=','ab_opt=','hb_opt='],false,option) then exit;
         try
-          case lowercase(AAuf.nargs[2].arg) of
+          case lowercase(option) of
             'ab_act=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.Act1,Form_Routiner.Setting.AufButton.Act2);
             'ab_adv=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.ExtraAct1,Form_Routiner.Setting.AufButton.ExtraAct2);
             'ab_halt=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.Halt1,Form_Routiner.Setting.AufButton.Halt2);
             'ab_opt=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.Setting1,Form_Routiner.Setting.AufButton.Setting2);
             'hb_opt=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.HoldButton.Setting1,Form_Routiner.Setting.HoldButton.Setting2);
-            else AufScpt.send_error('set Action_Setting之后需要使用ab_act=,ab_adv,ab_halt=,ab_opt=,hb_opt=进行设置。');
           end;
         except
           AufScpt.send_error('参数只能包含LMR12CSA几个字符，未完成设置！');exit
@@ -1801,11 +1559,10 @@ begin
       end;
     'wndlist':
       begin
-        if AAuf.ArgsCount<4 then
-          begin
-            AufScpt.send_error('set Wndlist需要3个参数，未成功设置！');exit
-          end;
-        AAuf.CheckArgs(4);
+        if AAuf.ArgsCount<4 then begin
+          AufScpt.send_error('set Wndlist需要3个参数，未成功设置！');exit
+        end;
+        if not AAuf.TryArgToStrParam(2,['pos=','hwnd=','name=','class=','namecell=','aligncell='],false,option) then exit;
         try
           with Form_Routiner.Setting.WndListShowingOption do begin
             case lowercase(AAuf.nargs[2].arg) of
@@ -1815,7 +1572,6 @@ begin
               'class=':case lowercase(AAuf.nargs[3].arg) of 'true','t','on','y','yes':ClassNameVisible:=true; else ClassNameVisible:=false;end;
               'namecell=':try NameCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('namecell 需要数字参数') end;
               'aligncell=':try AlignCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('aligncell 需要数字参数') end;
-              else AufScpt.send_error('Action_Setting之后需要使用pos=,hwnd=,name=,class=,namecell=,aligncell=进行设置。');
             end;
           end;
         except
@@ -1824,16 +1580,13 @@ begin
       end;
     'shortcut':
       begin
-        if AAuf.ArgsCount<4 then
-          begin
-            AufScpt.send_error('set Shortcut需要3个参数，未成功设置！');exit
-          end;
-        try
-          fo:=AufScpt.TryToDWord(AAuf.nargs[3]);
-        except
-          AufScpt.send_error('第2个参数需要是整数，未成功设置！');exit;
+        if AAuf.ArgsCount<4 then begin
+          AufScpt.send_error('set Shortcut需要3个参数，未成功设置！');exit
         end;
-        case lowercase(AAuf.nargs[2].arg) of
+        try fo:=AufScpt.TryToDWord(AAuf.nargs[3]);
+        except AufScpt.send_error('第2个参数需要是整数，未成功设置！');exit;end;
+        if not AAuf.TryArgToStrParam(2,['mode=','startkey=','endkey=','downupkey='],false,option) then exit;
+        case lowercase(option) of
           'mode=':
             if (fo<0) or (fo>3) then AufScpt.send_error('第3个参数无效，未成功设置！')
             else AdapterForm.Option.Shortcut.Mode:=TShortcutMode(fo);

@@ -8,7 +8,7 @@
       <Unit0>
         <Filename Value="MessageRoutiner.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="11"/>
+        <EditorIndex Value="12"/>
         <CursorPos Y="32"/>
         <UsageCount Value="205"/>
         <Loaded Value="True"/>
@@ -21,8 +21,8 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MessageRoutiner_Unit"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="1578"/>
-        <CursorPos X="22" Y="1599"/>
+        <TopLine Value="1021"/>
+        <CursorPos X="18" Y="1033"/>
         <UsageCount Value="205"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -33,7 +33,7 @@
         <ComponentName Value="SettingLagForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="10"/>
         <CursorPos X="92" Y="12"/>
         <UsageCount Value="202"/>
         <Loaded Value="True"/>
@@ -45,7 +45,7 @@
         <ComponentName Value="AufButtonForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="10"/>
+        <EditorIndex Value="11"/>
         <TopLine Value="155"/>
         <CursorPos X="86" Y="165"/>
         <UsageCount Value="203"/>
@@ -59,7 +59,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Form_Manual"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="9"/>
         <TopLine Value="14"/>
         <CursorPos X="3" Y="34"/>
         <UsageCount Value="200"/>
@@ -72,7 +72,7 @@
         <ComponentName Value="FormRunPerformance"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="5"/>
         <TopLine Value="172"/>
         <CursorPos X="21" Y="190"/>
         <UsageCount Value="201"/>
@@ -94,7 +94,7 @@
         <ComponentName Value="Form_HoldButtonSetting"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="8"/>
         <CursorPos X="48" Y="10"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
@@ -106,7 +106,7 @@
         <ComponentName Value="AdapterForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="6"/>
         <TopLine Value="55"/>
         <CursorPos X="59" Y="17"/>
         <UsageCount Value="200"/>
@@ -116,18 +116,18 @@
       <Unit9>
         <Filename Value="unit_bitmapdata.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="4"/>
         <TopLine Value="538"/>
         <CursorPos X="29" Y="509"/>
-        <UsageCount Value="192"/>
+        <UsageCount Value="195"/>
         <Loaded Value="True"/>
       </Unit9>
       <Unit10>
         <Filename Value="unit_writescreen.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="7"/>
         <CursorPos X="24" Y="15"/>
-        <UsageCount Value="141"/>
+        <UsageCount Value="144"/>
         <Loaded Value="True"/>
       </Unit10>
       <Unit11>
@@ -138,7 +138,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="88"/>
+        <UsageCount Value="91"/>
       </Unit11>
       <Unit12>
         <Filename Value="form_imagemerger.pas"/>
@@ -146,10 +146,10 @@
         <ComponentName Value="Form_ImgMerger"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="3"/>
         <TopLine Value="162"/>
         <CursorPos X="29" Y="97"/>
-        <UsageCount Value="47"/>
+        <UsageCount Value="50"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit12>
@@ -344,25 +344,25 @@
       <Unit38>
         <Filename Value="..\AufScript\apiglio_useful.pas"/>
         <UnitName Value="Apiglio_Useful"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="248"/>
-        <CursorPos X="19" Y="264"/>
-        <UsageCount Value="18"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="34"/>
+        <CursorPos X="32" Y="43"/>
+        <UsageCount Value="20"/>
         <Loaded Value="True"/>
       </Unit38>
       <Unit39>
         <Filename Value="..\AufScript\auf_ram_var.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="1715"/>
-        <CursorPos Y="1743"/>
-        <UsageCount Value="13"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="68" Y="11"/>
+        <UsageCount Value="15"/>
+        <Loaded Value="True"/>
       </Unit39>
       <Unit40>
         <Filename Value="..\AufScript\auf_ram_image.pas"/>
-        <EditorIndex Value="12"/>
+        <EditorIndex Value="13"/>
         <TopLine Value="184"/>
         <CursorPos X="31" Y="193"/>
-        <UsageCount Value="13"/>
+        <UsageCount Value="15"/>
         <Loaded Value="True"/>
       </Unit40>
       <Unit41>
@@ -441,123 +441,127 @@
         <UsageCount Value="10"/>
       </Unit50>
     </Units>
-    <JumpHistory Count="29" HistoryIndex="28">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1529" TopLine="1517"/>
+        <Caret Line="1553" Column="23" TopLine="1530"/>
       </Position1>
       <Position2>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1530" TopLine="1517"/>
+        <Caret Line="3922" Column="33" TopLine="3895"/>
       </Position2>
       <Position3>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1531" TopLine="1517"/>
+        <Caret Line="1598" Column="56" TopLine="1574"/>
       </Position3>
       <Position4>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1532" TopLine="1517"/>
+        <Caret Line="1700" Column="24" TopLine="1685"/>
       </Position4>
       <Position5>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1533" TopLine="1517"/>
+        <Caret Line="3922" TopLine="3905"/>
       </Position5>
       <Position6>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1534" TopLine="1517"/>
+        <Caret Line="1897" Column="42" TopLine="1881"/>
       </Position6>
       <Position7>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1408" Column="110" TopLine="1387"/>
+        <Caret Line="1030" Column="3" TopLine="1011"/>
       </Position7>
       <Position8>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1409" Column="110" TopLine="1388"/>
+        <Caret Line="1051" Column="3" TopLine="1030"/>
       </Position8>
       <Position9>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1408" Column="110" TopLine="1387"/>
+        <Caret Line="1050" Column="22" TopLine="1030"/>
       </Position9>
       <Position10>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1407" Column="110" TopLine="1386"/>
+        <Caret Line="1402" Column="57" TopLine="1384"/>
       </Position10>
       <Position11>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1406" Column="110" TopLine="1385"/>
+        <Caret Line="1327" Column="9" TopLine="1322"/>
       </Position11>
       <Position12>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1405" Column="110" TopLine="1384"/>
+        <Caret Line="1348" Column="28" TopLine="1346"/>
       </Position12>
       <Position13>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1404" Column="110" TopLine="1383"/>
+        <Caret Line="1389" Column="10" TopLine="1381"/>
       </Position13>
       <Position14>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1403" Column="110" TopLine="1382"/>
+        <Caret Line="1402" Column="49"/>
       </Position14>
       <Position15>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1402" Column="110" TopLine="1381"/>
+        <Caret Line="824" TopLine="807"/>
       </Position15>
       <Position16>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1401" Column="110" TopLine="1380"/>
+        <Caret Line="1101" Column="28" TopLine="1092"/>
       </Position16>
       <Position17>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1400" Column="110" TopLine="1379"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="410" Column="24" TopLine="406"/>
       </Position17>
       <Position18>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1399" Column="110" TopLine="1378"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="413" Column="69" TopLine="396"/>
       </Position18>
       <Position19>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1398" Column="110" TopLine="1377"/>
+        <Filename Value="..\AufScript\auf_ram_var.pas"/>
+        <Caret Line="12" Column="36"/>
       </Position19>
       <Position20>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1397" Column="110" TopLine="1376"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="413" Column="46" TopLine="396"/>
       </Position20>
       <Position21>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1396" Column="110" TopLine="1375"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="410" Column="27" TopLine="396"/>
       </Position21>
       <Position22>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1395" Column="110" TopLine="1374"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="3283" Column="22" TopLine="3268"/>
       </Position22>
       <Position23>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1394" Column="110" TopLine="1373"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="3276" Column="100" TopLine="3258"/>
       </Position23>
       <Position24>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1393" Column="110" TopLine="1372"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="413" Column="101" TopLine="397"/>
       </Position24>
       <Position25>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1553" Column="23" TopLine="1530"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="3276" Column="77" TopLine="3269"/>
       </Position25>
       <Position26>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3922" Column="33" TopLine="3895"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="413" Column="78" TopLine="397"/>
       </Position26>
       <Position27>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1598" Column="56" TopLine="1574"/>
+        <Caret Line="799" Column="52" TopLine="782"/>
       </Position27>
       <Position28>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1700" Column="24" TopLine="1685"/>
+        <Caret Line="800" Column="66" TopLine="782"/>
       </Position28>
       <Position29>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3922" TopLine="3905"/>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="413" Column="26" TopLine="397"/>
       </Position29>
+      <Position30>
+        <Filename Value="..\AufScript\apiglio_useful.pas"/>
+        <Caret Line="3299" Column="9" TopLine="3276"/>
+      </Position30>
     </JumpHistory>
   </ProjectSession>
   <Debugging>
