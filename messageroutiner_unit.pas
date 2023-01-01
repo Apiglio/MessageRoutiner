@@ -15,7 +15,7 @@ uses
 
 const
 
-  version_number='0.2.5';
+  version_number='0.2.6';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -168,6 +168,8 @@ type
   { TForm_Routiner }
 
   TForm_Routiner = class(TForm)
+    Button_MergerPath: TButton;
+    Button_MergerOption: TButton;
     Button_MergerAppend: TButton;
     Button_MergerClear: TButton;
     Button_MergerPosition: TButton;
@@ -264,6 +266,8 @@ type
     procedure Button_MergerClearClick(Sender: TObject);
     procedure Button_MergerClearMouseEnter(Sender: TObject);
     procedure Button_MergerClearMouseLeave(Sender: TObject);
+    procedure Button_MergerOptionClick(Sender: TObject);
+    procedure Button_MergerPathClick(Sender: TObject);
     procedure Button_MergerPositionClick(Sender: TObject);
     procedure Button_MergerPositionMouseEnter(Sender: TObject);
     procedure Button_MergerPositionMouseLeave(Sender: TObject);
@@ -1163,6 +1167,35 @@ begin
   SendMessage(hd,msg,wparam,lparam);
 end;
 
+procedure _MouseWheel(Sender:TObject);//mousewheel @w,wheel_delta,"LRCSM12",x,y
+var hd,msg,wparam,lparam,wheeldelta:longint;
+    x,y:dword;
+    AAuf:TAuf;
+    AufScpt:TAufScript;
+    buttonmode:string;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(6) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  if not AAuf.TryArgToLong(2,wheeldelta) then exit;
+  if not AAuf.TryArgToString(3,buttonmode) then exit;
+  if not AAuf.TryArgToDWord(4,x) then exit;
+  if not AAuf.TryArgToDWord(5,y) then exit;
+  buttonmode:=lowercase(buttonmode);
+  wparam:=0;
+  msg:=WM_MOUSEWHEEL;
+  if pos('l',buttonmode)>0 then wparam:=wparam or $01;
+  if pos('r',buttonmode)>0 then wparam:=wparam or $02;
+  if pos('s',buttonmode)>0 then wparam:=wparam or $04;
+  if pos('c',buttonmode)>0 then wparam:=wparam or $08;
+  if pos('m',buttonmode)>0 then wparam:=wparam or $10;
+  if pos('1',buttonmode)>0 then wparam:=wparam or $20;
+  if pos('2',buttonmode)>0 then wparam:=wparam or $40;
+  wparam:=(wheeldelta mod 65536) shl 16 + wparam;
+  lparam:=(y shl 16) + x;
+  SendMessage(hd,msg,wparam,lparam);
+end;
 
 function FunningColorExchange(ori:dword):dword;//  ABCD -> CBAD
 var arr:array[0..3]of byte;
@@ -1644,6 +1677,7 @@ begin
   AAuf.Script.add_func('keypress,键盘按键',@_KeyPress,'hwnd,key|"char",deley','向hwnd窗口发送一对间隔delay毫秒的按键消息');
   AAuf.Script.add_func('mouseclk,鼠标按键',@_MouseClk,'hwnd,"L/M/R",x,y,delay','向hwnd窗口发送一对间隔delay毫秒的鼠标消息');
   AAuf.Script.add_func('mousemov,鼠标移动',@_MouseMov,'hwnd,"LRSCM12",x,y','向hwnd窗口发送鼠标坐标更新的消息');
+  AAuf.Script.add_func('mousewhl,鼠标滚轮',@_MouseWheel,'hwnd,delta,"LRSCM12",x,y','向hwnd窗口发送鼠标滚轮的消息，delta推荐值为±120');
   AAuf.Script.add_func('post,发送消息',@PostM,'hwnd,msg,w,l','调用Postmessage');
   AAuf.Script.add_func('send,发送消息并等待处理',@SendM,'hwnd,msg,w,l','调用Sendmessage');
   AAuf.Script.add_func('getwnd_v,返回指定名称窗体',@getwind_name_visible,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
@@ -2582,13 +2616,13 @@ end;
 
 procedure TForm_Routiner.ScrollBox_SynchronicResize(Sender: TObject);
 var i:byte;
-    SyncW{,SyncH},TreW:longint;
+    SyncW{,SyncH},PentaW:longint;
 begin
   with Sender as TScrollBox do
     begin
       SyncW:=(Width - 2*gap);
       //SyncH:=(Height- 2*gap);
-      TreW:=(Width - 6*gap) div 3;
+      PentaW:=(Width - 5*gap) div 4;
     end;
   for i:=0 to SynCount do
     begin
@@ -2630,9 +2664,13 @@ begin
   Button_MergerSave.Height:=SynchronicH;
   Button_MergerClear.Height:=SynchronicH;
   Button_MergerAppend.Height:=SynchronicH;
-  Button_MergerSave.Width:=TreW;
-  Button_MergerClear.Width:=TreW;
-  Button_MergerAppend.Width:=TreW;
+  Button_MergerOption.Height:=SynchronicH;
+  Button_MergerPath.Height:=SynchronicH;
+  Button_MergerSave.Width:=PentaW;
+  Button_MergerClear.Width:=PentaW;
+  Button_MergerAppend.Width:=PentaW;
+  Button_MergerOption.Width:=PentaW div 2;
+  Button_MergerPath.Width:=PentaW div 2;
   Panel_ImageMerger.Height:=4*SynchronicH+5*Gap;
 end;
 
@@ -3119,6 +3157,32 @@ begin
   Self.ShowManual('');
 end;
 
+procedure TForm_Routiner.Button_MergerOptionClick(Sender: TObject);
+var value,res:string;
+    int_value,codee:integer;
+begin
+  //临时的设置方法
+  value:=IntToStr(Setting.MergerOption.PixelWidth);
+  res:=InputBox('截屏设置','匹配像素宽度',value);
+  int_value:=-1;
+  System.val(res,int_value,codee);
+  if int_value>=5 then Setting.MergerOption.PixelWidth:=int_value
+  else ShowMessage('匹配像素宽度取值应不小于5。');
+
+  value:=IntToStr(Setting.MergerOption.BackMatch);
+  res:=InputBox('截屏设置','回溯匹配上限',value);
+  int_value:=-1;
+  System.val(res,int_value,codee);
+  if (int_value>=0) and (int_value<10) then Setting.MergerOption.BackMatch:=int_value
+  else ShowMessage('回溯匹配上限取值应在0~10。');
+
+end;
+
+procedure TForm_Routiner.Button_MergerPathClick(Sender: TObject);
+begin
+  ShellExecute(0,'open','explorer.exe','".\ScreenShot"',nil,SW_NORMAL);
+end;
+
 procedure TForm_Routiner.Button_MergerPositionClick(Sender: TObject);
 var tmpRect:TRect;
 begin
@@ -3132,7 +3196,8 @@ begin
     MergerAuf.Script.Expression.Local.TryAddExp('w',narg('',IntToStr(Width),''));
     MergerAuf.Script.Expression.Local.TryAddExp('h',narg('',IntToStr(Height),''));
     MergerAuf.Script.Expression.Local.TryAddExp('pw',narg('',IntToStr(Height div 4),''));//可追加额外选项
-    MergerAuf.Script.Expression.Local.TryAddExp('bm',narg('','12',''));//可追加额外选项
+    Setting.MergerOption.PixelWidth:=Height div 4;
+    MergerAuf.Script.Expression.Local.TryAddExp('bm',narg('',IntToStr(Setting.MergerOption.BackMatch),''));//可追加额外选项
   end;
   SetFocus;
 end;
@@ -3149,6 +3214,10 @@ end;
 
 procedure TForm_Routiner.Button_MergerSaveClick(Sender: TObject);
 begin
+  if Setting.MergerOption.UseAuto then begin
+    CheckBox_MergerAutoAppend.Checked:=false;
+    Application.ProcessMessages;
+  end;
   Merger_Save;
 end;
 

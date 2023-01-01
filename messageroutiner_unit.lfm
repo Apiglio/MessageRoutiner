@@ -831,10 +831,10 @@ object Form_Routiner: TForm_Routiner
           AnchorSideLeft.Side = asrCenter
           AnchorSideTop.Control = SpinEdit_MergerIntervals
           AnchorSideTop.Side = asrBottom
-          Left = 129
+          Left = 143
           Height = 39
           Top = 131
-          Width = 88
+          Width = 60
           BorderSpacing.Top = 5
           Caption = '保存'
           OnClick = Button_MergerSaveClick
@@ -846,10 +846,10 @@ object Form_Routiner: TForm_Routiner
           AnchorSideTop.Control = Button_MergerSave
           AnchorSideTop.Side = asrCenter
           AnchorSideRight.Control = Button_MergerSave
-          Left = 41
+          Left = 83
           Height = 39
           Top = 131
-          Width = 88
+          Width = 60
           Anchors = [akTop, akRight]
           Caption = '新建'
           OnClick = Button_MergerClearClick
@@ -862,10 +862,10 @@ object Form_Routiner: TForm_Routiner
           AnchorSideLeft.Side = asrBottom
           AnchorSideTop.Control = Button_MergerSave
           AnchorSideTop.Side = asrCenter
-          Left = 217
+          Left = 203
           Height = 39
           Top = 131
-          Width = 88
+          Width = 60
           Caption = '拼接'
           OnClick = Button_MergerAppendClick
           OnMouseEnter = Button_MergerAppendMouseEnter
@@ -901,6 +901,32 @@ object Form_Routiner: TForm_Routiner
           BorderSpacing.Left = 20
           Caption = '每隔'
           ParentColor = False
+        end
+        object Button_MergerPath: TButton
+          AnchorSideLeft.Control = Button_MergerAppend
+          AnchorSideLeft.Side = asrBottom
+          AnchorSideTop.Control = Button_MergerSave
+          AnchorSideTop.Side = asrCenter
+          Left = 263
+          Height = 39
+          Top = 131
+          Width = 60
+          Caption = '目录'
+          OnClick = Button_MergerPathClick
+          TabOrder = 9
+        end
+        object Button_MergerOption: TButton
+          AnchorSideTop.Control = Button_MergerSave
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = Button_MergerClear
+          Left = 23
+          Height = 39
+          Top = 131
+          Width = 60
+          Anchors = [akTop, akRight]
+          Caption = '设置'
+          OnClick = Button_MergerOptionClick
+          TabOrder = 10
         end
       end
       object ScrollBox_ImageViewScroll: TScrollBox
