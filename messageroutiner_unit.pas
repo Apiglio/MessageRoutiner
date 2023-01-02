@@ -15,7 +15,7 @@ uses
 
 const
 
-  version_number='0.2.6';
+  version_number='0.2.7';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -169,7 +169,7 @@ type
 
   TForm_Routiner = class(TForm)
     Button_MergerPath: TButton;
-    Button_MergerOption: TButton;
+    Button_MergerRollback: TButton;
     Button_MergerAppend: TButton;
     Button_MergerClear: TButton;
     Button_MergerPosition: TButton;
@@ -190,8 +190,10 @@ type
     Edit_TimerOffset: TEdit;
     Edit_TreeView: TEdit;
     Image_Ram: TImage;
+    Label_MergerPixelWidth_Title: TLabel;
     Label_MergerIntervalsEvery: TLabel;
     Label_MergerIntervalsMS: TLabel;
+    Label_MergerBackMatch_Title: TLabel;
     Label_WindowPosPadState: TLabel;
     MenuItem_Lay_ImgMerge: TMenuItem;
     GroupBox_OffsetSetting: TGroupBox;
@@ -217,7 +219,9 @@ type
     ScrollBox_AufButton: TScrollBox;
     ScrollBox_HoldButton: TScrollBox;
     ScrollBox_WndList: TScrollBox;
+    SpinEdit_MergerPixelWidth: TSpinEdit;
     SpinEdit_MergerIntervals: TSpinEdit;
+    SpinEdit_MergerBackMatch: TSpinEdit;
     Splitter_SyncV: TSplitter;
     Splitter_LeftH: TSplitter;
     Splitter_ButtonV: TSplitter;
@@ -266,11 +270,15 @@ type
     procedure Button_MergerClearClick(Sender: TObject);
     procedure Button_MergerClearMouseEnter(Sender: TObject);
     procedure Button_MergerClearMouseLeave(Sender: TObject);
-    procedure Button_MergerOptionClick(Sender: TObject);
+    procedure Button_MergerPathMouseEnter(Sender: TObject);
+    procedure Button_MergerPathMouseLeave(Sender: TObject);
+    procedure Button_MergerRollbackClick(Sender: TObject);
     procedure Button_MergerPathClick(Sender: TObject);
     procedure Button_MergerPositionClick(Sender: TObject);
     procedure Button_MergerPositionMouseEnter(Sender: TObject);
     procedure Button_MergerPositionMouseLeave(Sender: TObject);
+    procedure Button_MergerRollbackMouseEnter(Sender: TObject);
+    procedure Button_MergerRollbackMouseLeave(Sender: TObject);
     procedure Button_MergerSaveClick(Sender: TObject);
     procedure Button_MergerSaveMouseEnter(Sender: TObject);
     procedure Button_MergerSaveMouseLeave(Sender: TObject);
@@ -321,9 +329,15 @@ type
     procedure RadioGroup_DelayModeMouseLeave(Sender: TObject);
     procedure RadioGroup_RecSyntaxModeMouseEnter(Sender: TObject);
     procedure RadioGroup_RecSyntaxModeMouseLeave(Sender: TObject);
+    procedure SpinEdit_MergerBackMatchChange(Sender: TObject);
+    procedure SpinEdit_MergerBackMatchMouseEnter(Sender: TObject);
+    procedure SpinEdit_MergerBackMatchMouseLeave(Sender: TObject);
     procedure SpinEdit_MergerIntervalsEditingDone(Sender: TObject);
     procedure SpinEdit_MergerIntervalsMouseEnter(Sender: TObject);
     procedure SpinEdit_MergerIntervalsMouseLeave(Sender: TObject);
+    procedure SpinEdit_MergerPixelWidthChange(Sender: TObject);
+    procedure SpinEdit_MergerPixelWidthMouseEnter(Sender: TObject);
+    procedure SpinEdit_MergerPixelWidthMouseLeave(Sender: TObject);
     procedure TreeViewEditOnChange(Sender:TObject);
     procedure Button_TreeViewFreshClick(Sender: TObject);
     procedure Button_Wnd_RecordClick(Sender: TObject);
@@ -467,6 +481,7 @@ type
     procedure Merger_Clear;
     procedure Merger_Save;
     procedure Merger_Append;
+    procedure Merger_Rollback;
     procedure Merger_Loop;
     procedure Merger_Stop;
 
@@ -2622,7 +2637,7 @@ begin
     begin
       SyncW:=(Width - 2*gap);
       //SyncH:=(Height- 2*gap);
-      PentaW:=(Width - 5*gap) div 4;
+      PentaW:=(Width - 6*gap) div 5;
     end;
   for i:=0 to SynCount do
     begin
@@ -2661,17 +2676,19 @@ begin
   Button_MergerPosition.Height:=SynchronicH;
   Button_MergerTarget.Height:=SynchronicH;
   SpinEdit_MergerIntervals.Height:=SynchronicH;
+  SpinEdit_MergerPixelWidth.Height:=SynchronicH;
+  SpinEdit_MergerBackMatch.Height:=SynchronicH;
   Button_MergerSave.Height:=SynchronicH;
   Button_MergerClear.Height:=SynchronicH;
   Button_MergerAppend.Height:=SynchronicH;
-  Button_MergerOption.Height:=SynchronicH;
+  Button_MergerRollback.Height:=SynchronicH;
   Button_MergerPath.Height:=SynchronicH;
   Button_MergerSave.Width:=PentaW;
   Button_MergerClear.Width:=PentaW;
   Button_MergerAppend.Width:=PentaW;
-  Button_MergerOption.Width:=PentaW div 2;
-  Button_MergerPath.Width:=PentaW div 2;
-  Panel_ImageMerger.Height:=4*SynchronicH+5*Gap;
+  Button_MergerRollback.Width:=PentaW;
+  Button_MergerPath.Width:=PentaW;
+  Panel_ImageMerger.Height:=5*SynchronicH+6*Gap;
 end;
 
 procedure TForm_Routiner.ScrollBox_WndListResize(Sender: TObject);
@@ -2925,7 +2942,7 @@ begin
   MergerAuf.Script.IO_fptr.error:=@ImgMergerAufStrErr;
   MergerAuf.Script.IO_fptr.pause:=nil;
   MergerAuf.Script.Expression.Local.TryAddExp('hwnd',narg('',IntToStr(WndRoot.info.hd),''));
-  MergerAuf.Script.Expression.Local.TryAddExp('pw',narg('','5',''));
+  MergerAuf.Script.Expression.Local.TryAddExp('pw',narg('','120',''));
   MergerAuf.Script.Expression.Local.TryAddExp('bm',narg('','12',''));
   MergerAuf.Script.Expression.Local.TryAddExp('x',narg('','0',''));
   MergerAuf.Script.Expression.Local.TryAddExp('y',narg('','0',''));
@@ -3157,25 +3174,19 @@ begin
   Self.ShowManual('');
 end;
 
-procedure TForm_Routiner.Button_MergerOptionClick(Sender: TObject);
-var value,res:string;
-    int_value,codee:integer;
+procedure TForm_Routiner.Button_MergerPathMouseEnter(Sender: TObject);
 begin
-  //临时的设置方法
-  value:=IntToStr(Setting.MergerOption.PixelWidth);
-  res:=InputBox('截屏设置','匹配像素宽度',value);
-  int_value:=-1;
-  System.val(res,int_value,codee);
-  if int_value>=5 then Setting.MergerOption.PixelWidth:=int_value
-  else ShowMessage('匹配像素宽度取值应不小于5。');
+  Self.ShowManual('打开截取画面的保存路径。');
+end;
 
-  value:=IntToStr(Setting.MergerOption.BackMatch);
-  res:=InputBox('截屏设置','回溯匹配上限',value);
-  int_value:=-1;
-  System.val(res,int_value,codee);
-  if (int_value>=0) and (int_value<10) then Setting.MergerOption.BackMatch:=int_value
-  else ShowMessage('回溯匹配上限取值应在0~10。');
+procedure TForm_Routiner.Button_MergerPathMouseLeave(Sender: TObject);
+begin
+  Self.ShowManual('');
+end;
 
+procedure TForm_Routiner.Button_MergerRollbackClick(Sender: TObject);
+begin
+  Merger_Rollback;
 end;
 
 procedure TForm_Routiner.Button_MergerPathClick(Sender: TObject);
@@ -3195,9 +3206,10 @@ begin
     MergerAuf.Script.Expression.Local.TryAddExp('y',narg('',IntToStr(Top),''));
     MergerAuf.Script.Expression.Local.TryAddExp('w',narg('',IntToStr(Width),''));
     MergerAuf.Script.Expression.Local.TryAddExp('h',narg('',IntToStr(Height),''));
-    MergerAuf.Script.Expression.Local.TryAddExp('pw',narg('',IntToStr(Height div 4),''));//可追加额外选项
     Setting.MergerOption.PixelWidth:=Height div 4;
-    MergerAuf.Script.Expression.Local.TryAddExp('bm',narg('',IntToStr(Setting.MergerOption.BackMatch),''));//可追加额外选项
+    SpinEdit_MergerPixelWidth.Value:=Setting.MergerOption.PixelWidth;
+    MergerAuf.Script.Expression.Local.TryAddExp('pw',narg('',IntToStr(Setting.MergerOption.PixelWidth),''));
+    MergerAuf.Script.Expression.Local.TryAddExp('bm',narg('',IntToStr(Setting.MergerOption.BackMatch),''));
   end;
   SetFocus;
 end;
@@ -3212,6 +3224,16 @@ begin
   Self.ShowManual('');
 end;
 
+procedure TForm_Routiner.Button_MergerRollbackMouseEnter(Sender: TObject);
+begin
+  Self.ShowManual('裁去当前截取结果最底部一段画面，自动拼接模式下不可用。');
+end;
+
+procedure TForm_Routiner.Button_MergerRollbackMouseLeave(Sender: TObject);
+begin
+  Self.ShowManual('');
+end;
+
 procedure TForm_Routiner.Button_MergerSaveClick(Sender: TObject);
 begin
   if Setting.MergerOption.UseAuto then begin
@@ -3219,6 +3241,7 @@ begin
     Application.ProcessMessages;
   end;
   Merger_Save;
+  ShowMessage('保存成功，点击目录按钮查看文件。');
 end;
 
 procedure TForm_Routiner.Button_MergerSaveMouseEnter(Sender: TObject);
@@ -3320,6 +3343,7 @@ procedure TForm_Routiner.CheckBox_MergerAutoAppendChange(Sender: TObject);
 begin
   SpinEdit_MergerIntervals.Enabled:=(Sender as TCheckBox).Checked;
   Button_MergerAppend.Enabled:=not (Sender as TCheckBox).Checked;
+  Button_MergerRollback.Enabled:=not (Sender as TCheckBox).Checked;
   Setting.MergerOption.UseAuto:=(Sender as TCheckBox).Checked;
   if Setting.MergerOption.UseAuto then
     Merger_Loop
@@ -3505,6 +3529,21 @@ begin
   Self.ShowManual('');
 end;
 
+procedure TForm_Routiner.SpinEdit_MergerBackMatchChange(Sender: TObject);
+begin
+  Setting.MergerOption.BackMatch:=(Sender as TSpinEdit).Value;
+end;
+
+procedure TForm_Routiner.SpinEdit_MergerBackMatchMouseEnter(Sender: TObject);
+begin
+  Self.ShowManual('设置拼接长图时的回溯次数上限，较大的值适合画面下部存在未加载的情况，同时运算耗时增大。');
+end;
+
+procedure TForm_Routiner.SpinEdit_MergerBackMatchMouseLeave(Sender: TObject);
+begin
+  Self.ShowManual('');
+end;
+
 procedure TForm_Routiner.SpinEdit_MergerIntervalsEditingDone(Sender: TObject);
 begin
   Setting.MergerOption.Interval:=(Sender as TSpinEdit).Value;
@@ -3517,6 +3556,21 @@ begin
 end;
 
 procedure TForm_Routiner.SpinEdit_MergerIntervalsMouseLeave(Sender: TObject);
+begin
+  Self.ShowManual('');
+end;
+
+procedure TForm_Routiner.SpinEdit_MergerPixelWidthChange(Sender: TObject);
+begin
+  Setting.MergerOption.PixelWidth:=(Sender as TSpinEdit).Value;
+end;
+
+procedure TForm_Routiner.SpinEdit_MergerPixelWidthMouseEnter(Sender: TObject);
+begin
+  Self.ShowManual('设置拼接长图时的像素匹配区域高度，值越大计算时间越长，过小的值可能造成拼接错误。');
+end;
+
+procedure TForm_Routiner.SpinEdit_MergerPixelWidthMouseLeave(Sender: TObject);
 begin
   Self.ShowManual('');
 end;
@@ -3733,8 +3787,8 @@ begin
     str.Add('cat @fn,".png"');
     str.Add('cat @fn,"ScreenShot\",-r');
     str.Add('img.save @im,@fn,-r');
-    str.Add('ari.get @hwnd,@im,@x,@y,@w,@h');
-    str.Add('ari.dsp @im,-u');
+    //str.Add('ari.get @hwnd,@im,@x,@y,@w,@h');
+    //str.Add('ari.dsp @im,-u');
     MergerAuf.Script.command(str);
   finally
     str.Clear;
@@ -3750,6 +3804,20 @@ begin
     str.Add('ari.get @hwnd,@in,@x,@y,@w,@h');
     str.Add('img.addln @im,@in,@pw,@bm');
     str.Add('ari.dsp @im,-d');
+    MergerAuf.Script.command(str);
+  finally
+    str.Clear;
+  end;
+end;
+procedure TForm_Routiner.Merger_Rollback;
+var str:TStringList;
+begin
+  if not MergerAuf.Script.PSW.haltoff then MergerAuf.Script.Stop;
+  str:=TStringList.Create;
+  try
+    str.Add('img.trmb @im,@pw,-sub');
+    str.Add('ari.dsp @im,-d');
+    str.Add('echoln rollback @pw');
     MergerAuf.Script.command(str);
   finally
     str.Clear;
@@ -3804,18 +3872,8 @@ end;
 
 procedure TARVButton.ButtonClick(Sender: TObject);
 var wind:TWindow;
-    //node:TTreeNode;
     str:string;
 begin
-  {
-  node:=Form_Routiner.TreeView_Wnd.selected;
-  if node=nil then
-    begin
-      MessageBox(0,PChar(utf8towincp('错误：不能将nil赋值给变量，请选择一个窗体！')),'Error',MB_OK);
-      exit
-    end;
-  wind:=TWindow(Form_Routiner.TreeView_Wnd.selected.data);
-  }
   wind:=Form_Routiner.GetSelectedWindow;
   str:=Self.Edit.Text;
   if length(str)=0 then begin

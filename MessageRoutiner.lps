@@ -21,8 +21,8 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MessageRoutiner_Unit"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="3139"/>
-        <CursorPos X="65" Y="3171"/>
+        <TopLine Value="3499"/>
+        <CursorPos X="3" Y="3526"/>
         <UsageCount Value="205"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -127,7 +127,7 @@
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="7"/>
         <CursorPos X="24" Y="15"/>
-        <UsageCount Value="153"/>
+        <UsageCount Value="154"/>
         <Loaded Value="True"/>
       </Unit10>
       <Unit11>
@@ -138,7 +138,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="100"/>
+        <UsageCount Value="101"/>
       </Unit11>
       <Unit12>
         <Filename Value="form_imagemerger.pas"/>
@@ -149,7 +149,7 @@
         <EditorIndex Value="3"/>
         <TopLine Value="161"/>
         <CursorPos X="38" Y="179"/>
-        <UsageCount Value="59"/>
+        <UsageCount Value="60"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit12>
@@ -444,123 +444,123 @@
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="406" TopLine="383"/>
+        <Caret Line="3292" Column="17" TopLine="3263"/>
       </Position1>
       <Position2>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="897" TopLine="912"/>
+        <Caret Line="3293" Column="20" TopLine="3264"/>
       </Position2>
       <Position3>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="1628" Column="43" TopLine="1615"/>
+        <Caret Line="3312" Column="17" TopLine="3283"/>
       </Position3>
       <Position4>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3142" Column="36" TopLine="3123"/>
+        <Caret Line="3313" Column="24" TopLine="3284"/>
       </Position4>
       <Position5>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3117" Column="3" TopLine="3115"/>
+        <Caret Line="3315" Column="19" TopLine="3286"/>
       </Position5>
       <Position6>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="467" Column="15" TopLine="450"/>
+        <Caret Line="3332" Column="17" TopLine="3303"/>
       </Position6>
       <Position7>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3720" Column="39" TopLine="3721"/>
+        <Caret Line="3333" Column="24" TopLine="3304"/>
       </Position7>
       <Position8>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2896" Column="46" TopLine="2881"/>
+        <Caret Line="3335" Column="19" TopLine="3306"/>
       </Position8>
       <Position9>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3135" Column="33" TopLine="3106"/>
+        <Caret Line="3479" Column="17" TopLine="3450"/>
       </Position9>
       <Position10>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3139" Column="38" TopLine="3110"/>
+        <Caret Line="3480" Column="82" TopLine="3451"/>
       </Position10>
       <Position11>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3142" Column="33" TopLine="3113"/>
+        <Caret Line="3135" Column="33" TopLine="3117"/>
       </Position11>
       <Position12>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3146" Column="59" TopLine="3117"/>
+        <Caret Line="3139" Column="38" TopLine="3117"/>
       </Position12>
       <Position13>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3163" Column="54" TopLine="3139"/>
+        <Caret Line="3142" Column="33" TopLine="3117"/>
       </Position13>
       <Position14>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3186" Column="20" TopLine="3157"/>
+        <Caret Line="3146" Column="59" TopLine="3117"/>
       </Position14>
       <Position15>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3209" Column="17" TopLine="3180"/>
+        <Caret Line="3158" Column="41" TopLine="3127"/>
       </Position15>
       <Position16>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3211" Column="17" TopLine="3182"/>
+        <Caret Line="3832" Column="44" TopLine="3807"/>
       </Position16>
       <Position17>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3292" Column="17" TopLine="3263"/>
+        <Caret Line="3171" Column="18" TopLine="3151"/>
       </Position17>
       <Position18>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3293" Column="20" TopLine="3264"/>
+        <Caret Line="3380" Column="32" TopLine="3352"/>
       </Position18>
       <Position19>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3312" Column="17" TopLine="3283"/>
+        <Caret Line="3171" Column="3" TopLine="3157"/>
       </Position19>
       <Position20>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3313" Column="24" TopLine="3284"/>
+        <Caret Line="476" Column="15" TopLine="459"/>
       </Position20>
       <Position21>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3315" Column="19" TopLine="3286"/>
+        <Caret Line="3766" TopLine="3759"/>
       </Position21>
       <Position22>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3332" Column="17" TopLine="3303"/>
+        <Caret Line="3767" TopLine="3759"/>
       </Position22>
       <Position23>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3333" Column="24" TopLine="3304"/>
+        <Caret Line="3768" TopLine="3759"/>
       </Position23>
       <Position24>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3335" Column="19" TopLine="3306"/>
+        <Caret Line="3837" Column="49" TopLine="3804"/>
       </Position24>
       <Position25>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3479" Column="17" TopLine="3450"/>
+        <Caret Line="3171" Column="3" TopLine="3169"/>
       </Position25>
       <Position26>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3480" Column="82" TopLine="3451"/>
+        <Caret Line="476" Column="15" TopLine="459"/>
       </Position26>
       <Position27>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3135" Column="33" TopLine="3117"/>
+        <Caret Line="3883" Column="30" TopLine="3886"/>
       </Position27>
       <Position28>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3139" Column="38" TopLine="3117"/>
+        <Caret Line="3830" Column="60" TopLine="3820"/>
       </Position28>
       <Position29>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3142" Column="33" TopLine="3117"/>
+        <Caret Line="2218" Column="44" TopLine="2175"/>
       </Position29>
       <Position30>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3146" Column="59" TopLine="3117"/>
+        <Caret Line="3532" Column="3" TopLine="3515"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>

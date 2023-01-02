@@ -695,7 +695,7 @@ object Form_Routiner: TForm_Routiner
         AnchorSideBottom.Side = asrBottom
         Left = 124
         Height = 28
-        Top = 177
+        Top = 221
         Width = 100
         BorderSpacing.Bottom = 5
         Caption = '显示预览'
@@ -708,11 +708,11 @@ object Form_Routiner: TForm_Routiner
         AnchorSideRight.Control = ScrollBox_ImageView
         AnchorSideRight.Side = asrBottom
         Left = 1
-        Height = 176
+        Height = 220
         Top = 1
         Width = 346
         Anchors = [akTop, akLeft, akRight]
-        ClientHeight = 176
+        ClientHeight = 220
         ClientWidth = 346
         TabOrder = 1
         object Button_MergerTarget: TButton
@@ -827,14 +827,15 @@ object Form_Routiner: TForm_Routiner
           ParentColor = False
         end
         object Button_MergerSave: TButton
-          AnchorSideLeft.Control = Panel_ImageMerger
-          AnchorSideLeft.Side = asrCenter
-          AnchorSideTop.Control = SpinEdit_MergerIntervals
-          AnchorSideTop.Side = asrBottom
-          Left = 143
+          AnchorSideLeft.Control = Button_MergerAppend
+          AnchorSideTop.Control = Button_MergerPath
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = Button_MergerPath
+          Left = 83
           Height = 39
-          Top = 131
+          Top = 168
           Width = 60
+          Anchors = [akTop, akRight]
           BorderSpacing.Top = 5
           Caption = '保存'
           OnClick = Button_MergerSaveClick
@@ -846,9 +847,9 @@ object Form_Routiner: TForm_Routiner
           AnchorSideTop.Control = Button_MergerSave
           AnchorSideTop.Side = asrCenter
           AnchorSideRight.Control = Button_MergerSave
-          Left = 83
+          Left = 23
           Height = 39
-          Top = 131
+          Top = 168
           Width = 60
           Anchors = [akTop, akRight]
           Caption = '新建'
@@ -858,13 +859,13 @@ object Form_Routiner: TForm_Routiner
           TabOrder = 6
         end
         object Button_MergerAppend: TButton
-          AnchorSideLeft.Control = Button_MergerSave
+          AnchorSideLeft.Control = Button_MergerPath
           AnchorSideLeft.Side = asrBottom
           AnchorSideTop.Control = Button_MergerSave
           AnchorSideTop.Side = asrCenter
           Left = 203
           Height = 39
-          Top = 131
+          Top = 168
           Width = 60
           Caption = '拼接'
           OnClick = Button_MergerAppendClick
@@ -903,30 +904,100 @@ object Form_Routiner: TForm_Routiner
           ParentColor = False
         end
         object Button_MergerPath: TButton
+          AnchorSideLeft.Control = Panel_ImageMerger
+          AnchorSideLeft.Side = asrCenter
+          AnchorSideTop.Control = SpinEdit_MergerPixelWidth
+          AnchorSideTop.Side = asrBottom
+          Left = 143
+          Height = 39
+          Top = 168
+          Width = 60
+          BorderSpacing.Top = 5
+          Caption = '目录'
+          OnClick = Button_MergerPathClick
+          OnMouseEnter = Button_MergerPathMouseEnter
+          OnMouseLeave = Button_MergerPathMouseLeave
+          TabOrder = 9
+        end
+        object Button_MergerRollback: TButton
           AnchorSideLeft.Control = Button_MergerAppend
           AnchorSideLeft.Side = asrBottom
           AnchorSideTop.Control = Button_MergerSave
           AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = Button_MergerClear
           Left = 263
           Height = 39
-          Top = 131
+          Top = 168
           Width = 60
-          Caption = '目录'
-          OnClick = Button_MergerPathClick
-          TabOrder = 9
-        end
-        object Button_MergerOption: TButton
-          AnchorSideTop.Control = Button_MergerSave
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Control = Button_MergerClear
-          Left = 23
-          Height = 39
-          Top = 131
-          Width = 60
-          Anchors = [akTop, akRight]
-          Caption = '设置'
-          OnClick = Button_MergerOptionClick
+          Caption = '回滚'
+          OnClick = Button_MergerRollbackClick
+          OnMouseEnter = Button_MergerRollbackMouseEnter
+          OnMouseLeave = Button_MergerRollbackMouseLeave
           TabOrder = 10
+        end
+        object SpinEdit_MergerPixelWidth: TSpinEdit
+          AnchorSideLeft.Control = Label_MergerPixelWidth_Title
+          AnchorSideLeft.Side = asrBottom
+          AnchorSideTop.Control = SpinEdit_MergerIntervals
+          AnchorSideTop.Side = asrBottom
+          AnchorSideRight.Control = Label_MergerBackMatch_Title
+          Left = 96
+          Height = 32
+          Top = 131
+          Width = 76
+          Anchors = [akTop, akLeft, akRight]
+          BorderSpacing.Top = 5
+          BorderSpacing.Right = 10
+          MaxValue = 500
+          MinValue = 5
+          OnChange = SpinEdit_MergerPixelWidthChange
+          OnMouseEnter = SpinEdit_MergerPixelWidthMouseEnter
+          OnMouseLeave = SpinEdit_MergerPixelWidthMouseLeave
+          TabOrder = 11
+          Value = 120
+        end
+        object SpinEdit_MergerBackMatch: TSpinEdit
+          AnchorSideTop.Control = SpinEdit_MergerIntervals
+          AnchorSideTop.Side = asrBottom
+          AnchorSideRight.Control = Panel_ImageMerger
+          AnchorSideRight.Side = asrBottom
+          Left = 272
+          Height = 32
+          Top = 131
+          Width = 68
+          Anchors = [akTop, akRight]
+          BorderSpacing.Top = 5
+          BorderSpacing.Right = 5
+          MaxValue = 50
+          OnChange = SpinEdit_MergerBackMatchChange
+          OnMouseEnter = SpinEdit_MergerBackMatchMouseEnter
+          OnMouseLeave = SpinEdit_MergerBackMatchMouseLeave
+          TabOrder = 12
+          Value = 12
+        end
+        object Label_MergerPixelWidth_Title: TLabel
+          AnchorSideLeft.Control = Panel_ImageMerger
+          AnchorSideTop.Control = SpinEdit_MergerPixelWidth
+          AnchorSideTop.Side = asrCenter
+          Left = 6
+          Height = 24
+          Top = 135
+          Width = 90
+          BorderSpacing.Left = 5
+          Caption = '匹配像素：'
+          ParentColor = False
+        end
+        object Label_MergerBackMatch_Title: TLabel
+          AnchorSideTop.Control = SpinEdit_MergerBackMatch
+          AnchorSideTop.Side = asrCenter
+          AnchorSideRight.Control = SpinEdit_MergerBackMatch
+          Left = 182
+          Height = 24
+          Top = 135
+          Width = 90
+          Anchors = [akTop, akRight]
+          Caption = '回溯上限：'
+          ParentColor = False
         end
       end
       object ScrollBox_ImageViewScroll: TScrollBox
@@ -938,13 +1009,13 @@ object Form_Routiner: TForm_Routiner
         AnchorSideBottom.Control = ScrollBox_ImageView
         AnchorSideBottom.Side = asrBottom
         Left = 1
-        Height = 197
-        Top = 210
+        Height = 153
+        Top = 254
         Width = 346
         HorzScrollBar.Page = 1
         VertScrollBar.Page = 136
         Anchors = [akTop, akLeft, akRight, akBottom]
-        ClientHeight = 193
+        ClientHeight = 149
         ClientWidth = 342
         TabOrder = 2
         object Image_Ram: TImage
