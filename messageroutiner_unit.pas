@@ -15,7 +15,7 @@ uses
 
 const
 
-  version_number='0.2.7';
+  version_number='0.2.8';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -497,7 +497,7 @@ type
 var
   Form_Routiner: TForm_Routiner;
   WndRoot:TWindow;
-  WndFlat,WndSub:TStringList;
+  WndFlat,WndSub,WndTmp:TStringList;
   Desktop:record
     Width,Height:longint;
   end;
@@ -816,7 +816,7 @@ begin
   AAuf:=AufScpt.Auf as TAuf;
   if not AAuf.CheckArgs(3) then exit;
   if not AAuf.TryArgToString(2,wind_name) then exit;
-  if not AAuf.TryArgToARV(1,tmp.size,High(dword),[ARV_FixNum],tmp) then exit;
+  if not AAuf.TryArgToARV(1,8,High(dword),[ARV_FixNum],tmp) then exit;
   hd:=FindWindow(nil,PChar(utf8towincp(wind_name)));
   while (hd<>0) and hidden do begin
     hidden:=false;
@@ -852,6 +852,36 @@ begin
     end;
 end;
 
+procedure getwind_size(Sender:TObject);
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    wind_name:string;
+    x,y,w,h:TAufRamVar;
+    hd:longint;
+    info:tagWindowInfo;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(6) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  if not AAuf.TryArgToARV(2,8,High(dword),[ARV_FixNum],x) then exit;
+  if not AAuf.TryArgToARV(3,8,High(dword),[ARV_FixNum],y) then exit;
+  if not AAuf.TryArgToARV(4,8,High(dword),[ARV_FixNum],w) then exit;
+  if not AAuf.TryArgToARV(5,8,High(dword),[ARV_FixNum],h) then exit;
+  if hd<>0 then begin
+    GetWindowInfo(hd,info);
+    dword_to_arv(info.rcWindow.Top,y);
+    dword_to_arv(info.rcWindow.Left,x);
+    dword_to_arv(info.rcWindow.Width,w);
+    dword_to_arv(info.rcWindow.Height,h);
+  end else begin
+    dword_to_arv(0,x);
+    dword_to_arv(0,y);
+    dword_to_arv(Desktop.Width,w);
+    dword_to_arv(Desktop.Height,h);
+  end;
+end;
+
 procedure wndlist_update(Sender:TObject);
 var AAuf:TAuf;
     AufScpt:TAufScript;
@@ -873,6 +903,7 @@ begin
   WndFinder(filter_str,use_reg);
   //Form_Routiner.Memo_Tmp.Clear;
   //for use_reg_str in WndFlat do AufScpt.writeln(use_reg_str);
+  WndTmp.Clear;//如果刷新列表之后再wndnew.pop，列表里的TWindow就会出错。
   Application.ProcessMessages;
 end;
 
@@ -909,7 +940,7 @@ begin
   end;
 end;
 
-procedure wndlist_set_comp(Sender:TObject);
+procedure wndlist_new_init(Sender:TObject);//wndnew.init
 var AAuf:TAuf;
     AufScpt:TAufScript;
     stmp:string;
@@ -920,20 +951,18 @@ begin
   for stmp in WndFlat do WndSub.Add(stmp);
 end;
 
-procedure wndlist_find_new(Sender:TObject);//wndlist.find_new @hwnd,filter,use_reg
+procedure wndlist_new_update(Sender:TObject);//wndnew.update filter,use_reg[,-show]
 var AAuf:TAuf;
     AufScpt:TAufScript;
-    filter_str,use_reg_str:string;
+    filter_str,use_reg_str,show_list_str:string;
     use_reg:boolean;
-    tmp:TAufRamVar;
-    hd:hwnd;
     pi,useless:integer;
-    WndTmp:TStringList;
+    show_list:boolean;
   function CheckWnd(WndName:string):boolean;
   begin
     try
-     if use_reg then result:=Reg.Exec(WndName)
-     else result:=pos(filter_str,WndName)>0;
+      if use_reg then result:=Reg.Exec(WndName)
+      else result:=pos(filter_str,WndName)>0;
     except
       result:=false;
     end;
@@ -941,40 +970,63 @@ var AAuf:TAuf;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
-  if not AAuf.CheckArgs(3) then exit;
-  if not AAuf.TryArgToString(2,filter_str) then exit;
-  if not AAuf.TryArgToARV(1,4,High(dword),[ARV_FixNum],tmp) then exit;
-  if AAuf.ArgsCount>=4 then begin
-    if not AAuf.TryArgToString(3,use_reg_str) then exit;
+  if not AAuf.CheckArgs(2) then exit;
+  if not AAuf.TryArgToString(1,filter_str) then exit;
+  if AAuf.ArgsCount>=3 then begin
+    if not AAuf.TryArgToString(2,use_reg_str) then exit;
   end else use_reg_str:='';
+  if AAuf.ArgsCount>=4 then begin
+    if not AAuf.TryArgToStrParam(3,['-show','-list','-quiet'],false,show_list_str) then exit;
+  end else show_list_str:='-quiet';
+  show_list:=not(lowercase(show_list_str)='-quiet');
   case lowercase(use_reg_str) of
     'on':use_reg:=true;
     else use_reg:=false;
   end;
-  WndTmp:=TStringList.Create;
-  try
-    for pi:=0 to WndFlat.Count-1 do begin
-      WndTmp.Add(WndFlat[pi]);
-      WndTmp.Objects[pi]:=WndFlat.Objects[pi];
-    end;
-    pi:=0;
-    while pi<WndTmp.Count do begin
-      if WndSub.Find(WndTmp[pi],useless) then WndTmp.Delete(pi)
-      else begin
-        if lowercase(AAuf.args[0])='wndlist.list_new' then AufScpt.writeln(WndTmp[pi]);
-        inc(pi);
-      end;
-    end;
-    hd:=0;
-    for pi:=0 to WndTmp.Count-1 do
-      if CheckWnd(WndTmp[pi]) then begin
-        hd:=qword(WndTmp.Objects[pi]);
-        break;
-      end;
-  finally
-    WndTmp.Free;
+  WndTmp.Clear;
+  for pi:=0 to WndFlat.Count-1 do begin
+    WndTmp.Add(WndFlat[pi]);
+    WndTmp.Objects[pi]:=WndFlat.Objects[pi];
   end;
-  dword_to_arv(hd,tmp);
+  pi:=0;
+  while pi<WndTmp.Count do begin
+    if WndSub.Find(WndTmp[pi],useless) then WndTmp.Delete(pi)
+    else begin
+      if show_list then AufScpt.writeln(WndTmp[pi]);
+      inc(pi);
+    end;
+  end;
+end;
+
+procedure wndlist_new_pop(Sender:TObject);//wndnew.pop @hwnd
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    tmp:TAufRamVar;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(2) then exit;
+  if not AAuf.TryArgToARV(1,8,High(Dword),[ARV_FixNum],tmp) then exit;
+  if WndTmp.Count>0 then begin
+    dword_to_arv(TWindow(WndTmp.Objects[0]).info.hd,tmp);
+    WndTmp.Delete(0);
+  end else begin
+    dword_to_arv(0,tmp);
+  end;
+end;
+
+procedure wndlist_new_empty(Sender:TObject);//wndnew.empty? :label
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    line:pRam;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(2) then exit;
+  if not AAuf.TryArgToAddr(1,line) then exit;
+  if WndTmp.Count<=0 then begin
+    AufScpt.jump_addr(line);
+  end;
 end;
 
 procedure SendString(Sender:TObject);
@@ -1695,13 +1747,17 @@ begin
   AAuf.Script.add_func('mousewhl,鼠标滚轮',@_MouseWheel,'hwnd,delta,"LRSCM12",x,y','向hwnd窗口发送鼠标滚轮的消息，delta推荐值为±120');
   AAuf.Script.add_func('post,发送消息',@PostM,'hwnd,msg,w,l','调用Postmessage');
   AAuf.Script.add_func('send,发送消息并等待处理',@SendM,'hwnd,msg,w,l','调用Sendmessage');
-  AAuf.Script.add_func('getwnd_v,返回指定名称窗体',@getwind_name_visible,'hwnd,wind_name','查找名称为wind_name且可见的窗体句柄');
-  AAuf.Script.add_func('getwnd_t,返回指定窗体',@getwind_top,'','返回当前置顶的窗体句柄');
+
+  AAuf.Script.add_func('getwnd_v,按名称返回句柄',@getwind_name_visible,'@hwnd,wnd_name','查找名称为wnd_name且可见的窗体句柄');
+  AAuf.Script.add_func('getwnd_t,返回置顶窗体',@getwind_top,'@hwnd','返回当前置顶窗体句柄');
+  AAuf.Script.add_func('getwnd_s,窗体尺寸信息',@getwind_size,'hwnd,@x,@y,@w,@h','返回指定窗体的尺寸信息');
   AAuf.Script.add_func('wndlist.update,刷新窗体列表',@wndlist_update,'filter,"on/off"','刷新窗体列表，filter为筛选字符串，第2参数规定是否使用正则表达式');
   AAuf.Script.add_func('wndlist.find,递归新窗体查找',@wndlist_find,'filter,"on/off"','查找符合条件的递归窗体，filter为筛选字符串，第2参数规定是否使用正则表达式');
-  AAuf.Script.add_func('wndlist.set_comp,创建对照窗体列表',@wndlist_set_comp,'','将当前WndList保存为对比列表');
-  AAuf.Script.add_func('wndlist.find_new,返回新窗体列表',@wndlist_find_new,'hwnd,filter,"on/off"','从对比列表返回第一个符合条件的新增窗体，filter为筛选字符串，第2参数规定是否使用正则表达式');
-  AAuf.Script.add_func('wndlist.list_new,查找新窗体列表',@wndlist_find_new,'hwnd,filter,"on/off"','从对比列表列出符合条件的新增窗体，并返回第一个，filter为筛选字符串，第2参数规定是否使用正则表达式');
+
+  AAuf.Script.add_func('wndnew.init,查找新窗体初始化',@wndlist_new_init,'','将当前WndList保存用于新窗体查找');
+  AAuf.Script.add_func('wndnew.update,计算新窗体',@wndlist_new_update,'hwnd,filter,"on/off"[,-show]','获取新窗体列表，filter为筛选字符串，第2参数规定是否使用正则表达式。带-show参数时打印符合要求的窗体');
+  AAuf.Script.add_func('wndnew.pop,获取新窗体',@wndlist_new_pop,'@hwnd','从新窗体列表中获取一个句柄并删除');
+  AAuf.Script.add_func('wndnew.empty?,判断是否没有新窗体',@wndlist_new_empty,':label','从新窗体列表中获取一个句柄并删除');
 
   AAuf.Script.add_func('getpixel,获取像素点',@_GetPixel,'hwnd,x,y,out_var','返回窗体指定像素点颜色');
   AAuf.Script.add_func('getrect,获取画面',@_GetPixelRect,'hwnd,x1,x2,y1,y2,out_var','返回窗体指定矩形范围内像素点颜色');
@@ -4192,10 +4248,12 @@ initialization
   WndFlat.Sorted:=true;
   WndSub:=TStringList.Create;
   WndSub.Sorted:=true;
+  WndTmp:=TStringList.Create;
 
 finalization
   Reg.Free;
   WndFlat.Free;
   WndSub.Free;
+  WndTmp.Free;
 end.
 
