@@ -8,14 +8,14 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Windows,
-  StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, Spin, Dos, LazUTF8, RegExpr
+  StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, Spin, Dos, LazUTF8, RegExpr, Clipbrd
   {$ifndef insert},
   Apiglio_Useful, aufscript_frame, auf_ram_var, form_adapter, unit_bitmapdata
   {$endif};
 
 const
 
-  version_number='0.2.8';
+  version_number='0.2.9';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -1038,10 +1038,23 @@ var hd:longint;
 begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(3) then exit;
   if not AAuf.TryArgToLong(1,hd) then exit;
   if not AAuf.TryArgToString(2,str) then exit;
   str:=utf8towincp(str);
   for i:=1 to length(str) do sendmessage(hd,WM_CHAR,ord(str[i]),0);
+end;
+
+procedure ClipBoardString(Sender:TObject);
+var str:string;
+    AAuf:TAuf;
+    AufScpt:TAufScript;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(2) then exit;
+  if not AAuf.TryArgToString(1,str) then exit;
+  Clipboard.AsText:=str;
 end;
 
 procedure SendM(Sender:TObject);
@@ -1739,6 +1752,7 @@ procedure CostumerFuncInitialize(AAuf:TAuf);
 begin
   AAuf.Script.add_func('about,软件信息',@print_version,'','版本信息');
   AAuf.Script.add_func('string,发送字符串',@SendString,'hwnd,str','向窗口输入字符串');
+  AAuf.Script.add_func('clipbd,修改剪贴板',@ClipBoardString,'hwnd,str','向窗口输入字符串');
   AAuf.Script.add_func('keybd,键盘动作',@_KeyBd,'hwnd,"U/D",key|"char"','向hwnd窗口发送一个键盘消息');
   AAuf.Script.add_func('mouse,鼠标动作',@_Mouse,'hwnd,"L/M/R"+"U/D/B",x,y','向hwnd窗口发送一个鼠标消息');
   AAuf.Script.add_func('keypress,键盘按键',@_KeyPress,'hwnd,key|"char",deley','向hwnd窗口发送一对间隔delay毫秒的按键消息');
