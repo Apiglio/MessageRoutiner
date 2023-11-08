@@ -15,7 +15,6 @@ type
   TForm_Manual = class(TForm)
     IpFileDataProvider: TIpFileDataProvider;
     IpHtmlPanel: TIpHtmlPanel;
-    procedure FormResize(Sender: TObject);
   private
 
   public
@@ -28,14 +27,6 @@ var
 implementation
 
 {$R *.lfm}
-
-procedure TForm_Manual.FormResize(Sender: TObject);
-begin
-  IpHtmlPanel.Width:=Self.Width;
-  IpHtmlPanel.Height:=Self.Height;
-  IpHtmlPanel.Left:=0;
-  IpHtmlPanel.Top:=0;
-end;
 
 procedure TForm_Manual.CastHtml(str:string);
 var

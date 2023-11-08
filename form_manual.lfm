@@ -8,14 +8,20 @@ object Form_Manual: TForm_Manual
   ClientHeight = 600
   ClientWidth = 800
   DesignTimePPI = 144
-  OnResize = FormResize
   Position = poScreenCenter
   LCLVersion = '1.8.4.0'
   object IpHtmlPanel: TIpHtmlPanel
-    Left = 8
-    Height = 312
-    Top = 8
-    Width = 536
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 0
+    Height = 600
+    Top = 0
+    Width = 800
+    Anchors = [akTop, akLeft, akRight, akBottom]
     DataProvider = IpFileDataProvider
     FixedTypeface = 'Courier New'
     DefaultTypeFace = 'default'
