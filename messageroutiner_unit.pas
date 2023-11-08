@@ -15,7 +15,7 @@ uses
 
 const
 
-  version_number='0.2.9';
+  version_number='0.2.10';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -1069,11 +1069,13 @@ begin
   if not AAuf.TryArgToLong(2,msg) then exit;
   case AAuf.nargs[3].pre of
     '"':wparam:=ord(AAuf.nargs[3].arg[1]);
-    else wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
+    //else wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
+    else if not AAuf.TryArgToLong(3,wparam) then exit;
   end;
   case AAuf.nargs[3].pre of
     '"':lparam:=ord(AAuf.nargs[4].arg[1]);
-    else lparam:=Round(AufScpt.to_double(AAuf.nargs[4].pre,AAuf.nargs[4].arg));
+    //else lparam:=Round(AufScpt.to_double(AAuf.nargs[4].pre,AAuf.nargs[4].arg));
+    else if not AAuf.TryArgToLong(4,lparam) then exit;
   end;
   SendMessage(hd,msg,wparam,lparam);
 end;
@@ -1090,11 +1092,13 @@ begin
   if not AAuf.TryArgToLong(2,msg) then exit;
   case AAuf.nargs[3].pre of
     '"':wparam:=ord(AAuf.nargs[3].arg[1]);
-    else wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
+    //else wparam:=Round(AufScpt.to_double(AAuf.nargs[3].pre,AAuf.nargs[3].arg));
+    else if not AAuf.TryArgToLong(3,wparam) then exit;
   end;
   case AAuf.nargs[3].pre of
     '"':lparam:=ord(AAuf.nargs[4].arg[1]);
-    else lparam:=Round(AufScpt.to_double(AAuf.nargs[4].pre,AAuf.nargs[4].arg));
+    //else lparam:=Round(AufScpt.to_double(AAuf.nargs[4].pre,AAuf.nargs[4].arg));
+    else if not AAuf.TryArgToLong(4,lparam) then exit;
   end;
   PostMessage(hd,msg,wparam,lparam);
 end;
@@ -1437,7 +1441,8 @@ end;
 
 procedure _ARI_Display(Sender:TObject);//ari.dsp @img -u/-d
 var ww,hh:word;
-    tmp:TAufRamVar;
+    //tmp:TAufRamVar;
+    itmp:TObject;
     AAuf:TAuf;
     AufScpt:TAufScript;
     mode:string;
@@ -1445,12 +1450,15 @@ begin
   AufScpt:=Sender as TAufScript;
   AAuf:=AufScpt.Auf as TAuf;
   if not AAuf.CheckArgs(2) then exit;
+  if not AAuf.TryArgToObject(1,TARImage,itmp) then exit;
+  {
   AAuf.TryArgToARV(1,8,8,[ARV_FixNum],tmp);
   if not (arv_to_obj(tmp) is TARImage) then begin
     AufScpt.send_error('ARI图像无效。');
     exit;
   end;
-  with (arv_to_obj(tmp) as TARImage).FPicture do begin
+  }
+  with itmp as TARImage do begin
     ww:=Width;
     hh:=Height;
   end;
@@ -1467,7 +1475,7 @@ begin
   Form_Routiner.Image_Ram.Picture:=TPicture.Create;
   Form_Routiner.Image_Ram.Picture.BitMap.PixelFormat:=pf32bit;
   Form_Routiner.Image_Ram.Picture.Bitmap.SetSize(ww,hh);
-  Form_Routiner.Image_Ram.Picture.Bitmap.Assign((arv_to_obj(tmp) as TARImage).FPicture.Bitmap);
+  Form_Routiner.Image_Ram.Picture.Bitmap.Assign((itmp as TARImage).FPicture.Bitmap);
   Form_Routiner.Image_Ram.Refresh;
   case lowercase(mode) of
     '-d':with Form_Routiner.ScrollBox_ImageViewScroll.VertScrollBar do Position:=Range-1;
@@ -1543,7 +1551,8 @@ begin
                 else
                   fo:=StrToInt(AAuf.nargs[4].arg);
                 if (fo<0) or (fo>RuleCount) then fo:=Form_Routiner.PageControl.PageIndex;
-                Form_Routiner.AufScriptFrames[fo].Frame.TrackBar.Position:=StrToInt(AAuf.nargs[3].arg);
+                //Form_Routiner.AufScriptFrames[fo].Frame.TrackBar.Position:=StrToInt(AAuf.nargs[3].arg);
+                Form_Routiner.AufScriptFrames[fo].Frame.Splitter_Vert.Left:=StrToInt(AAuf.nargs[3].arg) * Form_Routiner.AufScriptFrames[fo].Frame.Width div 100;
               except AufScpt.send_error('参数错误，未成功设置！');end;
             end;
         end;
@@ -1752,7 +1761,7 @@ procedure CostumerFuncInitialize(AAuf:TAuf);
 begin
   AAuf.Script.add_func('about,软件信息',@print_version,'','版本信息');
   AAuf.Script.add_func('string,发送字符串',@SendString,'hwnd,str','向窗口输入字符串');
-  AAuf.Script.add_func('clipbd,修改剪贴板',@ClipBoardString,'hwnd,str','向窗口输入字符串');
+  AAuf.Script.add_func('clipbd,修改剪贴板',@ClipBoardString,'str','向窗口输入字符串');
   AAuf.Script.add_func('keybd,键盘动作',@_KeyBd,'hwnd,"U/D",key|"char"','向hwnd窗口发送一个键盘消息');
   AAuf.Script.add_func('mouse,鼠标动作',@_Mouse,'hwnd,"L/M/R"+"U/D/B",x,y','向hwnd窗口发送一个鼠标消息');
   AAuf.Script.add_func('keypress,键盘按键',@_KeyPress,'hwnd,key|"char",deley','向hwnd窗口发送一对间隔delay毫秒的按键消息');
