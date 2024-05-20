@@ -15,7 +15,7 @@ uses
 
 const
 
-  version_number='0.2.10';
+  version_number='0.2.11';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9}
@@ -3799,10 +3799,13 @@ begin
     ww:=0;ll:=0;tt:=0;hh:=0;
     Label_WindowPosPadState.Caption:='无句柄';
   end else with TWindow(tmp.Data).info do begin
+    //with Screen.MonitorFromWindow(hd).WorkareaRect do ShowMessage(Format('l=%d, t=%d, w=%d, h=%d',[Left,Top,Width,Height]));
+    //with Screen.MonitorFromWindow(hd).BoundsRect do ShowMessage(Format('l=%d, t=%d, w=%d, h=%d',[Left,Top,Width,Height]));
+    //答案呼之欲出，之前的所有窗体操作全部改成用TScreen实现，计划写专门的窗体位置查看控件
     ww:=Width;
     hh:=Height;
-    ll:=Left;
-    tt:=Top;
+    ll:=int16(Left) - Screen.DesktopLeft;
+    tt:=int16(Top);
     if ww*hh<=16 then Label_WindowPosPadState.Caption:='窗体过小'
     else if ((ll+ww<0) or (ll>Desktop.Width)) and ((tt+hh<0) or (tt>Desktop.Height)) then Label_WindowPosPadState.Caption:='屏幕外'
     else Label_WindowPosPadState.Caption:='';
