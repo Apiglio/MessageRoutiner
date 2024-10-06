@@ -376,7 +376,6 @@ type
     procedure ScrollBox_AufButtonResize(Sender: TObject);
     procedure ScrollBox_HoldButtonResize(Sender: TObject);
     procedure ScrollBox_SynchronicResize(Sender: TObject);
-    procedure ScrollBox_WndListResize(Sender: TObject);
     procedure ScrollBox_WndViewResize(Sender: TObject);
     procedure TreeView_WndChange(Sender: TObject; Node: TTreeNode);
     procedure TreeView_WndMouseEnter(Sender: TObject);
@@ -1029,6 +1028,30 @@ begin
   end;
 end;
 
+procedure wnd_bring_to_top(Sender:TObject);//window.top hwnd
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    hd:longint;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(2) then exit;
+  if not AAuf.TryArgToLong(1,hd) then exit;
+  BringWindowToTop(hd);
+end;
+
+procedure show_messagebox(Sender:TObject);//messagebox prompt
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    prompt:string;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(2) then exit;
+  if not AAuf.TryArgToString(1,prompt) then exit;
+  ShowMessage(prompt);
+end;
+
 procedure SendString(Sender:TObject);
 var hd:longint;
     str:string;
@@ -1380,8 +1403,6 @@ begin
   Form_Routiner.Image_Ram.Picture.Bitmap.SaveToFile('ram.bmp');
   Form_Routiner.Image_Ram.Refresh;
   Form_Routiner.ScrollBox_SynchronicResize(Form_Routiner.ScrollBox_Synchronic);
-  Form_Routiner.ScrollBox_WndListResize(Form_Routiner.ScrollBox_Synchronic);
-  Form_Routiner.ScrollBox_WndListResize(Form_Routiner.ScrollBox_WndList);
   Form_Routiner.ScrollBox_RecOptionResize(Form_Routiner.ScrollBox_RecOption);
 
 end;
@@ -1482,8 +1503,6 @@ begin
     else ;
   end;
   Form_Routiner.ScrollBox_SynchronicResize(Form_Routiner.ScrollBox_Synchronic);
-  Form_Routiner.ScrollBox_WndListResize(Form_Routiner.ScrollBox_Synchronic);
-  Form_Routiner.ScrollBox_WndListResize(Form_Routiner.ScrollBox_WndList);
   Form_Routiner.ScrollBox_RecOptionResize(Form_Routiner.ScrollBox_RecOption);
 
 end;
@@ -1770,7 +1789,9 @@ begin
   AAuf.Script.add_func('mousewhl,鼠标滚轮',@_MouseWheel,'hwnd,delta,"LRSCM12",x,y','向hwnd窗口发送鼠标滚轮的消息，delta推荐值为±120');
   AAuf.Script.add_func('post,发送消息',@PostM,'hwnd,msg,w,l','调用Postmessage');
   AAuf.Script.add_func('send,发送消息并等待处理',@SendM,'hwnd,msg,w,l','调用Sendmessage');
+  AAuf.Script.add_func('messagebox,消息窗体',@show_messagebox,'prompt','弹出提示窗体');
 
+  AAuf.Script.add_func('window.top,窗体置顶',@wnd_bring_to_top,'@hwnd','置顶给定句柄的窗体');
   AAuf.Script.add_func('getwnd_v,按名称返回句柄',@getwind_name_visible,'@hwnd,wnd_name','查找名称为wnd_name且可见的窗体句柄');
   AAuf.Script.add_func('getwnd_t,返回置顶窗体',@getwind_top,'@hwnd','返回当前置顶窗体句柄');
   AAuf.Script.add_func('getwnd_s,窗体尺寸信息',@getwind_size,'hwnd,@x,@y,@w,@h','返回指定窗体的尺寸信息');
@@ -2709,34 +2730,16 @@ begin
 end;
 
 procedure TForm_Routiner.ScrollBox_SynchronicResize(Sender: TObject);
-var i:byte;
-    SyncW{,SyncH},PentaW:longint;
+var PentaW:longint;
 begin
-  with Sender as TScrollBox do
-    begin
-      SyncW:=(Width - 2*gap);
-      //SyncH:=(Height- 2*gap);
-      PentaW:=(Width - 6*gap) div 5;
-    end;
-  for i:=0 to SynCount do
-    begin
-      Self.Edits[i].Top:=gap+(SynchronicH+gap)*i;
-      Self.Edits[i].Width:=60;
-      Self.Edits[i].Left:=gap;
-      Self.Edits[i].Height:=SynchronicH;
-
-      Self.Buttons[i].Top:=Self.Edits[i].Top;
-      Self.Buttons[i].Width:=SyncW-2*gap-166;
-      Self.Buttons[i].Left:=Self.Edits[i].Width+2*gap;
-      Self.Buttons[i].Height:=SynchronicH;
-
-      Self.CheckBoxs[i].Left:=SyncW-100;
-      Self.CheckBoxs[i].Top:=Self.Buttons[i].Top+3;
-    end;
-  if Layout.LayoutCode=Lay_ImgMerger then
-    Self.ScrollBox_ImageView.Top:=gap
-  else
-    Self.ScrollBox_ImageView.Top:=Self.CheckBoxs[SynCount].Top+Self.CheckBoxs[SynCount].Height+gap;
+  with Sender as TScrollBox do PentaW:=(Width - 8*gap) div 5;
+  if Layout.LayoutCode=Lay_ImgMerger then begin
+    Self.ScrollBox_ImageView.AnchorSideTop.Control:=ScrollBox_Synchronic;
+    Self.ScrollBox_ImageView.AnchorSideTop.Side:=asrTop;
+  end else begin
+    Self.ScrollBox_ImageView.AnchorSideTop.Control:=Self.Edits[SynCount];
+    Self.ScrollBox_ImageView.AnchorSideTop.Side:=asrBottom;
+  end;
   Self.ScrollBox_ImageView.Height:=Self.ScrollBox_Synchronic.Height-Self.ScrollBox_ImageView.Top-gap;
   if Self.ScrollBox_ImageView.Height<48 then Self.CheckBox_ViewEnabled.Visible:=false
   else Self.CheckBox_ViewEnabled.Visible:=true;
@@ -2770,42 +2773,10 @@ begin
   Panel_ImageMerger.Height:=5*SynchronicH+6*Gap;
 end;
 
-procedure TForm_Routiner.ScrollBox_WndListResize(Sender: TObject);
-begin
-  TreeView_Wnd.Width:=(Sender as TScrollBox).Width - 2*gap;
-end;
-
 procedure TForm_Routiner.ScrollBox_WndViewResize(Sender: TObject);
-var ARVCW:longint;
 begin
-  with Sender as TScrollBox do
-    begin
-      ARVCW:=(Width - 2*gap)-24;
-    end;
-  Button_Wnd_Record.Top:=gap;
-  Button_Wnd_Record.Left:=gap;
-  Button_Wnd_Record.Height:=SynchronicH;
-  Button_Wnd_Record.Width:=ARVCW;
-
-  Button_Wnd_Synthesis.Top:=SynchronicH + 2*gap;
-  Button_Wnd_Synthesis.Left:=gap;
-  Button_Wnd_Synthesis.Height:=SynchronicH;
-  Button_Wnd_Synthesis.Width:=ARVCW;
-
-  Button_excel.Top:=2*SynchronicH+3*gap;
-  Button_excel.Left:=gap;
-  Button_excel.Height:=SynchronicH;
-  Button_excel.Width:=ARVCW;
-
-  WindowPosPad.Top:=3*SynchronicH+4*gap;
-  WindowPosPad.Left:=gap;
-  WindowPosPad.Width:=ARVCW;
   WindowPosPad.Height:=WindowPosPad.Width*Desktop.Height div Desktop.Width;
   ReDrawWndPos;
-
-  Memo_Tmp.Top:=3*SynchronicH+5*gap+WindowPosPad.Height;
-  Memo_Tmp.Left:=gap;
-  Memo_Tmp.Width:=ARVCW;
   Memo_Tmp.Height:=(Sender as TScrollBox).Height-Memo_Tmp.Top+SynchronicH;
 
   with Sender as TScrollBox do
@@ -2819,7 +2790,6 @@ begin
       else
         VertScrollBar.Visible:=true;
     end;
-
 end;
 
 procedure TForm_Routiner.ScrollBox_RecOptionResize(Sender: TObject);
@@ -2980,6 +2950,49 @@ begin
       Self.CheckBoxs[i].ShowHint:=true;
       Self.CheckBoxs[i].Hint:='按Ctrl+'+IntToStr(i+1)+'切换状态';
 
+      //同步按钮布局
+      with Self.Edits[i] do begin
+        Width:=60;
+        Height:=SynchronicH;
+        if i=0 then begin
+          AnchorSideTop.Control:=ScrollBox_Synchronic;
+          AnchorSideTop.Side:=asrTop;
+        end else begin
+          AnchorSideTop.Control:=Self.Edits[i-1];
+          AnchorSideTop.Side:=asrBottom;
+        end;
+        BorderSpacing.Top:=gap;
+        AnchorSideLeft.Control:=ScrollBox_Synchronic;
+        AnchorSideLeft.Side:=asrLeft;
+        BorderSpacing.Left:=gap;
+        Anchors:=[akTop, akLeft];
+      end;
+      with Self.CheckBoxs[i] do begin
+        AutoSize:=true;
+        AnchorSideRight.Control:=ScrollBox_Synchronic;
+        AnchorSideRight.Side:=asrRight;
+        BorderSpacing.Left:=gap;
+        AnchorSideBottom.Control:=Self.Edits[i];
+        AnchorSideBottom.Side:=asrBottom;
+        BorderSpacing.Left:=0;
+        Anchors:=[akBottom, akRight];
+      end;
+      with Self.Buttons[i] do begin
+        AnchorSideLeft.Control:=Self.Edits[i];
+        AnchorSideLeft.Side:=asrRight;
+        BorderSpacing.Left:=gap;
+        AnchorSideRight.Control:=Self.CheckBoxs[i];
+        AnchorSideRight.Side:=asrLeft;
+        BorderSpacing.Right:=gap;
+        AnchorSideTop.Control:=Self.Edits[i];
+        AnchorSideTop.Side:=asrTop;
+        BorderSpacing.Top:=0;
+        AnchorSideBottom.Control:=Self.Edits[i];
+        AnchorSideBottom.Side:=asrBottom;
+        BorderSpacing.Bottom:=0;
+        Anchors:=[akLeft, akRight, akTop, akBottom];
+      end;
+
       Self.SynSetting[i].mode_lag:=true;
       Self.SynSetting[i].adjusting_step:=5;
       Self.SynSetting[i].adjusting_lag:=0;
@@ -2987,6 +3000,11 @@ begin
       Self.KeyLag[i,1]:=TTimerLag.Create(Self);
 
     end;
+  //将截屏控制面板追加在最后一行同步按钮后
+  ScrollBox_ImageView.AnchorSideTop.Control:=Self.Edits[i];
+  ScrollBox_ImageView.AnchorSideTop.Side:=asrBottom;
+  ScrollBox_ImageView.BorderSpacing.Top:=gap;
+  ScrollBox_ImageView.Anchors:=ScrollBox_ImageView.Anchors+[akTop];
 
   for i:=0 to ShortcutCount do
     begin
@@ -3176,7 +3194,6 @@ begin
   Self.ScrollBox_SynchronicResize(Self.ScrollBox_Synchronic);
   Self.ScrollBox_AufButtonResize(Self.ScrollBox_AufButton);
   Self.ScrollBox_HoldButtonResize(Self.ScrollBox_HoldButton);
-  Self.ScrollBox_WndListResize(Self.ScrollBox_WndList);
   Self.ScrollBox_RecOptionResize(Self.ScrollBox_RecOption);
 end;
 

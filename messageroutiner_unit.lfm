@@ -23,7 +23,7 @@ object Form_Routiner: TForm_Routiner
     Left = 0
     Height = 888
     Top = 0
-    Width = 96
+    Width = 32
     Anchors = [akTop, akLeft, akBottom]
     Caption = '更换布局模式'
     Enabled = False
@@ -62,12 +62,13 @@ object Form_Routiner: TForm_Routiner
     Left = 614
     Height = 458
     Top = 396
-    Width = 396
-    HorzScrollBar.Page = 296
+    Width = 394
+    HorzScrollBar.Page = 1
+    HorzScrollBar.Visible = False
     VertScrollBar.Page = 353
     Anchors = [akTop, akLeft, akRight, akBottom]
     ClientHeight = 454
-    ClientWidth = 392
+    ClientWidth = 390
     TabOrder = 2
     OnResize = ScrollBox_RecOptionResize
     object RadioGroup_RecSyntaxMode: TRadioGroup
@@ -309,7 +310,7 @@ object Form_Routiner: TForm_Routiner
     AnchorSideTop.Control = Owner
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
-    Left = 1010
+    Left = 1008
     Height = 888
     Top = 0
     Width = 6
@@ -345,7 +346,7 @@ object Form_Routiner: TForm_Routiner
     Left = 614
     Height = 6
     Top = 41
-    Width = 396
+    Width = 394
     Align = alNone
     Anchors = [akLeft, akRight]
     ResizeAnchor = akTop
@@ -362,7 +363,7 @@ object Form_Routiner: TForm_Routiner
     Left = 614
     Height = 6
     Top = 390
-    Width = 396
+    Width = 394
     Align = alNone
     Anchors = [akLeft, akRight]
     ResizeAnchor = akTop
@@ -389,17 +390,17 @@ object Form_Routiner: TForm_Routiner
     Left = 614
     Height = 343
     Top = 47
-    Width = 396
+    Width = 394
     HorzScrollBar.Page = 384
     HorzScrollBar.Range = 384
+    HorzScrollBar.Visible = False
     VertScrollBar.Page = 252
     VertScrollBar.Range = 252
     Anchors = [akTop, akLeft, akRight, akBottom]
     AutoScroll = False
     ClientHeight = 339
-    ClientWidth = 392
+    ClientWidth = 390
     TabOrder = 10
-    OnResize = ScrollBox_WndListResize
     object TreeView_Wnd: TTreeView
       AnchorSideLeft.Control = ScrollBox_WndList
       AnchorSideTop.Control = ScrollBox_WndList
@@ -409,8 +410,8 @@ object Form_Routiner: TForm_Routiner
       Left = 5
       Height = 292
       Top = 5
-      Width = 347
-      Anchors = [akTop, akLeft, akBottom]
+      Width = 380
+      Anchors = [akTop, akLeft, akRight, akBottom]
       BorderSpacing.Left = 5
       BorderSpacing.Top = 5
       BorderSpacing.Right = 5
@@ -448,7 +449,7 @@ object Form_Routiner: TForm_Routiner
       Left = 64
       Height = 32
       Top = 302
-      Width = 134
+      Width = 167
       Anchors = [akLeft, akRight, akBottom]
       BorderSpacing.Left = 5
       BorderSpacing.Top = 5
@@ -465,7 +466,7 @@ object Form_Routiner: TForm_Routiner
       AnchorSideTop.Side = asrCenter
       AnchorSideRight.Control = TreeView_Wnd
       AnchorSideRight.Side = asrBottom
-      Left = 272
+      Left = 305
       Height = 28
       Top = 304
       Width = 80
@@ -480,7 +481,7 @@ object Form_Routiner: TForm_Routiner
       AnchorSideTop.Control = Edit_TreeView
       AnchorSideTop.Side = asrCenter
       AnchorSideRight.Control = Button_TreeViewFresh
-      Left = 203
+      Left = 236
       Height = 28
       Top = 304
       Width = 64
@@ -518,7 +519,7 @@ object Form_Routiner: TForm_Routiner
     Left = 838
     Height = 41
     Top = 0
-    Width = 172
+    Width = 170
     HorzScrollBar.Page = 1
     VertScrollBar.Page = 1
     Anchors = [akTop, akLeft, akRight, akBottom]
@@ -539,17 +540,25 @@ object Form_Routiner: TForm_Routiner
     Width = 234
     HorzScrollBar.Page = 1
     HorzScrollBar.Visible = False
-    VertScrollBar.Page = 329
+    VertScrollBar.Page = 307
     Anchors = [akTop, akLeft, akRight, akBottom]
     ClientHeight = 427
     ClientWidth = 230
     TabOrder = 13
     OnResize = ScrollBox_WndViewResize
     object Button_Wnd_Record: TButton
-      Left = 16
+      AnchorSideLeft.Control = ScrollBox_WndView
+      AnchorSideTop.Control = ScrollBox_WndView
+      AnchorSideRight.Control = ScrollBox_WndView
+      AnchorSideRight.Side = asrBottom
+      Left = 5
       Height = 28
-      Top = 16
-      Width = 194
+      Top = 5
+      Width = 220
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Left = 5
+      BorderSpacing.Top = 5
+      BorderSpacing.Right = 5
       Caption = '开始录制键盘'
       Font.Pitch = fpVariable
       Font.Quality = fqDraft
@@ -560,10 +569,19 @@ object Form_Routiner: TForm_Routiner
       TabOrder = 0
     end
     object Button_Wnd_Synthesis: TButton
-      Left = 16
+      AnchorSideLeft.Control = ScrollBox_WndView
+      AnchorSideTop.Control = Button_Wnd_Record
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ScrollBox_WndView
+      AnchorSideRight.Side = asrBottom
+      Left = 5
       Height = 28
-      Top = 48
-      Width = 194
+      Top = 38
+      Width = 220
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Left = 5
+      BorderSpacing.Top = 5
+      BorderSpacing.Right = 5
       Caption = '开始同步键盘'
       Font.Pitch = fpVariable
       Font.Quality = fqDraft
@@ -574,10 +592,19 @@ object Form_Routiner: TForm_Routiner
       TabOrder = 1
     end
     object Button_excel: TButton
-      Left = 16
+      AnchorSideLeft.Control = ScrollBox_WndView
+      AnchorSideTop.Control = Button_Wnd_Synthesis
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ScrollBox_WndView
+      AnchorSideRight.Side = asrBottom
+      Left = 5
       Height = 32
-      Top = 80
-      Width = 194
+      Top = 71
+      Width = 220
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Left = 5
+      BorderSpacing.Top = 5
+      BorderSpacing.Right = 5
       Caption = '锁定窗口设置'
       Font.Pitch = fpVariable
       Font.Quality = fqDraft
@@ -589,10 +616,19 @@ object Form_Routiner: TForm_Routiner
       TabOrder = 2
     end
     object WindowPosPad: TShape
-      Left = 16
+      AnchorSideLeft.Control = ScrollBox_WndView
+      AnchorSideTop.Control = Button_excel
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ScrollBox_WndView
+      AnchorSideRight.Side = asrBottom
+      Left = 5
       Height = 97
-      Top = 120
-      Width = 194
+      Top = 108
+      Width = 220
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Left = 5
+      BorderSpacing.Top = 5
+      BorderSpacing.Right = 5
       Brush.Color = clSilver
       ParentShowHint = False
       OnMouseEnter = WindowPosPadMouseEnter
@@ -608,10 +644,19 @@ object Form_Routiner: TForm_Routiner
       OnMouseLeave = WindowPosPadWindMouseLeave
     end
     object Memo_Tmp: TMemo
-      Left = 16
+      AnchorSideLeft.Control = ScrollBox_WndView
+      AnchorSideTop.Control = WindowPosPad
+      AnchorSideTop.Side = asrBottom
+      AnchorSideRight.Control = ScrollBox_WndView
+      AnchorSideRight.Side = asrBottom
+      Left = 5
       Height = 97
-      Top = 232
-      Width = 194
+      Top = 210
+      Width = 220
+      Anchors = [akTop, akLeft, akRight]
+      BorderSpacing.Left = 5
+      BorderSpacing.Top = 5
+      BorderSpacing.Right = 5
       OnKeyUp = Memo_TmpKeyUp
       OnMouseEnter = Memo_TmpMouseEnter
       OnMouseLeave = Memo_TmpMouseLeave
@@ -623,9 +668,9 @@ object Form_Routiner: TForm_Routiner
       AnchorSideLeft.Side = asrCenter
       AnchorSideTop.Control = WindowPosPad
       AnchorSideTop.Side = asrCenter
-      Left = 86
+      Left = 88
       Height = 24
-      Top = 156
+      Top = 144
       Width = 54
       BorderSpacing.Left = 8
       BorderSpacing.Top = 8
@@ -663,7 +708,7 @@ object Form_Routiner: TForm_Routiner
     Width = 362
     HorzScrollBar.Page = 1
     HorzScrollBar.Visible = False
-    VertScrollBar.Page = 413
+    VertScrollBar.Page = 1
     Anchors = [akTop, akLeft, akRight, akBottom]
     ClientHeight = 427
     ClientWidth = 358
@@ -671,15 +716,16 @@ object Form_Routiner: TForm_Routiner
     OnResize = ScrollBox_SynchronicResize
     object ScrollBox_ImageView: TPanel
       AnchorSideLeft.Control = ScrollBox_Synchronic
+      AnchorSideTop.Side = asrBottom
       AnchorSideRight.Control = ScrollBox_Synchronic
       AnchorSideRight.Side = asrBottom
       AnchorSideBottom.Control = ScrollBox_Synchronic
       AnchorSideBottom.Side = asrBottom
       Left = 5
       Height = 408
-      Top = 64
+      Top = 128
       Width = 348
-      Anchors = [akTop, akLeft, akRight]
+      Anchors = [akLeft, akRight]
       BorderSpacing.Left = 5
       BorderSpacing.Right = 5
       BorderSpacing.Bottom = 5
