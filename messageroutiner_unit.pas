@@ -761,7 +761,7 @@ begin
             end;
           new_wnd.node:=Form_Routiner.TreeView_Wnd.Items[Form_Routiner.TreeView_Wnd.Items.count-1];
           (new_wnd.node as TTreeNode).data:=new_wnd;
-          GetChildWindows(new_wnd);
+          GetChildWindows(new_wnd, filter, UseReg);
         END;
 
       hd:=GetNextWindow(hd,GW_HWNDNEXT);
@@ -774,20 +774,25 @@ procedure WndFinder(filter:string='';UseReg:boolean=false);
 var hd:HWND;
     info:tagWindowInfo;
 begin
-  ClearWindows(WndRoot);
-  WndFlat.Clear;
-  hd:=GetDesktopWindow;//得到桌面窗口
-  GlobalExpressionList.TryAddExp('desktop',narg('',IntToStr(hd),''));
-  WndRoot:=TWindow.Create(hd,'WndRoot','',0,0,0,0);
-  WndRoot.parent:=nil;
-  WndRoot.node:=nil;
-  WndFlat.Objects[WndFlat.Add('')]:=nil;
+  Form_Routiner.TreeView_Wnd.BeginUpdate;
+  try
+    ClearWindows(WndRoot);
+    WndFlat.Clear;
+    hd:=GetDesktopWindow;//得到桌面窗口
+    GlobalExpressionList.TryAddExp('desktop',narg('',IntToStr(hd),''));
+    WndRoot:=TWindow.Create(hd,'WndRoot','',0,0,0,0);
+    WndRoot.parent:=nil;
+    WndRoot.node:=nil;
+    WndFlat.Objects[WndFlat.Add('')]:=nil;
 
-  GetWindowInfo(hd,info);
-  Desktop.Width:=info.rcWindow.Right-info.rcWindow.Left;
-  Desktop.Height:=info.rcWindow.Bottom-info.rcWindow.Top;
+    GetWindowInfo(hd,info);
+    Desktop.Width:=info.rcWindow.Right-info.rcWindow.Left;
+    Desktop.Height:=info.rcWindow.Bottom-info.rcWindow.Top;
 
-  GetChildWindows(WndRoot,filter,UseReg);
+    GetChildWindows(WndRoot,filter,UseReg);
+  finally
+    Form_Routiner.TreeView_Wnd.EndUpdate;
+  end;
 end;
 
 
