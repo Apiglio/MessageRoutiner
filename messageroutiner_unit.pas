@@ -3161,8 +3161,8 @@ begin
         Self.Splitter_SyncV.Left:=ARVControlW;
         Self.Splitter_ButtonV.Left:=max(Self.Splitter_MainV.Left+2*sp_thick,Self.Width-2*sp_thick-8*SynchronicW)-sp_thick;
         Self.Splitter_LeftH.Top:=0;
-        Self.Splitter_RightH.Top:=Self.Height+sp_thick-MainMenuH-StatusBarH;
-        Self.Splitter_RecH.Top:=Self.Height+sp_thick-MainMenuH-StatusBarH;
+        Self.Splitter_RightH.Top:=min(Self.Height{+sp_thick}-MainMenuH-StatusBarH,(SynCount+1)*SynchronicH+sp_thick);
+        Self.Splitter_RecH.Top:=Self.Height{+sp_thick}-MainMenuH-StatusBarH;
         Self.Button_Wnd_Record.Enabled:=false;
       end;
     Lay_Buttons:
