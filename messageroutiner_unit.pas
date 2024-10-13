@@ -22,12 +22,11 @@ const
   ButtonColumn   = 9;{不能大于31，否则设置保存会出问题}
   AufPopupCount  = 5;{不能大于254，也不推荐大于5}
 
-  gap=5;
   sp_thick=6;
   WindowsListW=300;
   //ARVControlH=170;
   ARVControlW=150;
-  SynchronicH=28;
+  SynchronicH=24;
   SynchronicW=36;
   MainMenuH=24;
   StatusBarH=26;
@@ -2665,16 +2664,18 @@ end;
 
 procedure TForm_Routiner.PageControlResize(Sender: TObject);
 var page:integer;
+    tmpFrame:TFrame_AufScript;
+    portrait_mode:boolean;
 begin
-  //(Sender as TPageControl).ActivePage.Color:=clSkyBlue;
-  with Sender as TPageControl do if (Width<=150) or (Height<100) then exit;
+  portrait_mode:=PageControl.Height*1.2>PageControl.Width;
+  //with Sender as TPageControl do if (Width<=150) or (Height<100) then exit;//这个限制现在还需要吗，改成anchor之后
   for page:=0 to RuleCount do begin
-    Self.AufScriptFrames[page].Frame.Width:=PageControl.Width-2*gap;
-    Self.AufScriptFrames[page].Frame.Height:=PageControl.Height-25-2*gap;
-    Self.AufScriptFrames[page].Frame.Left:=0;
-    Self.AufScriptFrames[page].Frame.Top:=0;
+    tmpFrame:=Self.AufScriptFrames[page].Frame;
+    tmpFrame.Portrait:=portrait_mode;
+    tmpFrame.FrameResize(tmpFrame);
   end;
-  Self.AufScriptFrames[PageControl.ActivePageIndex].Frame.FrameResize(nil);
+  //在从竖屏转横屏时，按钮会绘制错误一次
+  //Self.AufScriptFrames[PageControl.ActivePageIndex].Frame.FrameResize(nil);
 end;
 
 procedure TForm_Routiner.RadioGroup_RecSyntaxModeSelectionChanged(
@@ -2696,8 +2697,8 @@ var i,j:byte;
 begin
   with Sender as TScrollBox do
     begin
-      AufButtonW:=(Width - (ButtonColumn+3)*gap) div (ButtonColumn+1);
-      AufButtonH:=(Height- (SynCount+3)*gap) div (SynCount+1);
+      AufButtonW:=(Width - ButtonColumn+3) div (ButtonColumn+1);
+      AufButtonH:=(Height- SynCount+3) div (SynCount+1) - 1;
     end;
   if AufButtonH<SynchronicH then AufButtonH:=SynchronicH;
   if AufButtonW<SynchronicW then AufButtonW:=SynchronicW;
@@ -2708,8 +2709,8 @@ begin
         begin
           Self.AufButtons[i,j].Height:=AufButtonH;
           Self.AufButtons[i,j].Width:=AufButtonW;
-          Self.AufButtons[i,j].Left:=j*(gap + AufButtonW)+gap;
-          Self.AufButtons[i,j].Top:=gap + i*(gap+AufButtonH);
+          Self.AufButtons[i,j].Left:=j*AufButtonW;
+          Self.AufButtons[i,j].Top:=i*AufButtonH;
         end;
     end;
 end;
@@ -2720,15 +2721,15 @@ var i:byte;
 begin
   with Sender as TScrollBox do
     begin
-      HoldButtonW:=(Width - 9*gap)div 8;
-      HoldButtonH:=(Height- 5*gap)div 4;
+      HoldButtonW:=(Width-9) div 8 - 1;
+      HoldButtonH:=(Height-5) div 4 - 1;
     end;
   if HoldButtonH<SynchronicH then HoldButtonH:=SynchronicH;
   if HoldButtonW<SynchronicW then HoldButtonW:=SynchronicW;
   for i:=0 to 31 do
     begin
-      Self.HoldButtons[i].Top:=gap+(i mod 4)*(HoldButtonH+gap);
-      Self.HoldButtons[i].Left:=gap+(i div 4)*(HoldBUttonW+gap);
+      Self.HoldButtons[i].Top:=(i mod 4)*HoldButtonH;
+      Self.HoldButtons[i].Left:=(i div 4)*HoldBUttonW;
       Self.HoldButtons[i].Width:=HoldButtonW;
       Self.HoldButtons[i].Height:=HoldButtonH;
     end;
@@ -2737,7 +2738,7 @@ end;
 procedure TForm_Routiner.ScrollBox_SynchronicResize(Sender: TObject);
 var PentaW:longint;
 begin
-  with Sender as TScrollBox do PentaW:=(Width - 8*gap) div 5;
+  with Sender as TScrollBox do PentaW:=Width div 5 - 6;
   if Layout.LayoutCode=Lay_ImgMerger then begin
     Self.ScrollBox_ImageView.AnchorSideTop.Control:=ScrollBox_Synchronic;
     Self.ScrollBox_ImageView.AnchorSideTop.Side:=asrTop;
@@ -2745,18 +2746,18 @@ begin
     Self.ScrollBox_ImageView.AnchorSideTop.Control:=Self.Edits[SynCount];
     Self.ScrollBox_ImageView.AnchorSideTop.Side:=asrBottom;
   end;
-  Self.ScrollBox_ImageView.Height:=Self.ScrollBox_Synchronic.Height-Self.ScrollBox_ImageView.Top-gap;
+  Self.ScrollBox_ImageView.Height:=Self.ScrollBox_Synchronic.Height-Self.ScrollBox_ImageView.Top;
   if Self.ScrollBox_ImageView.Height<48 then Self.CheckBox_ViewEnabled.Visible:=false
   else Self.CheckBox_ViewEnabled.Visible:=true;
   if Layout.LayoutCode=Lay_ImgMerger then begin
-    Self.Image_Ram.Width:=(Sender as TScrollBox).Width-2*gap;
+    Self.Image_Ram.Width:=(Sender as TScrollBox).Width;
     Self.Image_Ram.Height:=Self.Image_Ram.Width * Self.Image_Ram.Picture.Height div Self.Image_Ram.Picture.Width;
   end else begin
     Self.Image_Ram.Height:=max(0,Self.ScrollBox_ImageView.Height-48);
     with Self.Image_Ram do Width:=Height * Picture.Bitmap.Width div Picture.Bitmap.Height;
-    if Self.Image_Ram.Width+2*gap>(Sender as TScrollBox).Width then
+    if Self.Image_Ram.Width>(Sender as TScrollBox).Width then
       begin
-        Self.Image_Ram.Width:=(Sender as TScrollBox).Width-2*gap;
+        Self.Image_Ram.Width:=(Sender as TScrollBox).Width;
         with Self.Image_Ram do Height:=Width * Picture.Bitmap.Height div Picture.Bitmap.Width;
       end;
   end;
@@ -2775,7 +2776,7 @@ begin
   Button_MergerAppend.Width:=PentaW;
   Button_MergerRollback.Width:=PentaW;
   Button_MergerPath.Width:=PentaW;
-  Panel_ImageMerger.Height:=5*SynchronicH+6*Gap;
+  Panel_ImageMerger.Height:=5*SynchronicH;
 end;
 
 procedure TForm_Routiner.ScrollBox_WndViewResize(Sender: TObject);
@@ -2865,6 +2866,8 @@ begin
       Self.AufScriptFrames[page]:=TAufScriptFrame.Create(Self);
       AufScriptFrames[page].Frame:=TFrame_AufScript.Create(AufScriptFrames[page]);
       AufScriptFrames[page].Frame.Parent:=tmp;
+      AufScriptFrames[page].Frame.Align:=alClient;
+      //AufScriptFrames[page].Frame.BorderSpacing;
       AufScriptFrames[page].Frame.FrameResize(nil);
       tmp.OnResize:=@AufScriptFrames[page].Frame.FrameResize;
       tmp.OnShow:=@AufScriptFrames[page].Frame.FrameResize;
@@ -2966,29 +2969,29 @@ begin
           AnchorSideTop.Control:=Self.Edits[i-1];
           AnchorSideTop.Side:=asrBottom;
         end;
-        BorderSpacing.Top:=gap;
+        BorderSpacing.Top:=0;
         AnchorSideLeft.Control:=ScrollBox_Synchronic;
         AnchorSideLeft.Side:=asrLeft;
-        BorderSpacing.Left:=gap;
+        BorderSpacing.Left:=0;
         Anchors:=[akTop, akLeft];
       end;
       with Self.CheckBoxs[i] do begin
         AutoSize:=true;
         AnchorSideRight.Control:=ScrollBox_Synchronic;
         AnchorSideRight.Side:=asrRight;
-        BorderSpacing.Left:=gap;
+        BorderSpacing.Left:=0;
         AnchorSideBottom.Control:=Self.Edits[i];
-        AnchorSideBottom.Side:=asrBottom;
+        AnchorSideBottom.Side:=asrCenter;
         BorderSpacing.Left:=0;
         Anchors:=[akBottom, akRight];
       end;
       with Self.Buttons[i] do begin
         AnchorSideLeft.Control:=Self.Edits[i];
         AnchorSideLeft.Side:=asrRight;
-        BorderSpacing.Left:=gap;
+        BorderSpacing.Left:=0;
         AnchorSideRight.Control:=Self.CheckBoxs[i];
         AnchorSideRight.Side:=asrLeft;
-        BorderSpacing.Right:=gap;
+        BorderSpacing.Right:=0;
         AnchorSideTop.Control:=Self.Edits[i];
         AnchorSideTop.Side:=asrTop;
         BorderSpacing.Top:=0;
@@ -3008,7 +3011,7 @@ begin
   //将截屏控制面板追加在最后一行同步按钮后
   ScrollBox_ImageView.AnchorSideTop.Control:=Self.Edits[i];
   ScrollBox_ImageView.AnchorSideTop.Side:=asrBottom;
-  ScrollBox_ImageView.BorderSpacing.Top:=gap;
+  ScrollBox_ImageView.BorderSpacing.Top:=0;
   ScrollBox_ImageView.Anchors:=ScrollBox_ImageView.Anchors+[akTop];
 
   for i:=0 to ShortcutCount do
@@ -3118,10 +3121,10 @@ procedure TForm_Routiner.FormResize(Sender: TObject);
 begin
   case Self.Layout.LayoutCode of
     Lay_Command:MinSizeCheck(480,300);
-    Lay_Advanced:MinSizeCheck(480+WindowsListW,300+(SynCount+1)*(gap+SynchronicH)+gap);
-    Lay_Synchronic:MinSizeCheck(ARVControlW+360,(SynCount+2)*(SynchronicH+gap)+gap+StatusBarH);
-    Lay_Buttons:MinSizeCheck((ButtonColumn+1+8+1)*(gap+SynchronicW)+2*gap,(SynCount+1)*(gap+SynchronicH)+2*gap+MainMenuH+StatusBarH);
-    Lay_Recorder:MinSizeCheck(480+WindowsListW,300+(SynCount+1)*(gap+SynchronicH)+gap);
+    Lay_Advanced:MinSizeCheck(480+WindowsListW,300+(SynCount+1)*SynchronicH);
+    Lay_Synchronic:MinSizeCheck(ARVControlW+360,(SynCount+1)*(1+SynchronicH){+StatusBarH});
+    Lay_Buttons:MinSizeCheck((ButtonColumn+1+8+1)*SynchronicW,(SynCount+1)*SynchronicH+MainMenuH+StatusBarH);
+    Lay_Recorder:MinSizeCheck(320+WindowsListW,300+(SynCount+1)*(SynchronicH));
     Lay_ImgMerger:MinSizeCheck(300+WindowsListW,300+StatusBarH);
   end;
   Self.Splitter_LeftV.Left:=0;
@@ -3134,7 +3137,7 @@ begin
         Self.Splitter_MainV.Left:=Self.Width-sp_thick;
         Self.Splitter_SyncV.Left:=Self.Width-sp_thick;
         Self.Splitter_ButtonV.Left:=Self.Width-sp_thick;
-        Self.Splitter_LeftH.Top:=Self.Height-sp_thick-MainMenuH-StatusBarH;
+        Self.Splitter_LeftH.Top:=Self.Height{-sp_thick}-MainMenuH-StatusBarH;
         Self.Splitter_RightH.Top:=Self.Height-sp_thick-MainMenuH-StatusBarH;
         Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH-StatusBarH;
         Self.Button_Wnd_Record.Enabled:=false;
@@ -3144,19 +3147,19 @@ begin
         Self.Splitter_MainV.Left:=Self.Width-sp_thick-WindowsListW;
         Self.Splitter_SyncV.Left:=ARVControlW;
         Self.Splitter_ButtonV.Left:=Self.Width{-sp_thick}-WindowsListW;
-        Self.Splitter_LeftH.Top:=Self.Height-sp_thick-MainMenuH-(1+SynCount)*(gap+SynchronicH)-gap-StatusBarH;
+        Self.Splitter_LeftH.Top:=Self.Height-sp_thick{-MainMenuH}-(2+SynCount)*SynchronicH-StatusBarH;
         Self.Splitter_RightH.Top:=0;
-        Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH-StatusBarH;
+        Self.Splitter_RecH.Top:=Self.Height{-sp_thick}-MainMenuH-StatusBarH;
         Self.Button_Wnd_Record.Enabled:=true;
       end;
     Lay_Synchronic:
       begin
         Self.Splitter_MainV.Left:=ARVControlW+360;
         Self.Splitter_SyncV.Left:=ARVControlW;
-        Self.Splitter_ButtonV.Left:=max(Self.Splitter_MainV.Left+2*sp_thick,Self.Width-sp_thick-8*(gap+SynchronicW)-gap)-sp_thick;
+        Self.Splitter_ButtonV.Left:=max(Self.Splitter_MainV.Left+2*sp_thick,Self.Width-2*sp_thick-8*SynchronicW)-sp_thick;
         Self.Splitter_LeftH.Top:=0;
-        Self.Splitter_RightH.Top:=(SynCount+1)*(SynchronicH+gap)+gap;
-        Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH-StatusBarH;
+        Self.Splitter_RightH.Top:=Self.Height+sp_thick-MainMenuH-StatusBarH;
+        Self.Splitter_RecH.Top:=Self.Height+sp_thick-MainMenuH-StatusBarH;
         Self.Button_Wnd_Record.Enabled:=false;
       end;
     Lay_Buttons:
@@ -3165,8 +3168,8 @@ begin
         Self.Splitter_SyncV.Left:=0;
         Self.Splitter_ButtonV.Left:=(Self.Width-sp_thick)*(ButtonColumn+1)div(ButtonColumn+1+8);
         Self.Splitter_LeftH.Top:=0;
-        Self.Splitter_RightH.Top:=Self.Height-sp_thick-MainMenuH-StatusBarH;
-        Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH-StatusBarH;
+        Self.Splitter_RightH.Top:=Self.Height+sp_thick-MainMenuH-StatusBarH;
+        Self.Splitter_RecH.Top:=Self.Height+sp_thick-MainMenuH-StatusBarH;
         Self.Button_Wnd_Record.Enabled:=false;
       end;
     Lay_Recorder:
@@ -3174,7 +3177,7 @@ begin
         Self.Splitter_MainV.Left:=Self.Width-sp_thick-WindowsListW;
         Self.Splitter_SyncV.Left:=Self.Width-sp_thick-WindowsListW;
         Self.Splitter_ButtonV.Left:=Self.Width-sp_thick-WindowsListW;
-        Self.Splitter_LeftH.Top:=Self.Height-sp_thick-MainMenuH-3*gap-SynchronicH-StatusBarH;
+        Self.Splitter_LeftH.Top:=Self.Height-sp_thick-MainMenuH-SynchronicH-StatusBarH;
         Self.Splitter_RightH.Top:=0;
         Self.Splitter_RecH.Top:=0;
         Self.Button_Wnd_Record.Enabled:=true;
@@ -3183,10 +3186,10 @@ begin
       begin
         Self.Splitter_MainV.Left:=Self.Width-WindowsListW;
         Self.Splitter_SyncV.Left:=0;
-        Self.Splitter_ButtonV.Left:=max(Self.Splitter_MainV.Left+2*sp_thick,Self.Width-sp_thick-8*(gap+SynchronicW)-gap)-sp_thick;
+        Self.Splitter_ButtonV.Left:=max(Self.Splitter_MainV.Left+2*sp_thick,Self.Width-sp_thick-8*SynchronicW)-sp_thick;
         Self.Splitter_LeftH.Top:=0;
         Self.Splitter_RightH.Top:=0;
-        Self.Splitter_RecH.Top:=Self.Height-sp_thick-MainMenuH-StatusBarH;
+        Self.Splitter_RecH.Top:=Self.Height{-sp_thick}-MainMenuH-StatusBarH;
         Self.Button_Wnd_Record.Enabled:=false;
       end;
     Lay_Customer:
@@ -3195,6 +3198,7 @@ begin
       end;
   end;
   Self.PageControlResize(Self.PageControl);
+  Self.ScrollBox_SynchronicResize(Self.ScrollBox_Synchronic);
   Self.ScrollBox_WndViewResize(Self.ScrollBox_WndView);
   Self.ScrollBox_SynchronicResize(Self.ScrollBox_Synchronic);
   Self.ScrollBox_AufButtonResize(Self.ScrollBox_AufButton);
@@ -3756,7 +3760,7 @@ begin
   Lay_advanced:
     begin
       Self.Layout.LayoutCode:=Lay_Advanced;
-      Self.Constraints.MinHeight:=300+(SynCount+1)*(gap+SynchronicH)+gap+StatusBarH;
+      Self.Constraints.MinHeight:=300+(SynCount+1)*SynchronicH+StatusBarH;
       Self.Constraints.MaxHeight:=0;
       Self.Constraints.MinWidth:=480+WindowsListW;
       Self.Constraints.MaxWidth:=0;
@@ -3765,29 +3769,29 @@ begin
   Lay_SynChronic:
     begin
       Self.Layout.LayoutCode:=Lay_Synchronic;
-      Self.Constraints.MinHeight:=(SynCount+2)*(SynchronicH+gap)+gap+StatusBarH;
+      Self.Constraints.MinHeight:=(SynCount+2)*(1+SynchronicH)+StatusBarH;
       Self.Constraints.MaxHeight:=0;
       Self.Constraints.MinWidth:=ARVControlW+360;
       Self.Constraints.MaxWidth:=0;
-      Self.Height:=(SynCount+1)*(gap+SynchronicH) + MainMenuH;
+      Self.Height:=(SynCount+1)*(1+SynchronicH) + StatusBarH;
       Self.MainMenu.Items[1].Items[2].Enabled:=false;
     end;
   Lay_Buttons:
     begin
       Self.Layout.LayoutCode:=Lay_Buttons;
-      Self.Constraints.MinHeight:=(SynCount+1)*(gap+SynchronicH)+2*gap+MainMenuH+StatusBarH;
-      Self.Constraints.MaxHeight:=(SynCount+1)*(gap+SynchronicH)+2*gap+MainMenuH+StatusBarH;
-      Self.Constraints.MinWidth:=(ButtonColumn+1+8+1)*(gap+SynchronicW)+2*gap;
+      Self.Constraints.MinHeight:=(SynCount+1)*SynchronicH+MainMenuH+StatusBarH;
+      Self.Constraints.MaxHeight:=(SynCount+1)*SynchronicH+MainMenuH+StatusBarH;
+      Self.Constraints.MinWidth:=(ButtonColumn+1+8+1)*SynchronicW;
       Self.Constraints.MaxWidth:=0;
-      Self.Height:=(SynCount+1)*(gap+SynchronicH) + MainMenuH;
+      Self.Height:=(SynCount+1)*SynchronicH + MainMenuH;
       Self.MainMenu.Items[1].Items[3].Enabled:=false;
     end;
   Lay_Recorder:
     begin
       Self.Layout.LayoutCode:=Lay_Recorder;
-      Self.Constraints.MinHeight:=300+(SynCount+1)*(gap+SynchronicH)+gap+StatusBarH;
+      Self.Constraints.MinHeight:=300+(SynCount+1)*SynchronicH+StatusBarH;
       Self.Constraints.MaxHeight:=0;
-      Self.Constraints.MinWidth:=480+WindowsListW;
+      Self.Constraints.MinWidth:=320+WindowsListW;
       Self.Constraints.MaxWidth:=0;
       Self.MainMenu.Items[1].Items[4].Enabled:=false;
     end;

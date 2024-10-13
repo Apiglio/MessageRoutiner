@@ -1,7 +1,7 @@
 object Form_ImgMerger: TForm_ImgMerger
-  Left = 1246
+  Left = 1540
   Height = 224
-  Top = 560
+  Top = 691
   Width = 393
   AlphaBlend = True
   AlphaBlendValue = 127

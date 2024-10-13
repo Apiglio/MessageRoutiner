@@ -1,7 +1,7 @@
 object Form_HoldButtonSetting: TForm_HoldButtonSetting
-  Left = 555
+  Left = 688
   Height = 238
-  Top = 354
+  Top = 437
   Width = 400
   BorderStyle = bsSingle
   Caption = '鼠标代键设置'

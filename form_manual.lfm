@@ -1,7 +1,7 @@
 object Form_Manual: TForm_Manual
-  Left = 877
+  Left = 1084
   Height = 600
-  Top = 337
+  Top = 416
   Width = 800
   BorderIcons = [biSystemMenu]
   Caption = '操作指南'

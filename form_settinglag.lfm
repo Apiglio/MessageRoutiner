@@ -1,7 +1,7 @@
 object SettingLagForm: TSettingLagForm
-  Left = 447
+  Left = 554
   Height = 391
-  Top = 364
+  Top = 449
   Width = 584
   Caption = '异步器设置'
   ClientHeight = 391
