@@ -760,7 +760,7 @@ begin
             end;
           new_wnd.node:=Form_Routiner.TreeView_Wnd.Items[Form_Routiner.TreeView_Wnd.Items.count-1];
           (new_wnd.node as TTreeNode).data:=new_wnd;
-          GetChildWindows(new_wnd, filter, UseReg);
+          GetChildWindows(new_wnd{, filter, UseReg});//很显然不应该在次级窗体中应用筛选
         END;
 
       hd:=GetNextWindow(hd,GW_HWNDNEXT);
