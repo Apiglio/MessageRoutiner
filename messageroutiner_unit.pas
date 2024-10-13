@@ -3987,6 +3987,7 @@ var wind:TWindow;
     str:string;
 begin
   wind:=Form_Routiner.GetSelectedWindow;
+  if wind=nil then exit;
   str:=Self.Edit.Text;
   if length(str)=0 then begin
     MessageBox(0,PChar(utf8towincp('错误：窗体变量为空，请输入一个变量名!')),'Error',MB_OK);
@@ -4176,6 +4177,7 @@ procedure TAufButton.ButtonMouseUp(Sender: TObject; Button: TMouseButton;
                       Shift: TShiftState; X, Y: Integer);
 var frm:TForm_Routiner;
 begin
+  if Self.ScriptPath='' then exit;
   frm:=Form_Routiner;
   if (Button=frm.Setting.AufButton.Setting2) and (Shift=frm.Setting.AufButton.Setting1) then
     begin ButtonRightUp;exit end;
