@@ -25,12 +25,12 @@ const
   sp_thick=6;
   WindowsListW=300;
   //ARVControlH=170;
-  ARVControlW=150;
+  ARVControlW=120;//原本是150，但是会在切换布局模式时造成ScrollBox_WndView的显示错误
   SynchronicH=24;
   SynchronicW=36;
+  SynWndButtonW=300;//原本是360
   MainMenuH=24;
   StatusBarH=26;
-  MinAufButtonW=450;
 
 
 type
@@ -2784,7 +2784,6 @@ begin
   WindowPosPad.Height:=WindowPosPad.Width*Desktop.Height div Desktop.Width;
   ReDrawWndPos;
   Memo_Tmp.Height:=(Sender as TScrollBox).Height-Memo_Tmp.Top+SynchronicH;
-
   with Sender as TScrollBox do
     begin
       if Self.Layout.LayoutCode = Lay_Synchronic then
@@ -2947,7 +2946,7 @@ begin
       Self.Buttons[i].expression:=Self.Buttons[i].expression;
 
       Self.CheckBoxs[i]:=TARVCheckBox.Create(Self);
-      Self.CheckBoxs[i].Caption:='键盘同步';
+      Self.CheckBoxs[i].Caption:='同步';
       Self.CheckBoxs[i].Font.Bold:=true;
       Self.CheckBoxs[i].Font.Bold:=false;
       Self.CheckBoxs[i].Parent:=Self.ScrollBox_Synchronic;
@@ -3059,6 +3058,10 @@ begin
   MergerAuf.Script.Expression.Local.TryAddExp('fn',narg('#"','@@@@@@A@|@@@@@@C@','"'));//define fn,#48[16]
   Merger_Clear;
 
+  Button_Wnd_Record.Height:=SynchronicH;
+  Button_Wnd_Synthesis.Height:=SynchronicH;
+  Button_excel.Height:=SynchronicH;
+
   ScrollBox_ImageView.BringToFront;//LAY_ImgMerger时，遮盖ARV
   FormResize(nil);
 
@@ -3122,7 +3125,7 @@ begin
   case Self.Layout.LayoutCode of
     Lay_Command:MinSizeCheck(480,300);
     Lay_Advanced:MinSizeCheck(480+WindowsListW,300+(SynCount+1)*SynchronicH);
-    Lay_Synchronic:MinSizeCheck(ARVControlW+360,(SynCount+1)*(1+SynchronicH){+StatusBarH});
+    Lay_Synchronic:MinSizeCheck(ARVControlW+SynWndButtonW,(SynCount+1)*(1+SynchronicH){+StatusBarH});
     Lay_Buttons:MinSizeCheck((ButtonColumn+1+8+1)*SynchronicW,(SynCount+1)*SynchronicH+MainMenuH+StatusBarH);
     Lay_Recorder:MinSizeCheck(320+WindowsListW,300+(SynCount+1)*(SynchronicH));
     Lay_ImgMerger:MinSizeCheck(300+WindowsListW,300+StatusBarH);
@@ -3145,7 +3148,7 @@ begin
     Lay_Advanced:
       begin
         Self.Splitter_MainV.Left:=Self.Width-sp_thick-WindowsListW;
-        Self.Splitter_SyncV.Left:=ARVControlW;
+        Self.Splitter_SyncV.Left:=ARVControlW+1;//强制变化宽度+1触发resize
         Self.Splitter_ButtonV.Left:=Self.Width{-sp_thick}-WindowsListW;
         Self.Splitter_LeftH.Top:=Self.Height-sp_thick{-MainMenuH}-(2+SynCount)*SynchronicH-StatusBarH;
         Self.Splitter_RightH.Top:=0;
@@ -3154,7 +3157,7 @@ begin
       end;
     Lay_Synchronic:
       begin
-        Self.Splitter_MainV.Left:=ARVControlW+360;
+        Self.Splitter_MainV.Left:=ARVControlW+SynWndButtonW;
         Self.Splitter_SyncV.Left:=ARVControlW;
         Self.Splitter_ButtonV.Left:=max(Self.Splitter_MainV.Left+2*sp_thick,Self.Width-2*sp_thick-8*SynchronicW)-sp_thick;
         Self.Splitter_LeftH.Top:=0;
@@ -3199,11 +3202,12 @@ begin
   end;
   Self.PageControlResize(Self.PageControl);
   Self.ScrollBox_SynchronicResize(Self.ScrollBox_Synchronic);
-  Self.ScrollBox_WndViewResize(Self.ScrollBox_WndView);
   Self.ScrollBox_SynchronicResize(Self.ScrollBox_Synchronic);
   Self.ScrollBox_AufButtonResize(Self.ScrollBox_AufButton);
   Self.ScrollBox_HoldButtonResize(Self.ScrollBox_HoldButton);
   Self.ScrollBox_RecOptionResize(Self.ScrollBox_RecOption);
+  Self.ScrollBox_WndViewResize(Self.ScrollBox_WndView);
+
 end;
 
 procedure TForm_Routiner.Button_advancedClick(Sender: TObject);
@@ -3771,7 +3775,7 @@ begin
       Self.Layout.LayoutCode:=Lay_Synchronic;
       Self.Constraints.MinHeight:=(SynCount+2)*(1+SynchronicH)+StatusBarH;
       Self.Constraints.MaxHeight:=0;
-      Self.Constraints.MinWidth:=ARVControlW+360;
+      Self.Constraints.MinWidth:=ARVControlW+SynWndButtonW;
       Self.Constraints.MaxWidth:=0;
       Self.Height:=(SynCount+1)*(1+SynchronicH) + StatusBarH;
       Self.MainMenu.Items[1].Items[2].Enabled:=false;

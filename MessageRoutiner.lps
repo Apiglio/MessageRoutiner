@@ -21,7 +21,8 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MessageRoutiner_Unit"/>
         <IsVisibleTab Value="True"/>
-        <CursorPos X="25" Y="25"/>
+        <TopLine Value="2773"/>
+        <CursorPos X="5" Y="2787"/>
         <UsageCount Value="205"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -137,7 +138,7 @@
         <EditorIndex Value="1"/>
         <TopLine Value="264"/>
         <CursorPos Y="282"/>
-        <UsageCount Value="147"/>
+        <UsageCount Value="148"/>
         <Loaded Value="True"/>
       </Unit11>
       <Unit12>
@@ -149,7 +150,7 @@
         <EditorIndex Value="3"/>
         <TopLine Value="161"/>
         <CursorPos X="38" Y="179"/>
-        <UsageCount Value="106"/>
+        <UsageCount Value="107"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit12>
@@ -160,7 +161,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="51"/>
+        <UsageCount Value="52"/>
       </Unit13>
       <Unit14>
         <Filename Value="..\AufScript\auftype\auf_type_base.pas"/>
@@ -169,7 +170,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="51"/>
+        <UsageCount Value="52"/>
       </Unit14>
       <Unit15>
         <Filename Value="..\AufScript\aufkernel\kernel.pas"/>
@@ -178,7 +179,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="41"/>
+        <UsageCount Value="42"/>
       </Unit15>
       <Unit16>
         <Filename Value="K:\FPC_Unit\Auf\aufscript_frame.pas"/>
@@ -469,123 +470,123 @@
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2293" Column="59" TopLine="2264"/>
+        <Caret Line="2662" Column="48" TopLine="2660"/>
       </Position1>
       <Position2>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2297" Column="43" TopLine="2268"/>
+        <Filename Value="..\AufScript\aufscript_frame.pas"/>
+        <Caret Line="92" Column="24" TopLine="77"/>
       </Position2>
       <Position3>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2298" Column="37" TopLine="2269"/>
+        <Filename Value="..\AufScript\aufscript_frame.pas"/>
+        <Caret Line="295" Column="61" TopLine="276"/>
       </Position3>
       <Position4>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2299" Column="37" TopLine="2270"/>
+        <Filename Value="..\AufScript\aufscript_frame.pas"/>
+        <Caret Line="291" Column="31" TopLine="276"/>
       </Position4>
       <Position5>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2300" Column="37" TopLine="2271"/>
+        <Caret Line="2677" Column="37" TopLine="2660"/>
       </Position5>
       <Position6>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2301" Column="37" TopLine="2272"/>
+        <Caret Line="3181" Column="40" TopLine="3167"/>
       </Position6>
       <Position7>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2383" Column="31" TopLine="2354"/>
+        <Caret Line="3793" Column="30" TopLine="3772"/>
       </Position7>
       <Position8>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2435" Column="27" TopLine="2406"/>
+        <Filename Value="form_runperformance.pas"/>
+        <Caret Line="211" Column="35" TopLine="193"/>
       </Position8>
       <Position9>
-        <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2436" Column="44" TopLine="2407"/>
+        <Filename Value="form_runperformance.pas"/>
+        <Caret Line="216" Column="38" TopLine="211"/>
       </Position9>
       <Position10>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2729" Column="39" TopLine="2716"/>
+        <Caret Line="473" Column="15" TopLine="450"/>
       </Position10>
       <Position11>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3172" Column="57" TopLine="3155"/>
+        <Caret Line="516" Column="25" TopLine="499"/>
       </Position11>
       <Position12>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3165" Column="25" TopLine="3141"/>
+        <Caret Line="27" Column="52" TopLine="61"/>
       </Position12>
       <Position13>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2710" Column="33" TopLine="2691"/>
+        <Caret Line="30" Column="31"/>
       </Position13>
       <Position14>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="33" Column="43" TopLine="11"/>
+        <Caret Line="2773" Column="38" TopLine="2748"/>
       </Position14>
       <Position15>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3775" Column="58" TopLine="3751"/>
+        <Caret Line="2784" Column="3" TopLine="2770"/>
       </Position15>
       <Position16>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3779" Column="26" TopLine="3752"/>
+        <Caret Line="3063" Column="11" TopLine="3046"/>
       </Position16>
       <Position17>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3775" Column="74" TopLine="3760"/>
+        <Caret Line="3142" Column="33" TopLine="3138"/>
       </Position17>
       <Position18>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3161" Column="37" TopLine="3146"/>
+        <Caret Line="41" Column="28" TopLine="9"/>
       </Position18>
       <Position19>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2681" Column="13" TopLine="2670"/>
+        <Caret Line="3773" Column="17" TopLine="3758"/>
       </Position19>
       <Position20>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2662" Column="48" TopLine="2660"/>
+        <Caret Line="3163" Column="38" TopLine="3144"/>
       </Position20>
       <Position21>
-        <Filename Value="..\AufScript\aufscript_frame.pas"/>
-        <Caret Line="92" Column="24" TopLine="77"/>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="2799" Column="43" TopLine="2776"/>
       </Position21>
       <Position22>
-        <Filename Value="..\AufScript\aufscript_frame.pas"/>
-        <Caret Line="295" Column="61" TopLine="276"/>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="3745" TopLine="3793"/>
       </Position22>
       <Position23>
-        <Filename Value="..\AufScript\aufscript_frame.pas"/>
-        <Caret Line="291" Column="31" TopLine="276"/>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="347" Column="15" TopLine="330"/>
       </Position23>
       <Position24>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="2677" Column="37" TopLine="2660"/>
+        <Caret Line="3210" Column="27" TopLine="3195"/>
       </Position24>
       <Position25>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3181" Column="40" TopLine="3167"/>
+        <Caret Line="378" Column="15" TopLine="360"/>
       </Position25>
       <Position26>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="3793" Column="30" TopLine="3772"/>
+        <Caret Line="2784" TopLine="2773"/>
       </Position26>
       <Position27>
-        <Filename Value="form_runperformance.pas"/>
-        <Caret Line="211" Column="35" TopLine="193"/>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="2782" Column="36" TopLine="2773"/>
       </Position27>
       <Position28>
-        <Filename Value="form_runperformance.pas"/>
-        <Caret Line="216" Column="38" TopLine="211"/>
+        <Filename Value="messageroutiner_unit.pas"/>
+        <Caret Line="2786" TopLine="2773"/>
       </Position28>
       <Position29>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="473" Column="15" TopLine="450"/>
+        <Caret Line="2788" TopLine="2773"/>
       </Position29>
       <Position30>
         <Filename Value="messageroutiner_unit.pas"/>
-        <Caret Line="516" Column="25" TopLine="499"/>
+        <Caret Line="2790" TopLine="2773"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>

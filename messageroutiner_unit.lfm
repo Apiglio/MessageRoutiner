@@ -1,7 +1,7 @@
 object Form_Routiner: TForm_Routiner
-  Left = 645
+  Left = 472
   Height = 918
-  Top = 295
+  Top = 280
   Width = 1031
   Caption = 'Apiglio Message Routiner'
   ClientHeight = 888
