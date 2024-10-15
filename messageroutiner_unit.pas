@@ -10,7 +10,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Windows,
   StdCtrls, ComCtrls, ExtCtrls, Menus, Buttons, Spin, Dos, LazUTF8, RegExpr, Clipbrd
   {$ifndef insert},
-  Apiglio_Useful, aufscript_frame, auf_ram_var, form_adapter, unit_bitmapdata
+  Apiglio_Useful, aufscript_frame, auf_ram_var, form_adapter, unit_bitmapdata, mr_messagebox
   {$endif};
 
 const
@@ -1044,7 +1044,7 @@ begin
   BringWindowToTop(hd);
 end;
 
-procedure show_messagebox(Sender:TObject);//messagebox prompt
+procedure ui_message(Sender:TObject);//ui.message prompt
 var AAuf:TAuf;
     AufScpt:TAufScript;
     prompt:string;
@@ -1054,6 +1054,37 @@ begin
   if not AAuf.CheckArgs(2) then exit;
   if not AAuf.TryArgToString(1,prompt) then exit;
   ShowMessage(prompt);
+end;
+
+procedure ui_options(Sender:TObject);//ui.options @res,prompt,options[, ...]
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    arv:TAufRamVar;
+    index:integer;
+    prompt,stmp:string;
+    options:TStringList;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(4) then exit;
+  if not AAuf.TryArgToARV(1,1,High(DWORD),[ARV_Char],arv) then exit;
+  if not AAuf.TryArgToString(2,prompt) then exit;
+  options:=TStringList.Create;
+  try
+    for index:=3 to AAuf.ArgsCount-1 do begin
+      if not AAuf.TryArgToString(index,stmp) then exit;
+      options.Add(stmp);
+    end;
+    with TMROptionForm.Create(nil,'MessageRoutiner',prompt) do try
+      stmp:=Execute(options);
+      initiate_arv_str(stmp,arv);
+    finally
+      Free;
+    end;
+  finally
+    options.Free;
+  end;
+  //ShowMessage(prompt);
 end;
 
 procedure SendString(Sender:TObject);
@@ -1793,7 +1824,8 @@ begin
   AAuf.Script.add_func('mousewhl,鼠标滚轮',@_MouseWheel,'hwnd,delta,"LRSCM12",x,y','向hwnd窗口发送鼠标滚轮的消息，delta推荐值为±120');
   AAuf.Script.add_func('post,发送消息',@PostM,'hwnd,msg,w,l','调用Postmessage');
   AAuf.Script.add_func('send,发送消息并等待处理',@SendM,'hwnd,msg,w,l','调用Sendmessage');
-  AAuf.Script.add_func('messagebox,消息窗体',@show_messagebox,'prompt','弹出提示窗体');
+  AAuf.Script.add_func('ui.message,消息窗体',@ui_message,'prompt','弹出提示窗体');
+  AAuf.Script.add_func('ui.options,选项窗体',@ui_options,'@res,prompt,options[, ...]','弹出选项窗体并返回结果');
 
   AAuf.Script.add_func('window.top,窗体置顶',@wnd_bring_to_top,'@hwnd','置顶给定句柄的窗体');
   AAuf.Script.add_func('getwnd_v,按名称返回句柄',@getwind_name_visible,'@hwnd,wnd_name','查找名称为wnd_name且可见的窗体句柄');

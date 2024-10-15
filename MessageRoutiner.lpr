@@ -11,7 +11,7 @@ uses
   { you can add units after this }
   MessageRoutiner_Unit, form_settinglag, form_aufbutton, form_manual,
   form_runperformance, unit_holdbuttonsetting, form_adapter, unit_bitmapdata,
-  unit_writescreen, form_imagemerger;
+  unit_writescreen, form_imagemerger, mr_messagebox;
 
 {$R *.res}
 
