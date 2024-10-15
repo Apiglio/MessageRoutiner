@@ -4120,6 +4120,7 @@ begin
         end
       else
         begin
+          if Self.Caption='' then exit;//没有显示名的按键不触发（还是触发设置？）
           for i:=0 to ButtonColumn do Form_Routiner.AufButtons[Self.WindowIndex,i].Enabled:=false;
           Self.Enabled:=true;
           Self.Font.Bold:=true;
@@ -4145,6 +4146,7 @@ begin
         end
       else
         begin
+          if Self.Caption='' then exit;//没有显示名的按键不触发（还是触发设置？）
           Form_Routiner.AufPopupMenu.PopupComponent:=Self;
           Form_Routiner.AufPopupMenu.button:=Self;
           for i:=0 to AufPopupCount do begin
@@ -4177,7 +4179,6 @@ procedure TAufButton.ButtonMouseUp(Sender: TObject; Button: TMouseButton;
                       Shift: TShiftState; X, Y: Integer);
 var frm:TForm_Routiner;
 begin
-  if Self.ScriptPath='' then exit;
   frm:=Form_Routiner;
   if (Button=frm.Setting.AufButton.Setting2) and (Shift=frm.Setting.AufButton.Setting1) then
     begin ButtonRightUp;exit end;
