@@ -164,6 +164,12 @@ type
     procedure SubButtonClick(Sender:TObject);
   end;
 
+  TMouseCursor = record
+    Point:TPoint;
+    Pred:^TMouseCursor;
+  end;
+  PMouseCursor = ^TMouseCursor;
+
   { TForm_Routiner }
 
   TForm_Routiner = class(TForm)
@@ -462,6 +468,12 @@ type
     FirstRecTime:longint;//录制过程中表示第一个记录时间，作差用来确定waittimer的参数
     LastMessage:TMessage;
     TimeOffset:longint;//rtmWaittimer模式的初始时间
+
+  private //鼠标指正坐标压栈
+    FPMouseCursor:PMouseCursor;
+  public //鼠标指正坐标压栈
+    procedure PushMouseCursor(point:TPoint);
+    function PopMouseCursor:TPoint;
 
   public
     procedure SaveOption;
@@ -1542,6 +1554,46 @@ begin
 
 end;
 
+procedure PushCursor(Sender:TObject);//pushcursor x,y[,window]
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    pos_x,pos_y,hd:longint;
+    tmpPoint:TPoint;
+    info:TWindowInfo;
+    dpi:double;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(3) then exit;
+  if not AAuf.TryArgToLong(1,pos_x) then exit;
+  if not AAuf.TryArgToLong(2,pos_y) then exit;
+  if AAuf.ArgsCount>=4 then begin
+    if not AAuf.TryArgToLong(3,hd) then exit;
+  end else begin
+    hd:=0;
+  end;
+  if hd<>0 then begin
+    GetWindowInfo(hd,info);
+    inc(pos_y,info.rcWindow.Top);
+    inc(pos_x,info.rcWindow.Left);
+  end else begin
+    //pos_x pos_y
+  end;
+  dpi:=GetDPIScaling;
+  pos_x:=trunc(pos_x/dpi);
+  pos_y:=trunc(pos_y/dpi);
+  if not GetCursorPos(tmpPoint) then begin AufScpt.send_error('读取鼠标坐标失败。');exit end;
+  Form_Routiner.PushMouseCursor(tmpPoint);
+  SetCursorPos(pos_x,pos_y);
+end;
+
+procedure PopCursor(Sender:TObject);//popcursor
+var tmpPoint:TPoint;
+begin
+  tmpPoint:=Form_Routiner.PopMouseCursor();
+  SetCursorPos(tmpPoint.X,tmpPoint.Y);
+end;
+
 procedure Routiner_Setting(Sender:TObject);
 var AufScpt:TAufScript;
     AAuf:TAuf;
@@ -1826,6 +1878,9 @@ begin
   AAuf.Script.add_func('send,发送消息并等待处理',@SendM,'hwnd,msg,w,l','调用Sendmessage');
   AAuf.Script.add_func('ui.message,消息窗体',@ui_message,'prompt','弹出提示窗体');
   AAuf.Script.add_func('ui.options,选项窗体',@ui_options,'@res,prompt,options[, ...]','弹出选项窗体并返回结果');
+
+  AAuf.Script.add_func('pushcursor,光标跳转',@PushCursor,'x,y','改变鼠标指针位置，并将当前位置压栈');
+  AAuf.Script.add_func('popcursor,光标返回',@PopCursor,'','将鼠标指针位置还原');
 
   AAuf.Script.add_func('window.top,窗体置顶',@wnd_bring_to_top,'@hwnd','置顶给定句柄的窗体');
   AAuf.Script.add_func('getwnd_v,按名称返回句柄',@getwind_name_visible,'@hwnd,wnd_name','查找名称为wnd_name且可见的窗体句柄');
@@ -2180,6 +2235,26 @@ begin
   for pi:=0 to ShortcutCount do
     if not Self.SCAufs[pi].Script.PSW.haltoff then
         Self.SCAufs[pi].Script.Stop;
+end;
+
+
+procedure TForm_Routiner.PushMouseCursor(point:TPoint);
+var tmpMouseCursorPtr:PMouseCursor;
+begin
+  GetMem(tmpMouseCursorPtr,1);
+  tmpMouseCursorPtr^.Point:=point;
+  tmpMouseCursorPtr^.Pred:=FPMouseCursor;
+  FPMouseCursor:=tmpMouseCursorPtr;
+end;
+
+function TForm_Routiner.PopMouseCursor:TPoint;
+var tmpMouseCursorPtr:PMouseCursor;
+begin
+  if FPMouseCursor=nil then exit;
+  result:=FPMouseCursor^.Point;
+  tmpMouseCursorPtr:=FPMouseCursor;
+  FPMouseCursor:=FPMouseCursor^.Pred;
+  FreeMem(tmpMouseCursorPtr,1);
 end;
 
 {$define ByteModeRec}
@@ -3096,6 +3171,8 @@ begin
 
   ScrollBox_ImageView.BringToFront;//LAY_ImgMerger时，遮盖ARV
   FormResize(nil);
+
+  FPMouseCursor:=nil;
 
   tim:=TTimer.Create(Self);
   tim.OnTimer:=@Self.TreeViewEditOnChange;
