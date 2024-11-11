@@ -224,6 +224,7 @@ begin
   tmpStr.Clear;
   Self.Syn_Show.Clear;
   Self.Syn_Show.Lines.Add('define win, @'+Form_Routiner.Buttons[Self.ComboBox_Window.ItemIndex].expression);
+  Self.Syn_Show.Lines.Add('define idx, '+IntToStr(Self.ComboBox_Window.ItemIndex));
   Self.Syn_Show.Lines.Add('jmp +'+IntToStr((Self.NowEditing as TAufButton).SkipLine));
   //Self.Syn_Show.Lines.Add('load "'+Self.Button_FileName.Caption+'"');
   path:='';

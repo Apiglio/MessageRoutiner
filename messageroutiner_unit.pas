@@ -66,6 +66,11 @@ type
       sel_hwnd:hwnd;
       expression:string;
       WindowIndex:byte;
+    private
+      EOptionSettingError:string;
+    public
+      function SetARV(arv_name:string;arv_hwnd:HWND;window_name:string):boolean;
+      function RenameARV(arv_name:string):boolean;
   end;
   TARVEdit = class(TEdit)
     published
@@ -1099,6 +1104,38 @@ begin
   //ShowMessage(prompt);
 end;
 
+procedure ui_set_sync_arv(Sender:TObject);//ui.setsync index,hwnd[,name]
+var AAuf:TAuf;
+    AufScpt:TAufScript;
+    index:byte;
+    arv_hwnd:longint;
+    arv_name,old_name:string;
+    window_name:array[0..239] of char;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.CheckArgs(3) then exit;
+  if not AAuf.TryArgToByte(1,index) then exit;
+  if not AAuf.TryArgToLong(2,arv_hwnd) then exit;
+  if AAuf.ArgsCount>3 then begin
+    if not AAuf.TryArgToString(3,arv_name) then exit;
+  end else begin
+    arv_name:='';
+  end;
+  if index>SynCount then begin
+    AufScpt.send_error('第1个参数index应为0至'+IntToStr(SynCount)+'的整数。');
+    exit;
+  end;
+  GetWindowText(arv_hwnd,window_name,240);
+  old_name:='@'+Form_Routiner.Buttons[index].expression;
+  if arv_name='' then arv_name:=old_name;
+  if Form_Routiner.Buttons[index].SetARV(old_name,arv_hwnd,WinCPToUTF8(window_name)) then begin
+    if old_name<>arv_name then Form_Routiner.Edits[index].Caption:=arv_name;
+  end else begin
+    AufScpt.send_error(Form_Routiner.Buttons[index].EOptionSettingError);
+  end;
+end;
+
 procedure SendString(Sender:TObject);
 var hd:longint;
     str:string;
@@ -1878,6 +1915,7 @@ begin
   AAuf.Script.add_func('send,发送消息并等待处理',@SendM,'hwnd,msg,w,l','调用Sendmessage');
   AAuf.Script.add_func('ui.message,消息窗体',@ui_message,'prompt','弹出提示窗体');
   AAuf.Script.add_func('ui.options,选项窗体',@ui_options,'@res,prompt,options[, ...]','弹出选项窗体并返回结果');
+  AAuf.Script.add_func('ui.setsync,设置同步器窗体',@ui_set_sync_arv,'index,hwnd','设置第index个同步窗体');
 
   AAuf.Script.add_func('pushcursor,光标跳转',@PushCursor,'x,y','改变鼠标指针位置，并将当前位置压栈');
   AAuf.Script.add_func('popcursor,光标返回',@PopCursor,'','将鼠标指针位置还原');
@@ -4072,6 +4110,61 @@ end;
 
 { TARVButton & TARVEdit }
 
+function TARVButton.SetARV(arv_name:string;arv_hwnd:HWND;window_name:string):boolean;
+begin
+  result:=false;
+  if length(arv_name)=0 then begin
+    EOptionSettingError:='错误：窗体变量为空，请输入一个变量名!';
+    exit;
+  end;
+  if arv_name[1]<>'@' then begin
+    EOptionSettingError:='错误：窗体变量必须以@开头，例如@win1';
+    exit;
+  end;
+  case arv_name[2] of
+    'a'..'z','A'..'Z','_':;
+    else begin
+      EOptionSettingError:='错误：窗体变量第二位必须是字母或下划线，例如@win1';
+      exit;
+    end;
+  end;
+  delete(arv_name,1,1);
+  try
+    GlobalExpressionList.TryAddExp(arv_name,narg('',IntToStr(arv_hwnd),''));
+  except
+    EOptionSettingError:='错误：窗体变量写入失败，请尝试其他变量名称';
+    exit;
+  end;
+  Self.expression:=arv_name;
+  Self.Caption:=IntToHex(arv_hwnd,8)+':'+window_name;
+  Self.hint:=Self.Caption;
+  Self.ShowHint:=true;
+  Self.sel_hwnd:=arv_hwnd;
+  EOptionSettingError:='';
+  result:=true;
+end;
+
+function TARVButton.RenameARV(arv_name:string):boolean;
+begin
+  if Self.Edit<>nil then Self.Edit.Color:=clRed;
+  result:=false;
+  EOptionSettingError:='错误：无效变量名，变量名须以@开头，第二位必须是字母或下划线';
+  if length(arv_name)=0 then exit;
+  if arv_name[1]<>'@' then exit;
+  if not (arv_name[2] in ['a'..'z','A'..'Z','_']) then exit;
+  delete(arv_name,1,1);
+  try
+    if expression<>'' then GlobalExpressionList.TryRenameExp(Self.expression,arv_name);
+  except
+    EOptionSettingError:='错误：窗体变量写入失败，请尝试其他变量名称';
+    exit;
+  end;
+  Self.expression:=arv_name;
+  EOptionSettingError:='';
+  result:=true;
+  if Self.Edit<>nil then Self.Edit.Color:=clDefault;
+end;
+
 constructor TARVButton.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -4093,38 +4186,11 @@ end;
 
 procedure TARVButton.ButtonClick(Sender: TObject);
 var wind:TWindow;
-    str:string;
 begin
   wind:=Form_Routiner.GetSelectedWindow;
   if wind=nil then exit;
-  str:=Self.Edit.Text;
-  if length(str)=0 then begin
-    MessageBox(0,PChar(utf8towincp('错误：窗体变量为空，请输入一个变量名!')),'Error',MB_OK);
-    exit
-  end;
-  if str[1]<>'@' then begin
-    MessageBox(0,PChar(utf8towincp('错误：窗体变量必须以@开头，例如@win1')),'Error',MB_OK);
-    exit
-  end;
-  case str[2] of
-    'a'..'z','A'..'Z','_':;
-    else begin
-      MessageBox(0,PChar(utf8towincp('错误：窗体变量第二位必须是字母或下划线，例如@win1')),'Error',MB_OK);
-      exit
-    end;
-  end;
-  delete(str,1,1);
-  try
-    GlobalExpressionList.TryAddExp(str,narg('',IntToStr(wind.info.hd),''));
-  except
-    MessageBox(0,PChar(utf8towincp('错误：窗体变量写入失败，请尝试其他变量名称')),'Error',MB_OK);
-    exit;
-  end;
-  (Sender as TARVButton).expression:=str;
-  (Sender as TARVButton).Caption:=IntToHex(wind.info.hd,8)+':'+wind.info.name;
-  (Sender as TARVButton).hint:=(Sender as TButton).Caption;
-  (Sender as TARVButton).ShowHint:=true;
-  (Sender as TARVButton).sel_hwnd:=wind.info.hd;
+  if not SetARV(Self.Edit.Text,wind.info.hd,wind.info.name) then
+    MessageBox(0,PChar(utf8towincp(EOptionSettingError)),'Error',MB_OK);
 end;
 
 procedure TARVEdit.EditMouseEnter(Sender:TObject);
@@ -4136,9 +4202,6 @@ begin
   Form_Routiner.ShowManual('');
 end;
 
-
-
-
 constructor TARVEdit.Create(AOwner:TComponent);
 begin
   inherited Create(AOwner);
@@ -4149,20 +4212,9 @@ end;
 
 procedure TARVEdit.EditOnChange(Sender:TObject);
 var tmp:TARVEdit;
-    str:string;
 begin
   tmp:=Sender as TARVEdit;
-  str:=tmp.Text;
-  if length(str)=0 then exit;
-  if str[1]<>'@' then exit;
-  if not (str[2] in ['a'..'z','A'..'Z','_']) then exit;
-  delete(str,1,1);
-  try
-    GlobalExpressionList.TryRenameExp((tmp.Button as TARVButton).expression,str);
-  except
-    exit;
-  end;
-  (tmp.Button as TARVButton).expression:=str;
+  (tmp.Button as TARVButton).RenameARV(tmp.Text);
 end;
 
 procedure TARVCheckBox.CheckOnChange(Sender:TObject);
@@ -4321,6 +4373,7 @@ var str:string;
 begin
   Self.cmd.Clear;
   Self.cmd.add('define win, @'+Form_Routiner.Buttons[Self.WindowIndex].expression);
+  Self.cmd.add('define idx, '+IntToStr(Self.WindowIndex));
   Self.cmd.add('jmp +'+IntToStr(Self.SkipLine));
   for str in Self.ScriptFile do Self.cmd.Add('load "'+str+'"');
 
