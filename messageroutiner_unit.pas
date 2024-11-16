@@ -205,9 +205,12 @@ type
     Label_MergerIntervalsMS: TLabel;
     Label_MergerBackMatch_Title: TLabel;
     Label_WindowPosPadState: TLabel;
+    MenuItem_Wndlist_BringToFront: TMenuItem;
+    MenuItem_Wndlist_Scale: TMenuItem;
     MenuItem_Lay_ImgMerge: TMenuItem;
     GroupBox_OffsetSetting: TGroupBox;
     Panel_ImageMerger: TPanel;
+    PopupMenu_Wndlist: TPopupMenu;
     ScrollBox_ImageView: TPanel;
     ScrollBox_ImageViewScroll: TScrollBox;
     ScrollBox_RecOption: TScrollBox;
@@ -334,6 +337,8 @@ type
     procedure Memo_TmpRecMouseEnter(Sender: TObject);
     procedure Memo_TmpRecMouseLeave(Sender: TObject);
     procedure MenuItem_Lay_ImgMergeClick(Sender: TObject);
+    procedure MenuItem_Wndlist_BringToFrontClick(Sender: TObject);
+    procedure MenuItem_Wndlist_ScaleClick(Sender: TObject);
     procedure RadioGroup_DelayModeClick(Sender: TObject);
     procedure RadioGroup_DelayModeMouseEnter(Sender: TObject);
     procedure RadioGroup_DelayModeMouseLeave(Sender: TObject);
@@ -390,6 +395,8 @@ type
     procedure TreeView_WndChange(Sender: TObject; Node: TTreeNode);
     procedure TreeView_WndMouseEnter(Sender: TObject);
     procedure TreeView_WndMouseLeave(Sender: TObject);
+    procedure TreeView_WndMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure WindowPosPadMouseEnter(Sender: TObject);
     procedure WindowPosPadMouseLeave(Sender: TObject);
     procedure WindowPosPadViceChange(Sender: TObject);
@@ -524,7 +531,7 @@ var
 
 implementation
 uses form_settinglag, form_aufbutton, form_manual, form_runperformance,
-     unit_holdbuttonsetting, auf_ram_image, form_imagemerger;
+     unit_holdbuttonsetting, auf_ram_image, form_imagemerger, form_scale;
 
 {$R *.lfm}
 
@@ -2774,6 +2781,22 @@ begin
   Self.FormResize(Self);
 end;
 
+procedure TForm_Routiner.MenuItem_Wndlist_BringToFrontClick(Sender: TObject);
+var tmpWnd:TWindow;
+begin
+  tmpWnd:=Form_Routiner.GetSelectedWindow;
+  if tmpWnd=nil then exit;
+  BringWindowToTop(tmpWnd.info.hd);
+end;
+
+procedure TForm_Routiner.MenuItem_Wndlist_ScaleClick(Sender: TObject);
+var tmpWnd:TWindow;
+begin
+  tmpWnd:=Form_Routiner.GetSelectedWindow;
+  if tmpWnd=nil then exit;
+  FormScale.Call(tmpWnd.info.hd);
+end;
+
 procedure TForm_Routiner.MenuItem_Lay_SaveOptionClick(Sender: TObject);
 begin
   Self.SaveOption;
@@ -2961,6 +2984,17 @@ end;
 procedure TForm_Routiner.TreeView_WndMouseLeave(Sender: TObject);
 begin
   Self.ShowManual('');
+end;
+
+procedure TForm_Routiner.TreeView_WndMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var tmpTreeNode:TTreeNode;
+begin
+  if Button<>mbRight then exit;
+  tmpTreeNode:=TreeView_Wnd.GetNodeAt(X,Y);
+  if tmpTreeNode=nil then exit;
+  TreeView_Wnd.Select(tmpTreeNode);
+  PopupMenu_Wndlist.PopUp;
 end;
 
 procedure TForm_Routiner.WindowPosPadMouseEnter(Sender: TObject);

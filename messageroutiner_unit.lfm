@@ -425,6 +425,7 @@ object Form_Routiner: TForm_Routiner
       OnChange = TreeView_WndChange
       OnMouseEnter = TreeView_WndMouseEnter
       OnMouseLeave = TreeView_WndMouseLeave
+      OnMouseUp = TreeView_WndMouseUp
     end
     object Label_filter: TLabel
       AnchorSideLeft.Control = ScrollBox_WndList
@@ -5962,6 +5963,18 @@ object Form_Routiner: TForm_Routiner
         Caption = 'Hook Adapter'
         OnClick = MenuItem_Opt_AdapterClick
       end
+    end
+  end
+  object PopupMenu_Wndlist: TPopupMenu
+    left = 720
+    top = 208
+    object MenuItem_Wndlist_BringToFront: TMenuItem
+      Caption = '置顶窗体'
+      OnClick = MenuItem_Wndlist_BringToFrontClick
+    end
+    object MenuItem_Wndlist_Scale: TMenuItem
+      Caption = '显示标尺'
+      OnClick = MenuItem_Wndlist_ScaleClick
     end
   end
 end

@@ -1,0 +1,17 @@
+object FormScale: TFormScale
+  Left = 1077
+  Height = 529
+  Top = 345
+  Width = 797
+  AlphaBlend = True
+  AlphaBlendValue = 191
+  BorderStyle = bsNone
+  Caption = 'FormScale'
+  DesignTimePPI = 144
+  OnChangeBounds = FormChangeBounds
+  OnMouseUp = FormMouseUp
+  OnPaint = FormPaint
+  OnResize = FormResize
+  LCLVersion = '1.8.4.0'
+  WindowState = wsMaximized
+end
