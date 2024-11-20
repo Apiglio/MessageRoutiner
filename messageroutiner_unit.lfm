@@ -5974,7 +5974,14 @@ object Form_Routiner: TForm_Routiner
     end
     object MenuItem_Wndlist_Scale: TMenuItem
       Caption = '显示标尺'
-      OnClick = MenuItem_Wndlist_ScaleClick
+      object MenuItem_Wndlist_Scale_Form: TMenuItem
+        Caption = '窗体'
+        OnClick = MenuItem_Wndlist_Scale_FormClick
+      end
+      object MenuItem_Wndlist_Scale_Client: TMenuItem
+        Caption = '用户区'
+        OnClick = MenuItem_Wndlist_Scale_ClientClick
+      end
     end
   end
 end

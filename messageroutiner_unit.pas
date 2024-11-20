@@ -205,8 +205,10 @@ type
     Label_MergerIntervalsMS: TLabel;
     Label_MergerBackMatch_Title: TLabel;
     Label_WindowPosPadState: TLabel;
-    MenuItem_Wndlist_BringToFront: TMenuItem;
+    MenuItem_Wndlist_Scale_Client: TMenuItem;
+    MenuItem_Wndlist_Scale_Form: TMenuItem;
     MenuItem_Wndlist_Scale: TMenuItem;
+    MenuItem_Wndlist_BringToFront: TMenuItem;
     MenuItem_Lay_ImgMerge: TMenuItem;
     GroupBox_OffsetSetting: TGroupBox;
     Panel_ImageMerger: TPanel;
@@ -338,7 +340,8 @@ type
     procedure Memo_TmpRecMouseLeave(Sender: TObject);
     procedure MenuItem_Lay_ImgMergeClick(Sender: TObject);
     procedure MenuItem_Wndlist_BringToFrontClick(Sender: TObject);
-    procedure MenuItem_Wndlist_ScaleClick(Sender: TObject);
+    procedure MenuItem_Wndlist_Scale_ClientClick(Sender: TObject);
+    procedure MenuItem_Wndlist_Scale_FormClick(Sender: TObject);
     procedure RadioGroup_DelayModeClick(Sender: TObject);
     procedure RadioGroup_DelayModeMouseEnter(Sender: TObject);
     procedure RadioGroup_DelayModeMouseLeave(Sender: TObject);
@@ -2789,12 +2792,20 @@ begin
   BringWindowToTop(tmpWnd.info.hd);
 end;
 
-procedure TForm_Routiner.MenuItem_Wndlist_ScaleClick(Sender: TObject);
+procedure TForm_Routiner.MenuItem_Wndlist_Scale_ClientClick(Sender: TObject);
 var tmpWnd:TWindow;
 begin
   tmpWnd:=Form_Routiner.GetSelectedWindow;
   if tmpWnd=nil then exit;
-  FormScale.Call(tmpWnd.info.hd);
+  FormScale.Call(tmpWnd.info.hd,stClient);
+end;
+
+procedure TForm_Routiner.MenuItem_Wndlist_Scale_FormClick(Sender: TObject);
+var tmpWnd:TWindow;
+begin
+  tmpWnd:=Form_Routiner.GetSelectedWindow;
+  if tmpWnd=nil then exit;
+  FormScale.Call(tmpWnd.info.hd,stForm);
 end;
 
 procedure TForm_Routiner.MenuItem_Lay_SaveOptionClick(Sender: TObject);

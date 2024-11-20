@@ -12,6 +12,7 @@ type
 
   { TFormScale }
 
+  TScaleType = (stUnknown, stForm, stClient);
   TFormScale = class(TForm)
     procedure FormChangeBounds(Sender: TObject);
     procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
@@ -20,8 +21,9 @@ type
     procedure FormResize(Sender: TObject);
   private
     FHWND:HWND;
+    FType:TScaleType;
   public
-    procedure Call(Target:HWND);
+    procedure Call(Target:HWND;ScaleType:TScaleType);
   end;
 
 var
@@ -52,15 +54,18 @@ end;
 procedure TFormScale.FormPaint(Sender: TObject);
 var window_info:TWindowInfo;
     tmpRect:TRect;
-    tmpx,tmpy,linex,liney,p_start,p_end:Integer;
+    tmpx,tmpy,linex,liney:Integer;
     hth,htw:Integer;
     stmp:string;
     dpi_scaling:double;
 begin
   if GetWindowInfo(FHWND,window_info) then begin
     dpi_scaling:=GetDPIScaling;
-    //tmpRect:=GetDPIRect(window_info.rcClient);
-    tmpRect:=window_info.rcClient;
+    case FType of
+      stClient:tmpRect:=window_info.rcClient;
+      stForm:tmpRect:=window_info.rcWindow;
+      else exit;
+    end;
     tmpRect.Top:=tmpRect.Top-Top;
     tmpRect.Left:=tmpRect.Left-Left;
     tmpRect.Right:=tmpRect.Right-Left;
@@ -112,9 +117,10 @@ begin
   FormPaint(Self);
 end;
 
-procedure TFormScale.Call(Target:HWND);
+procedure TFormScale.Call(Target:HWND;ScaleType:TScaleType);
 begin
   FHWND:=Target;
+  FType:=ScaleType;
   ShowModal;
 end;
 
