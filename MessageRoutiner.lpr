@@ -9,9 +9,10 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms,
   { you can add units after this }
-  MessageRoutiner_Unit, form_settinglag, form_aufbutton, form_manual,
-  form_runperformance, unit_holdbuttonsetting, form_adapter, unit_bitmapdata,
-  unit_writescreen, form_imagemerger, form_scale, mr_messagebox;
+  MessageRoutiner_Unit,
+  form_settinglag, form_aufbutton, form_manual, form_runperformance,
+  form_holdbuttonsetting, form_adapter, form_imagemerger, form_scale,
+  unit_bitmapdata, unit_writescreen, mr_messagebox, mr_windowlist, mr_misc;
 
 {$R *.res}
 
@@ -23,7 +24,7 @@ begin
   Application.CreateForm(TAufButtonForm, AufButtonForm);
   Application.CreateForm(TForm_Manual, ManualForm);
   Application.CreateForm(TFormRunPerformance, FormRunPerformance);
-  Application.CreateForm(TForm_HoldButtonSetting, Form_HoldButtonSetting);
+  Application.CreateForm(TFormHoldButtonSetting, FormHoldButtonSetting);
   Application.CreateForm(TAdapterForm, AdapterForm);
   Form_Routiner.LoadOption;
   Form_Routiner.FormResize(Form_Routiner);

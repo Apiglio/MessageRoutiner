@@ -1,4 +1,4 @@
-unit unit_holdbuttonsetting;
+unit form_holdbuttonsetting;
 
 {$mode objfpc}{$H+}
 
@@ -10,9 +10,9 @@ uses
 
 type
 
-  { TForm_HoldButtonSetting }
+  { TFormHoldButtonSetting }
 
-  TForm_HoldButtonSetting = class(TForm)
+  TFormHoldButtonSetting = class(TForm)
     Button_Okay: TButton;
     Button_Cancel: TButton;
     Button_Reset: TButton;
@@ -42,16 +42,16 @@ type
   end;
 
 var
-  Form_HoldButtonSetting: TForm_HoldButtonSetting;
+  FormHoldButtonSetting: TFormHoldButtonSetting;
 
 implementation
-uses MessageRoutiner_Unit;
+uses MessageRoutiner_Unit, mr_holdbutton;
 
 {$R *.lfm}
 
-{ TForm_HoldButtonSetting }
+{ TFormHoldButtonSetting }
 
-procedure TForm_HoldButtonSetting.Button_OkayClick(Sender: TObject);
+procedure TFormHoldButtonSetting.Button_OkayClick(Sender: TObject);
 var tmp:THoldButton;
 begin
   tmp:=TargetButton as THoldButton;
@@ -79,12 +79,12 @@ begin
   Self.Hide;
 end;
 
-procedure TForm_HoldButtonSetting.Button_CancelClick(Sender: TObject);
+procedure TFormHoldButtonSetting.Button_CancelClick(Sender: TObject);
 begin
   Self.Hide;
 end;
 
-procedure TForm_HoldButtonSetting.Button_ResetClick(Sender: TObject);
+procedure TFormHoldButtonSetting.Button_ResetClick(Sender: TObject);
 begin
   Self.LabeledEdit_Caption.Text:='';
   Self.LabeledEdit_Key1.Text:='0';
@@ -93,12 +93,12 @@ begin
   Self.LabeledEdit_Interval.Text:='0';
 end;
 
-procedure TForm_HoldButtonSetting.FormHide(Sender: TObject);
+procedure TFormHoldButtonSetting.FormHide(Sender: TObject);
 begin
   //
 end;
 
-procedure TForm_HoldButtonSetting.FormShow(Sender: TObject);
+procedure TFormHoldButtonSetting.FormShow(Sender: TObject);
 var tmp:THoldButton;
 begin
   tmp:=TargetButton as THoldButton;
@@ -109,13 +109,13 @@ begin
   Self.LabeledEdit_Interval.Text:=IntToStr(tmp.keymessage[3]);
 end;
 
-procedure TForm_HoldButtonSetting.LabeledEdit_IntervalKeyUp(Sender: TObject;
+procedure TFormHoldButtonSetting.LabeledEdit_IntervalKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
   //(Sender as TLabeledEdit).Text:=IntToStr(Key mod 256);
 end;
 
-procedure TForm_HoldButtonSetting.LabeledEdit_Key1KeyUp(Sender: TObject;
+procedure TFormHoldButtonSetting.LabeledEdit_Key1KeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
   if not Self.ToggleBox_KeyRead.Checked then

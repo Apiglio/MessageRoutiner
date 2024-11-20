@@ -62,7 +62,7 @@ var
   AufButtonForm: TAufButtonForm;
 
 implementation
-uses MessageRoutiner_Unit;
+uses MessageRoutiner_Unit, mr_aufbutton;
 
 {$R *.lfm}
 

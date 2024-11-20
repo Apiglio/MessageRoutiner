@@ -1,4 +1,4 @@
-object Form_HoldButtonSetting: TForm_HoldButtonSetting
+object FormHoldButtonSetting: TFormHoldButtonSetting
   Left = 688
   Height = 238
   Top = 437
