@@ -5,7 +5,7 @@ unit mr_misc;
 interface
 
 uses
-  Classes, SysUtils, Windows;
+  Classes, SysUtils, Forms, Windows;
 
 function GetDPIScaling:double;
 function GetDPI:integer;
@@ -59,7 +59,7 @@ procedure process_sleep(n:longint);
 var t0,t1,t2:TDateTime;
 begin
   t0:=Now;
-  t2:=t0+n/1000;
+  t2:=t0+n/86400000;
   repeat
     t1:=Now;
     Application.ProcessMessages;

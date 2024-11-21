@@ -802,4 +802,272 @@ begin
   SetCursorPos(tmpPoint.X,tmpPoint.Y);
 end;
 
+procedure Routiner_Setting(Sender:TObject);
+var AufScpt:TAufScript;
+    AAuf:TAuf;
+    fo,ww,hh,tt,ll:longint;
+    s1,s2:string;
+    slst:TStringList;
+    pf:TForm;
+    branch,option:string;
+begin
+  AufScpt:=Sender as TAufScript;
+  AAuf:=AufScpt.Auf as TAuf;
+  if not AAuf.TryArgToStrParam(1,
+  ['title','version','axis','form','layout','customer_layout','aufbutton',
+  'holdbutton','action_setting','wndlist','shortcut','shortcut_command'],
+  false,branch) then exit;
+  case lowercase(branch) of
+    'title':{伪指令};
+    'version':{伪指令};
+    'axis':
+      begin
+        if AAuf.ArgsCount<4 then begin
+          AufScpt.send_error('set Axis需要3个参数，未成功设置！');exit
+        end;
+        if not AAuf.TryArgToStrParam(2,['mainv=','syncv=','buttonv=','lefth=','righth=','rech=','codev='],false,option) then exit;
+        case lowercase(option) of
+          'mainv=':
+            begin
+              try Form_Routiner.Splitter_MainV.Left:=StrToInt(AAuf.nargs[3].arg);
+              except AufScpt.send_error('参数错误，未成功设置！');end;
+            end;
+          'syncv=':
+            begin
+              try Form_Routiner.Splitter_SyncV.Left:=StrToInt(AAuf.nargs[3].arg);
+              except AufScpt.send_error('参数错误，未成功设置！');end;
+            end;
+          'buttonv=':
+            begin
+              try Form_Routiner.Splitter_ButtonV.Left:=StrToInt(AAuf.nargs[3].arg);
+              except AufScpt.send_error('参数错误，未成功设置！');end;
+            end;
+          'lefth=':
+            begin
+              try Form_Routiner.Splitter_LeftH.Top:=StrToInt(AAuf.nargs[3].arg);
+              except AufScpt.send_error('参数错误，未成功设置！');end;
+            end;
+          'righth=':
+            begin
+              try Form_Routiner.Splitter_RightH.Top:=StrToInt(AAuf.nargs[3].arg);
+              except AufScpt.send_error('参数错误，未成功设置！');end;
+            end;
+          'rech=':
+            begin
+              try Form_Routiner.Splitter_RecH.Top:=StrToInt(AAuf.nargs[3].arg);
+              except AufScpt.send_error('参数错误，未成功设置！');end;
+            end;
+          'codev=':
+            begin
+              try
+                if AAuf.ArgsCount<5 then
+                  fo:=-1
+                else
+                  fo:=StrToInt(AAuf.nargs[4].arg);
+                if (fo<0) or (fo>RuleCount) then fo:=Form_Routiner.PageControl.PageIndex;
+                Form_Routiner.AufScriptFrames[fo].Frame.Splitter_Vert.Left:=StrToInt(AAuf.nargs[3].arg) * Form_Routiner.AufScriptFrames[fo].Frame.Width div 100;
+              except AufScpt.send_error('参数错误，未成功设置！');end;
+            end;
+        end;
+      end;
+    'form':
+      begin
+        if AAuf.ArgsCount<7 then begin
+          AufScpt.send_error('set Form需要6个参数，未成功设置！');exit
+        end;
+        try
+          fo:=StrToInt(AAuf.nargs[2].arg);
+          tt:=StrToInt(AAuf.nargs[3].arg);
+          ll:=StrToInt(AAuf.nargs[4].arg);
+          ww:=StrToInt(AAuf.nargs[5].arg);
+          hh:=StrToInt(AAuf.nargs[6].arg);
+        except
+          AufScpt.send_error('set Form之后的参数需要是数字，未设置成功。');exit
+        end;
+        case fo of
+          1:pf:=Form_Routiner;
+          2:pf:=AufButtonForm;
+          3:pf:=SettingLagForm;
+          4:pf:=ManualForm;
+          5:pf:=FormRunPerformance;
+          6:pf:=FormHoldButtonSetting;
+          else begin AufScpt.send_error('未找到指定窗口，未设置成功。');exit end;
+        end;
+        with pf do
+          begin
+            Top:=tt;
+            Left:=ll;
+            Width:=ww;
+            Height:=hh;
+          end;
+      end;
+    'layout':
+      begin
+        if AAuf.ArgsCount<3 then begin
+          AufScpt.send_error('set Layout需要2个参数，未成功设置！');exit
+        end;
+        try fo:=StrToInt(AAuf.nargs[2].arg);
+        except AufScpt.send_error('set Layout之后的参数需要是数字，未设置成功。');exit end;
+        Form_Routiner.Layout.LayoutCode:=TLayoutSet(fo);
+        Form_Routiner.SetLayout(byte(Form_Routiner.Layout.LayoutCode));
+        Form_Routiner.FormResize(Form_Routiner);
+      end;
+    'customer_layout':
+      begin
+        if AAuf.ArgsCount<10 then begin
+          AufScpt.send_error('set Customer_Layout需要9个参数，未成功设置！');exit
+        end;
+        try
+          Form_Routiner.Layout.customer_layout.Width:=StrToInt(AAuf.nargs[2].arg);
+          Form_Routiner.Layout.customer_layout.Height:=StrToInt(AAuf.nargs[3].arg);
+          Form_Routiner.Layout.customer_layout.MainV:=StrToInt(AAuf.nargs[4].arg);
+          Form_Routiner.Layout.customer_layout.SyncV:=StrToInt(AAuf.nargs[5].arg);
+          Form_Routiner.Layout.customer_layout.ButtV:=StrToInt(AAuf.nargs[6].arg);
+          Form_Routiner.Layout.customer_layout.LeftH:=StrToInt(AAuf.nargs[7].arg);
+          Form_Routiner.Layout.customer_layout.RightH:=StrToInt(AAuf.nargs[8].arg);
+          Form_Routiner.Layout.customer_layout.RecH:=StrToInt(AAuf.nargs[9].arg);
+        except
+          AufScpt.send_error('参数存在错误，未完全完成设置！')
+        end;
+      end;
+    'aufbutton':
+      begin
+        if AAuf.ArgsCount<7 then begin
+          AufScpt.send_error('set AufButton需要6个参数，未成功设置！');exit
+        end;
+        try
+          {winID}ww:=StrToInt(AAuf.nargs[2].arg);
+          {colID}hh:=StrToInt(AAuf.nargs[3].arg);
+          {winIndex}ll:=StrToInt(AAuf.nargs[5].arg);
+          if (ww>SynCount) or (ww<0) then raise Exception.Create('SynCount');
+          if (ll>SynCount) or (ll<0) then raise Exception.Create('WinIndex');
+          if (hh>ButtonColumn) or (hh<0) then raise Exception.Create('ButtonColumn');
+        except
+          AufScpt.send_error('参数存在错误，未完成设置！');exit
+        end;
+        Form_Routiner.AufButtons[ww,hh].Caption:=AAuf.nargs[4].arg;
+        Form_Routiner.AufButtons[ww,hh].ScriptFile.CommaText:=AAuf.nargs[6].arg;
+        Form_Routiner.AufButtons[ww,hh].WindowIndex:=ll;
+      end;
+    'holdbutton':
+      begin
+        if AAuf.ArgsCount<8 then begin
+          AufScpt.send_error('set HoldButton需要7个参数，未成功设置！');exit
+        end;
+        try
+          {ID}fo:=StrToInt(AAuf.nargs[2].arg);
+          {key1}tt:=StrToInt(AAuf.nargs[4].arg);
+          {key2}ll:=StrToInt(AAuf.nargs[5].arg);
+          {key3}ww:=StrToInt(AAuf.nargs[6].arg);
+          {last}hh:=StrToInt(AAuf.nargs[7].arg);
+          if (fo>31) or (fo<0) then raise Exception.Create('HoldButton');
+          if (tt>255) or (tt<0) then raise Exception.Create('key1');
+          if (ll>255) or (ll<0) then raise Exception.Create('key2');
+          if (ww>255) or (ww<0) then raise Exception.Create('key3');
+          if (hh>255) or (hh<0) then raise Exception.Create('last');
+        except
+          AufScpt.send_error('参数存在错误，未完成设置！');exit
+        end;
+        Form_Routiner.HoldButtons[fo].Caption:=AAuf.nargs[3].arg;
+        Form_Routiner.HoldButtons[fo].keymessage[0]:=tt;
+        Form_Routiner.HoldButtons[fo].keymessage[1]:=ll;
+        Form_Routiner.HoldButtons[fo].keymessage[2]:=ww;
+        Form_Routiner.HoldButtons[fo].keymessage[3]:=hh;
+      end;
+    'action_setting':
+      begin
+        if AAuf.ArgsCount<4 then begin
+          AufScpt.send_error('set Action_Setting需要3个参数，未成功设置！');exit
+        end;
+        if not AAuf.TryArgToStrParam(2,['ab_act=','ab_adv=','ab_halt=','ab_opt=','hb_opt='],false,option) then exit;
+        try
+          case lowercase(option) of
+            'ab_act=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.Act1,Form_Routiner.Setting.AufButton.Act2);
+            'ab_adv=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.ExtraAct1,Form_Routiner.Setting.AufButton.ExtraAct2);
+            'ab_halt=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.Halt1,Form_Routiner.Setting.AufButton.Halt2);
+            'ab_opt=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.AufButton.Setting1,Form_Routiner.Setting.AufButton.Setting2);
+            'hb_opt=':MouseActCodeToMouseActSetting(AAuf.nargs[3].arg,Form_Routiner.Setting.HoldButton.Setting1,Form_Routiner.Setting.HoldButton.Setting2);
+          end;
+        except
+          AufScpt.send_error('参数只能包含LMR12CSA几个字符，未完成设置！');exit
+        end;
+      end;
+    'wndlist':
+      begin
+        if AAuf.ArgsCount<4 then begin
+          AufScpt.send_error('set Wndlist需要3个参数，未成功设置！');exit
+        end;
+        if not AAuf.TryArgToStrParam(2,['pos=','hwnd=','name=','class=','namecell=','aligncell='],false,option) then exit;
+        try
+          with Form_Routiner.Setting.WndListShowingOption do begin
+            case lowercase(AAuf.nargs[2].arg) of
+              'pos=':case lowercase(AAuf.nargs[3].arg) of 'true','t','on','y','yes':PositionVisible:=true; else PositionVisible:=false;end;
+              'hwnd=':case lowercase(AAuf.nargs[3].arg) of 'true','t','on','y','yes':HwndVisible:=true; else HwndVisible:=false;end;
+              'name=':case lowercase(AAuf.nargs[3].arg) of 'true','t','on','y','yes':WndNameVisible:=true; else WndNameVisible:=false;end;
+              'class=':case lowercase(AAuf.nargs[3].arg) of 'true','t','on','y','yes':ClassNameVisible:=true; else ClassNameVisible:=false;end;
+              'namecell=':try NameCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('namecell 需要数字参数') end;
+              'aligncell=':try AlignCell:=StrToInt(AAuf.nargs[3].arg) mod 256 except AufScpt.send_error('aligncell 需要数字参数') end;
+            end;
+          end;
+        except
+          AufScpt.send_error('参数只能包含LMR12CSA几个字符，未完成设置！');exit
+        end;
+      end;
+    'shortcut':
+      begin
+        if AAuf.ArgsCount<4 then begin
+          AufScpt.send_error('set Shortcut需要3个参数，未成功设置！');exit
+        end;
+        try fo:=AufScpt.TryToDWord(AAuf.nargs[3]);
+        except AufScpt.send_error('第2个参数需要是整数，未成功设置！');exit;end;
+        if not AAuf.TryArgToStrParam(2,['mode=','startkey=','endkey=','downupkey='],false,option) then exit;
+        case lowercase(option) of
+          'mode=':
+            if (fo<0) or (fo>3) then AufScpt.send_error('第3个参数无效，未成功设置！')
+            else AdapterForm.Option.Shortcut.Mode:=TShortcutMode(fo);
+          'startkey=':
+            if (fo<0) or (fo>255) then AufScpt.send_error('第3个参数无效，未成功设置！')
+            else AdapterForm.Option.Shortcut.StartKey:=fo;
+          'endkey=':
+            if (fo<0) or (fo>255) then AufScpt.send_error('第3个参数无效，未成功设置！')
+            else AdapterForm.Option.Shortcut.EndKey:=fo;
+          'downupkey=':
+            if (fo<0) or (fo>255) then AufScpt.send_error('第3个参数无效，未成功设置！')
+            else AdapterForm.Option.Shortcut.DownUpKey:=fo;
+          else AufScpt.send_error('Action_Setting之后需要使用Mode=,StartKey=,EndKey=,DownUpKey=进行设置。');exit    ;
+        end
+      end;
+    'shortcut_command':
+      begin
+        if AAuf.ArgsCount<5 then begin AufScpt.send_error('set Shortcut_Command需要4个参数，未成功设置！');exit;end;
+        try
+          fo:=AufScpt.TryToDWord(AAuf.nargs[2]);
+          if (fo<0) or (fo>ShortcutCount) then raise Exception.Create('');
+        except
+          AufScpt.send_error('第2个参数需要在0-'+IntToStr(ShortcutCount)+'范围内，未成功设置！');
+          exit;
+        end;
+
+        try s1:=AufScpt.TryToString(AAuf.nargs[3]);
+        except AufScpt.send_error('第3个参数转换为字符串失败，未成功设置！');exit
+        end;
+
+        try s2:=AufScpt.TryToString(AAuf.nargs[4]);
+        except AufScpt.send_error('第4个参数转换为字符串失败，未成功设置！');exit
+        end;
+
+        s2:=StringReplace(s2,'%Q','"',[rfReplaceAll]);
+        //AdapterForm.Option.Shortcut.ScriptFiles[fo].command:=s1;
+        //AdapterForm.Option.Shortcut.ScriptFiles[fo].filename:=s2;
+        if (s1<>'') and (s2<>'') then begin
+          slst:=TStringList.Create;
+          slst.Add(s2);
+          AdapterForm.Option.Shortcut.CommandList.AddObject(s1,TObject(slst));
+        end;
+      end;
+    //
+    else AufScpt.send_error('未知的命令行设置项，未成功设置！');
+  end;
+end;
+
 

@@ -105,44 +105,58 @@
       <Unit15>
         <Filename Value="ui\form_adapter.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="AdapterForm"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit15>
       <Unit16>
         <Filename Value="ui\form_aufbutton.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="AufButtonForm"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit16>
       <Unit17>
         <Filename Value="ui\form_holdbuttonsetting.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form_HoldButtonSetting"/>
+        <ComponentName Value="FormHoldButtonSetting"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit17>
       <Unit18>
         <Filename Value="ui\form_imagemerger.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form_ImgMerger"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit18>
       <Unit19>
         <Filename Value="ui\form_manual.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form_Manual"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit19>
       <Unit20>
         <Filename Value="ui\form_runperformance.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormRunPerformance"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit20>
       <Unit21>
         <Filename Value="ui\form_scale.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="FormScale"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit21>
       <Unit22>
         <Filename Value="ui\form_settinglag.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="SettingLagForm"/>
         <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
       </Unit22>
     </Units>
   </ProjectOptions>
