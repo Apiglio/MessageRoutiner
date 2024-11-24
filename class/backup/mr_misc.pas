@@ -66,26 +66,5 @@ begin
   until t1>=t2;
 end;
 
-{
-function GetTimeNumber:longint;
-var h,m,s,ms:word;
-begin
-  gettime(h,m,s,ms);
-  result:=ms*10+s*1000+m*60000+h*3600000;
-end;
-
-procedure process_sleep(n:longint);
-var t0,t1,t2:longint;
-begin
-  t0:=GetTimeNumber;
-  t2:=t0+n;
-  repeat
-    t1:=GetTimeNumber;
-    if t1<t0 then inc(t1,86400000);
-    Application.ProcessMessages;
-  until t1>=t2;
-end;
-}
-
 end.
 

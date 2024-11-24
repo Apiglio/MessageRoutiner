@@ -1,7 +1,7 @@
 object FormRunPerformance: TFormRunPerformance
-  Left = 1475
+  Left = 1265
   Height = 636
-  Top = 430
+  Top = 421
   Width = 580
   Caption = '全局设置'
   ClientHeight = 636
@@ -73,7 +73,7 @@ object FormRunPerformance: TFormRunPerformance
     Height = 596
     Top = 5
     Width = 570
-    ActivePage = TabSheet_HookOpt
+    ActivePage = TabSheet_General
     Anchors = [akTop, akLeft, akRight, akBottom]
     BorderSpacing.Left = 5
     BorderSpacing.Top = 5
@@ -81,14 +81,14 @@ object FormRunPerformance: TFormRunPerformance
     BorderSpacing.Bottom = 35
     TabIndex = 0
     TabOrder = 3
-    object TabSheet_HookOpt: TTabSheet
-      Caption = '消息钩子'
+    object TabSheet_General: TTabSheet
+      Caption = '通用'
       ClientHeight = 559
       ClientWidth = 562
       object CheckGroup_HookEnabled: TCheckGroup
-        AnchorSideLeft.Control = TabSheet_HookOpt
-        AnchorSideTop.Control = TabSheet_HookOpt
-        AnchorSideRight.Control = TabSheet_HookOpt
+        AnchorSideLeft.Control = TabSheet_General
+        AnchorSideTop.Control = TabSheet_General
+        AnchorSideRight.Control = TabSheet_General
         AnchorSideRight.Side = asrBottom
         Left = 5
         Height = 69
@@ -119,6 +119,41 @@ object FormRunPerformance: TFormRunPerformance
         TabOrder = 0
         Data = {
           020000000202
+        }
+      end
+      object CheckGroup_Display: TCheckGroup
+        AnchorSideLeft.Control = TabSheet_General
+        AnchorSideTop.Control = CheckGroup_HookEnabled
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = TabSheet_General
+        AnchorSideRight.Side = asrBottom
+        Left = 5
+        Height = 69
+        Top = 89
+        Width = 552
+        Anchors = [akTop, akLeft, akRight]
+        AutoFill = True
+        AutoSize = True
+        BorderSpacing.Left = 5
+        BorderSpacing.Top = 10
+        BorderSpacing.Right = 5
+        Caption = '窗体显示设置'
+        ChildSizing.LeftRightSpacing = 6
+        ChildSizing.TopBottomSpacing = 6
+        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+        ChildSizing.EnlargeVertical = crsHomogenousChildResize
+        ChildSizing.ShrinkHorizontal = crsScaleChilds
+        ChildSizing.ShrinkVertical = crsScaleChilds
+        ChildSizing.Layout = cclLeftToRightThenTopToBottom
+        ChildSizing.ControlsPerLine = 1
+        ClientHeight = 40
+        ClientWidth = 548
+        Items.Strings = (
+          '窗体置顶'
+        )
+        TabOrder = 1
+        Data = {
+          0100000002
         }
       end
     end

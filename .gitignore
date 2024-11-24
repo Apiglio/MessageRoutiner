@@ -1,6 +1,8 @@
 /lib
 /his
 /backup
+backup/*
+*/backup/*
 /QQSG
 /ScriptSample
 /ShortcutScript

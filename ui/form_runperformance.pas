@@ -26,6 +26,7 @@ type
     Button_Okay: TButton;
     Button_Reset: TButton;
     Button_Cancel: TButton;
+    CheckGroup_Display: TCheckGroup;
     CheckGroup_HookEnabled: TCheckGroup;
     Edit_SCM_KEY_DownUp: TEdit;
     Edit_SCM_KEY_Start: TEdit;
@@ -48,7 +49,7 @@ type
     RadioGroup_SCM: TRadioGroup;
     ScrollBox_KeyShort: TScrollBox;
     StringGrid_CommandList: TStringGrid;
-    TabSheet_HookOpt: TTabSheet;
+    TabSheet_General: TTabSheet;
     TabSheet_ButtonOpt: TTabSheet;
     TabSheet_KeyShortOpt: TTabSheet;
     ToggleBox_SCM_KEY_manual: TToggleBox;
@@ -218,7 +219,8 @@ begin
       Form_Routiner.Setting.HoldButton.Setting2:=HoldButtonSetting2;
     end;
 
-  //消息钩子
+  //通用设置
+  //    消息钩子设置不保存，默认键盘开启鼠标关闭
   if Self.CheckGroup_HookEnabled.Checked[0] then begin
     Form_Routiner.KeybdHook;
   end else begin
@@ -229,6 +231,12 @@ begin
   end else begin
     Form_Routiner.MouseUnHook;
   end;
+
+  if Self.CheckGroup_Display.Checked[0] then
+    Form_Routiner.AlwaysOnTopEnable
+  else
+    Form_Routiner.AlwaysOnTopDisable;
+
 
   //键盘快捷键
   case RadioGroup_SCM.ItemIndex of
@@ -400,6 +408,7 @@ begin
       StringGrid_CommandList.Cells[2,pi+1]:='';
       //StringGrid_CommandList.Cells[3,pi+1]:='...';
     end;
+  Self.CheckGroup_Display.Checked[0]:=Form_Routiner.Setting.General.Always_On_Top;
 end;
 
 end.

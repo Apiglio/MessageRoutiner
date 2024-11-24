@@ -11,22 +11,8 @@ function GetDPIScaling:double;
 function GetDPI:integer;
 function GetDPIRect(ARect:TRect):TRect;
 procedure process_sleep(n:longint);
-//function GetTimeNumber:longint;
-//procedure process_sleep(n:longint);
 
 implementation
-
-{
-procedure qk(str:string);deprecated;
-begin
-  Form_Routiner.AufScriptFrames[Form_Routiner.PageControl.ActivePageIndex].Frame.Auf.Script.writeln(str);
-end;
-
-procedure qkm(str:string);deprecated;
-begin
-  MessageBox(0,PChar(str),'Error',MB_OK);
-end;
-}
 
 function GetDPIScaling:double;
 var dc:HDC;
