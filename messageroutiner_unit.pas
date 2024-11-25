@@ -1435,10 +1435,11 @@ end;
 
 procedure TForm_Routiner.MenuItem_Opt_AboutClick(Sender: TObject);
 begin
-  MessageBox(0,
+  MessageDlg(
+    '版本信息',
     'Apiglio Message Routiner'+#13+#10+'- version '+version_number+#13+#10+'- by Apiglio',
-    PChar(utf8towincp('版本信息')),
-    MB_OK);
+    mtInformation,[mbOK],0
+  );
 end;
 
 procedure TForm_Routiner.MenuItem_Opt_AdapterClick(Sender: TObject);

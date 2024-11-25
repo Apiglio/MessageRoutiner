@@ -823,7 +823,7 @@ var AufScpt:TAufScript;
     s1,s2:string;
     slst:TStringList;
     pf:TForm;
-    branch,option,value:string;
+    branch,option,value,err_res:string;
 
 begin
   AufScpt:=Sender as TAufScript;
@@ -909,16 +909,16 @@ begin
     'aufbutton':
       begin
         if not AAuf.CheckArgs(7) then exit;
-        {err}fo:=0;
+        err_res:='';
         if not AAuf.TryArgToLong(2,{winID}ww) then exit;
         if not AAuf.TryArgToLong(3,{colID}hh) then exit;
         if not AAuf.TryArgToString(4,{caption}option) then exit;
         if not AAuf.TryArgToLong(5,{winIndex}ll) then exit;
         if not AAuf.TryArgToString(6,{path}value) then exit;
-        if (ww>SynCount) or (ww<0) then {err}fo:=1;
-        if (ll>SynCount) or (ll<0) then {err}fo:=1;
-        if (hh>ButtonColumn) or (hh<0) then {err}fo:=1;
-        if {err}fo<>0 then begin
+        if (ww>SynCount) or (ww<0) then err_res:='syncount';
+        if (ll>SynCount) or (ll<0) then err_res:='syncount';
+        if (hh>ButtonColumn) or (hh<0) then err_res:='buttoncolumn';
+        if err_res<>'' then begin
           AufScpt.send_error('参数存在错误，未完成设置！');
           exit;
         end;
@@ -929,19 +929,19 @@ begin
     'holdbutton':
       begin
         if not AAuf.CheckArgs(8) then exit;
-        {err}fo:=0;
+        err_res:='';
         if not AAuf.TryArgToLong(2,{ID}fo) then exit;
         if not AAuf.TryArgToString(3,{caption}option) then exit;
         if not AAuf.TryArgToLong(4,{key1}tt) then exit;
         if not AAuf.TryArgToLong(5,{key2}ll) then exit;
         if not AAuf.TryArgToLong(6,{key3}ww) then exit;
         if not AAuf.TryArgToLong(7,{last}hh) then exit;
-        if (fo>31) or (fo<0) then {err}fo:=1;
-        if (tt>255) or (tt<0) then {err}fo:=1;
-        if (ll>255) or (ll<0) then {err}fo:=1;
-        if (ww>255) or (ww<0) then {err}fo:=1;
-        if (hh>255) or (hh<0) then {err}fo:=1;
-        if {err}fo<>0 then begin
+        if (fo>31) or (fo<0) then err_res:='idx';
+        if (tt>255) or (tt<0) then err_res:='top';
+        if (ll>255) or (ll<0) then err_res:='left';
+        if (ww>255) or (ww<0) then err_res:='width';
+        if (hh>255) or (hh<0) then err_res:='bottom';
+        if err_res<>'' then begin
           AufScpt.send_error('参数存在错误，未完成设置！');
           exit;
         end;
@@ -998,22 +998,22 @@ begin
         if not AAuf.CheckArgs(4) then exit;
         if not AAuf.TryArgToLong(3,fo) then exit;
         if not AAuf.TryArgToStrParam(2,['mode=','startkey=','endkey=','downupkey='],false,option) then exit;
-        {err}value:='';
+        err_res:='';
         case lowercase(option) of
           'mode=':
-            if (fo<0) or (fo>3) then {err}value:='无效模式'
+            if (fo<0) or (fo>3) then err_res:='无效模式'
             else AdapterForm.Option.Shortcut.Mode:=TShortcutMode(fo);
           'startkey=':
-            if (fo<0) or (fo>255) then {err}value:='无效键盘值'
+            if (fo<0) or (fo>255) then err_res:='无效键盘值'
             else AdapterForm.Option.Shortcut.StartKey:=fo;
           'endkey=':
-            if (fo<0) or (fo>255) then {err}value:='无效键盘值'
+            if (fo<0) or (fo>255) then err_res:='无效键盘值'
             else AdapterForm.Option.Shortcut.EndKey:=fo;
           'downupkey=':
-            if (fo<0) or (fo>255) then {err}value:='无效键盘值'
+            if (fo<0) or (fo>255) then err_res:='无效键盘值'
             else AdapterForm.Option.Shortcut.DownUpKey:=fo;
         end;
-        if {err}value<>'' then AufScpt.send_error({err}value);
+        if err_res<>'' then AufScpt.send_error(err_res);
       end;
     'shortcut_command':
       begin
