@@ -1151,7 +1151,7 @@ begin
   AAuf.Script.add_func('window.top,窗体置顶',@wnd_bring_to_top,'@hwnd','置顶给定句柄的窗体');
   AAuf.Script.add_func('getwnd_v,按名称返回句柄',@getwind_name_visible,'@hwnd,wnd_name','查找名称为wnd_name且可见的窗体句柄');
   AAuf.Script.add_func('getwnd_t,返回置顶窗体',@getwind_top,'@hwnd','返回当前置顶窗体句柄');
-  AAuf.Script.add_func('getwnd_f,返回焦点窗体',@getwind_focus,'@hwnd','返回当前置顶窗体句柄');
+  AAuf.Script.add_func('getwnd_f,返回焦点窗体',@getwind_focus,'@hwnd','返回当前焦点所在窗体句柄');
   AAuf.Script.add_func('getwnd_s,窗体尺寸信息',@getwind_size,'hwnd,@x,@y,@w,@h','返回指定窗体的尺寸信息');
   AAuf.Script.add_func('wndlist.refresh,刷新窗体列表',@wndlist_refresh,'[-ui]','刷新窗体句柄列表，加-ui参数同时更新UI视图');
   AAuf.Script.add_func('wndlist.getlist,导出窗体列表',@wndlist_getlist,'@arr','将全部句柄保存在arr数组中');

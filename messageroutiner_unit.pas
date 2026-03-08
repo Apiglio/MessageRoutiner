@@ -16,7 +16,7 @@ uses
 
 const
 
-  version_number = '0.2.15';
+  version_number = '0.2.16';
 
   RuleCount      = 9;{不能大于31，否则设置保存会出问题}
   SynCount       = 4;{不能大于9，也不推荐9；也不推荐4以下，这会导致自动布局效果很差}
@@ -460,6 +460,7 @@ type
   public
     procedure CurrentAufStrAdd(str:string);inline;
     procedure WindowsFilter;
+    function WindowsNodeCompare(Node1, Node2: TTreeNode): Integer;
     procedure SetLayout(layoutcode:byte);
     procedure ReDrawWndPos;
     procedure ShowManual(msg:string);
@@ -1167,6 +1168,12 @@ begin
   if Reg.Expression='' then Reg.Expression:='.';
   Recur_WindowsFilter(WindowsTreeRoot, tmpTreeNode, false);
   tmpTreeNode.Expanded:=true;
+  tmpTreeNode.CustomSort(@WindowsNodeCompare);
+end;
+
+function TForm_Routiner.WindowsNodeCompare(Node1, Node2: TTreeNode): Integer;
+begin
+  result := TMR_Window(Node1.Data).Handle - TMR_Window(Node2.Data).Handle;
 end;
 
 procedure TForm_Routiner.CurrentAufStrAdd(str:string);inline;
